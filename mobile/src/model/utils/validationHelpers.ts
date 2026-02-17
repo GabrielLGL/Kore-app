@@ -33,7 +33,7 @@ export function isValidText(text: string): boolean {
  * }
  */
 export function isValidNumeric(value: string | number, min: number = 0): boolean {
-  const num = typeof value === 'string' ? parseFloat(value) : value
+  const num = typeof value === 'string' ? Number(value) : value
 
   if (isNaN(num)) return false
   if (num <= min) return false

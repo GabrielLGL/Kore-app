@@ -1,3 +1,6 @@
+// Mock the database to avoid SQLiteAdapter JSI initialization in test environment
+jest.mock('../../index', () => ({ database: {} }))
+
 import {
   parseNumericInput,
   parseIntegerInput,
