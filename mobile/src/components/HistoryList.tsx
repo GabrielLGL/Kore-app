@@ -45,7 +45,7 @@ const HistoryList: React.FC<Props> = ({ histories }) => {
           <HistoryItem
             history={item} 
             // Navigation vers l'écran SessionLive (Note: SessionLive semble être obsolète ou redirigé)
-            onPress={() => navigation.navigate('SessionLive', { sessionId: item.id })}
+            onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}
           />
         )}
         // Composant affiché si la liste est vide

@@ -149,7 +149,7 @@ export function useExerciseManager(
     setSelectedExercise(exercise)
     setEditExerciseName(exercise.name)
     setEditExerciseMuscles(exercise.muscles)
-    setEditExerciseEquipment(exercise.equipment)
+    setEditExerciseEquipment(exercise.equipment ?? 'Poids libre')
   }
 
   return {

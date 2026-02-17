@@ -1,4 +1,5 @@
 import React from 'react'
+import { View } from 'react-native'
 import { render, fireEvent } from '@testing-library/react-native'
 import { Button } from '../Button'
 import * as Haptics from 'expo-haptics'
@@ -189,7 +190,7 @@ describe('Button', () => {
   it('should render with React node children', () => {
     const { getByTestId } = render(
       <Button onPress={jest.fn()}>
-        <React.Fragment testID="custom-child">Custom</React.Fragment>
+        <View testID="custom-child" />
       </Button>
     )
 

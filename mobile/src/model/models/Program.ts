@@ -1,4 +1,4 @@
-import { Model, Q } from '@nozbe/watermelondb'
+import { Model, Q, Query } from '@nozbe/watermelondb'
 import { field, date, readonly, children } from '@nozbe/watermelondb/decorators'
 import type Session from './Session'
 
@@ -11,7 +11,7 @@ export default class Program extends Model {
   @field('name') name!: string
   @field('position') position!: number
   @readonly @date('created_at') createdAt!: Date
-  @children('sessions') sessions!: Session[]
+  @children('sessions') sessions!: Query<Session>
 
   // Ajoute cette méthode
   async duplicate() {

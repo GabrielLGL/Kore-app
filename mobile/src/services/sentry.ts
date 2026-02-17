@@ -61,10 +61,7 @@ export function initSentry() {
 
     // Intégrations par défaut
     integrations: [
-      new Sentry.ReactNativeTracing({
-        // Trace les performances de navigation
-        routingInstrumentation: new Sentry.ReactNavigationInstrumentation(),
-      }),
+      Sentry.reactNavigationIntegration(),
     ],
   })
 
