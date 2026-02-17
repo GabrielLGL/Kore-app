@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: mobile/package-lock.json
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install dependencies (CORRECTED)
         working-directory: mobile
         run: npm ci --legacy-peer-deps
 
