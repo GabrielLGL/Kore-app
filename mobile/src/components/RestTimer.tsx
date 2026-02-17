@@ -13,25 +13,33 @@ interface Props {
  * Désormais intégré au flux de la page pour ne pas chevaucher la liste.
  */
 const RestTimer: React.FC<Props> = ({ duration, onClose }) => {
-  const [timeLeft, setTargetTime] = useState(duration)
+  const [timeLeft, setTimeLeft] = useState(duration)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const endTimeRef = useRef<number>(Date.now() + duration * 1000) // Heure de fin cible
   const animValue = useRef(new Animated.Value(50)).current // Animation de montée légère
 
   useEffect(() => {
     // Animation d'entrée
     Animated.spring(animValue, { toValue: 0, useNativeDriver: true }).start()
 
-    // Logique du décompte
-    timerRef.current = setInterval(() => {
-      setTargetTime(prev => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current)
-          finishTimer()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    // Logique du décompte basée sur Date.now() pour éviter le drift
+    const updateTimer = () => {
+      const now = Date.now()
+      const remaining = Math.max(0, Math.ceil((endTimeRef.current - now) / 1000))
+
+      setTimeLeft(remaining)
+
+      if (remaining <= 0) {
+        if (timerRef.current) clearInterval(timerRef.current)
+        finishTimer()
+      }
+    }
+
+    // Première mise à jour immédiate
+    updateTimer()
+
+    // Mise à jour toutes les 100ms pour un affichage fluide
+    timerRef.current = setInterval(updateTimer, 100)
 
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
