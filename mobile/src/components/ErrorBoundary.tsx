@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { captureError } from '../services/sentry'
 import { colors } from '../theme'
 
 interface Props {
@@ -33,8 +34,13 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // TODO: Envoyer à un service de monitoring (Sentry, Crashlytics, etc.)
+    // Envoyer l'erreur à Sentry pour monitoring
     console.error('ErrorBoundary caught:', error, errorInfo)
+
+    captureError(error, {
+      componentStack: errorInfo.componentStack,
+      errorBoundary: 'Root ErrorBoundary',
+    })
   }
 
   handleReset = () => {

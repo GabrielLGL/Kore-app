@@ -76,6 +76,7 @@ npm test -- --watch
 - **[CLAUDE.md](CLAUDE.md)** - Guidelines du projet et architecture
 - **[mobile/MANUAL_TESTING_GUIDE.md](mobile/MANUAL_TESTING_GUIDE.md)** - Guide de tests manuels complet
 - **[mobile/TESTING.md](mobile/TESTING.md)** - Documentation des tests Jest
+- **[mobile/SENTRY_SETUP.md](mobile/SENTRY_SETUP.md)** - Configuration Sentry pour monitoring
 - **[mobile/PHASE5_IMPROVEMENTS.md](mobile/PHASE5_IMPROVEMENTS.md)** - Historique des améliorations
 
 ## 🔧 Configuration CI/CD

@@ -33,7 +33,8 @@
             "kotlinVersion": "1.9.25"
           }
         }
-      ]
+      ],
+      "@sentry/react-native/expo"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
@@ -46,7 +47,8 @@
     "extra": {
       "eas": {
         "projectId": "2f547162-0beb-4cfa-90c1-e6b8095203ae"
-      }
+      },
+      "sentryDsn": "YOUR_SENTRY_DSN_HERE"
     }
   }
 }
