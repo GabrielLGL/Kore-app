@@ -1,6 +1,7 @@
 import { Model, Q, Query } from '@nozbe/watermelondb'
 import { field, date, readonly, children } from '@nozbe/watermelondb/decorators'
 import type Session from './Session'
+import type SessionExercise from './SessionExercise'
 
 export default class Program extends Model {
   static table = 'programs'
@@ -13,26 +14,45 @@ export default class Program extends Model {
   @readonly @date('created_at') createdAt!: Date
   @children('sessions') sessions!: Query<Session>
 
-  // Ajoute cette méthode
   async duplicate() {
-    // On accède à la DB via this.database ou this.collection
     const db = this.database
-    
-    // On encapsule tout dans un write global
+
     await db.write(async () => {
-        const count = await db.get('programs').query().fetchCount()
-        
-        // 1. Création du programme
-        const newProgram = await db.get<Program>('programs').create(p => {
-            p.name = `${this.name} (Copie)`
-            p.position = count
+      const count = await db.get<Program>('programs').query().fetchCount()
+
+      const newProgram = await db.get<Program>('programs').create(p => {
+        p.name = `${this.name} (Copie)`
+        p.position = count
+      })
+
+      const originalSessions = await this.sessions.fetch()
+
+      for (const session of originalSessions) {
+        const newSession = await db.get<Session>('sessions').create(s => {
+          s.name = session.name
+          s.position = session.position
+          s.program.set(newProgram)
         })
 
-        // 2. Récupération des sessions
-        const originalSessions = await this.sessions.fetch()
-        
-        // ... (Tu peux copier ta logique de boucle for ici)
-        // L'avantage est que ton HomeScreen n'a plus à savoir COMMENT on duplique, juste QU'ON duplique.
+        const sessionExos = await db
+          .get<SessionExercise>('session_exercises')
+          .query(Q.where('session_id', session.id))
+          .fetch()
+
+        for (const se of sessionExos) {
+          const exercise = await se.exercise.fetch()
+          if (exercise) {
+            await db.get<SessionExercise>('session_exercises').create(newSE => {
+              newSE.session.set(newSession)
+              newSE.exercise.set(exercise)
+              newSE.position = se.position
+              newSE.setsTarget = se.setsTarget
+              newSE.repsTarget = se.repsTarget
+              newSE.weightTarget = se.weightTarget
+            })
+          }
+        }
+      }
     })
   }
 }

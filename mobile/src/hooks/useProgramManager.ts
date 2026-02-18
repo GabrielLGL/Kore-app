@@ -213,7 +213,9 @@ export function useProgramManager(onSuccess?: () => void) {
     if (!selectedSession) return false
 
     try {
-      await selectedSession.destroyPermanently()
+      await database.write(async () => {
+        await selectedSession.destroyPermanently()
+      })
       setSelectedSession(null)
       return true
     } catch (error) {
