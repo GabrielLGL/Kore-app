@@ -2,21 +2,38 @@ import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native'
 import * as Haptics from 'expo-haptics'
 import { colors } from '../theme'
+import {
+  scheduleRestEndNotification,
+  cancelNotification,
+} from '../services/notificationService'
 
 interface Props {
   duration: number // en secondes
   onClose: () => void
+  notificationEnabled?: boolean
 }
 
 /**
  * Composant Timer de repos automatique.
  * Désormais intégré au flux de la page pour ne pas chevaucher la liste.
  */
-const RestTimer: React.FC<Props> = ({ duration, onClose }) => {
+const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) => {
   const [timeLeft, setTimeLeft] = useState(duration)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const hapticTimer1Ref = useRef<NodeJS.Timeout | null>(null)
+  const hapticTimer2Ref = useRef<NodeJS.Timeout | null>(null)
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null)
   const endTimeRef = useRef<number>(Date.now() + duration * 1000) // Heure de fin cible
   const animValue = useRef(new Animated.Value(50)).current // Animation de montée légère
+  const notificationIdRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (notificationEnabled) {
+      scheduleRestEndNotification(duration).then(id => {
+        notificationIdRef.current = id
+      })
+    }
+  }, [])
 
   useEffect(() => {
     // Animation d'entrée
@@ -41,20 +58,35 @@ const RestTimer: React.FC<Props> = ({ duration, onClose }) => {
     // Mise à jour toutes les 100ms pour un affichage fluide
     timerRef.current = setInterval(updateTimer, 100)
 
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (hapticTimer1Ref.current) clearTimeout(hapticTimer1Ref.current)
+      if (hapticTimer2Ref.current) clearTimeout(hapticTimer2Ref.current)
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    }
   }, [])
 
   const finishTimer = () => {
+    if (notificationIdRef.current) {
+      cancelNotification(notificationIdRef.current)
+      notificationIdRef.current = null
+    }
+
     // Triple vibration forte pour alerter la fin du repos
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
-    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 400)
-    setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 800)
+    hapticTimer1Ref.current = setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 400)
+    hapticTimer2Ref.current = setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy), 800)
 
     // Fermeture automatique après 1 secondes
-    setTimeout(closeTimer, 1000)
+    closeTimerRef.current = setTimeout(closeTimer, 1000)
   }
 
   const closeTimer = () => {
+    if (notificationIdRef.current) {
+      cancelNotification(notificationIdRef.current)
+      notificationIdRef.current = null
+    }
+
     Animated.timing(animValue, { toValue: 50, duration: 200, useNativeDriver: true }).start(() => {
       onClose()
     })
