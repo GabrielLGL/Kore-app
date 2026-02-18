@@ -4,12 +4,13 @@ import { buildPrompt, parseGeneratedPlan } from './providerUtils'
 export function createGeminiProvider(apiKey: string): AIProvider {
   return {
     async generate(form: AIFormData, context: DBContext): Promise<GeneratedPlan> {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
         },
         body: JSON.stringify({
           contents: [

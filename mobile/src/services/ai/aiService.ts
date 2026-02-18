@@ -2,6 +2,7 @@ import { Q } from '@nozbe/watermelondb'
 import { database } from '../../model'
 import type Exercise from '../../model/models/Exercise'
 import type History from '../../model/models/History'
+import type PerformanceLog from '../../model/models/PerformanceLog'
 import type WorkoutSet from '../../model/models/Set'
 import type User from '../../model/models/User'
 import { offlineEngine } from './offlineEngine'
@@ -68,7 +69,7 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
       .query(Q.where('history_id', Q.oneOf(recentHistoryIds)))
       .fetch()
 
-    const recentExerciseIds = [...new Set(recentSets.map(s => s.exercise.id))]
+    const recentExerciseIds = [...new Set(recentSets.map(s => s._raw.exercise_id as string))]
     if (recentExerciseIds.length > 0) {
       const recentExercises = await database
         .get<Exercise>('exercises')
@@ -76,21 +77,18 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
         .fetch()
 
       recentExercises.forEach(ex => {
-        if (ex.muscles.length > 0) recentMuscles.push(...ex.muscles)
+        if (ex.muscles) recentMuscles.push(...ex.muscles.split(',').map((m: string) => m.trim()))
       })
     }
   }
 
   // 3. PRs depuis performance_logs
   const prs: Record<string, number> = {}
-  const perfLogs = (await database.get('performance_logs').query().fetch()) as unknown as Array<{
-    exercise: { id: string }
-    weight: number
-  }>
+  const perfLogs = await database.get<PerformanceLog>('performance_logs').query().fetch()
 
   const exerciseById = new Map(allExercises.map(ex => [ex.id, ex]))
   perfLogs.forEach(log => {
-    const ex = exerciseById.get(log.exercise.id)
+    const ex = exerciseById.get(log._raw.exercise_id as string)
     if (!ex) return
     if (!prs[ex.name] || log.weight > prs[ex.name]) {
       prs[ex.name] = log.weight

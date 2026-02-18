@@ -48,11 +48,45 @@ export function parseGeneratedPlan(raw: string): GeneratedPlan {
     .replace(/\s*```$/i, '')
     .trim()
 
-  const json = JSON.parse(cleaned)
-
-  if (!json || typeof json.name !== 'string' || !Array.isArray(json.sessions)) {
-    throw new Error('Structure JSON invalide : name ou sessions manquant')
+  let json: unknown
+  try {
+    json = JSON.parse(cleaned)
+  } catch {
+    throw new Error(`Réponse API non-JSON : ${cleaned.slice(0, 100)}`)
   }
 
-  return json as GeneratedPlan
+  if (!json || typeof json !== 'object') {
+    throw new Error('Structure JSON invalide : objet attendu')
+  }
+
+  const obj = json as Record<string, unknown>
+
+  if (typeof obj.name !== 'string' || !obj.name.trim()) {
+    throw new Error('Structure JSON invalide : name manquant ou vide')
+  }
+
+  if (!Array.isArray(obj.sessions) || obj.sessions.length === 0) {
+    throw new Error('Structure JSON invalide : sessions doit être un tableau non vide')
+  }
+
+  for (const session of obj.sessions as unknown[]) {
+    if (!session || typeof session !== 'object') {
+      throw new Error('Structure JSON invalide : chaque session doit être un objet')
+    }
+    const s = session as Record<string, unknown>
+    if (typeof s.name !== 'string') throw new Error('Structure JSON invalide : session.name manquant')
+    if (!Array.isArray(s.exercises)) throw new Error('Structure JSON invalide : session.exercises doit être un tableau')
+
+    for (const ex of s.exercises as unknown[]) {
+      if (!ex || typeof ex !== 'object') throw new Error('Structure JSON invalide : exercice invalide')
+      const e = ex as Record<string, unknown>
+      if (typeof e.exerciseName !== 'string' || !e.exerciseName.trim()) {
+        throw new Error('Structure JSON invalide : exerciseName manquant')
+      }
+      if (typeof e.setsTarget !== 'number') throw new Error('Structure JSON invalide : setsTarget doit être un nombre')
+      if (typeof e.repsTarget !== 'string') throw new Error('Structure JSON invalide : repsTarget doit être une string')
+    }
+  }
+
+  return obj as unknown as GeneratedPlan
 }
