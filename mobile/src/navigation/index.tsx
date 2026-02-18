@@ -11,6 +11,7 @@ import { useNavigationContainerRef } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 // --- AJOUT : Import du Provider pour les Modals ---
 import { PortalProvider } from '@gorhom/portal'
+import { colors } from '../theme'
 
 // Importation des écrans de l'application
 import HomeScreen from '../screens/HomeScreen'
@@ -18,6 +19,7 @@ import SessionDetailScreen from '../screens/SessionDetailScreen'
 import ExercisesScreen from '../screens/ExercisesScreen'
 import ChartsScreen from '../screens/ChartsScreen'
 import SettingsScreen from '../screens/SettingsScreen'
+import WorkoutScreen from '../screens/WorkoutScreen'
 // Importation de l'ErrorBoundary
 import { ErrorBoundary } from '../components/ErrorBoundary'
 
@@ -26,6 +28,7 @@ export type RootStackParamList = {
   MainTabs: { screen?: string } | undefined;
   SessionDetail: { sessionId: string };
   Settings: undefined;
+  Workout: { sessionId: string };
 };
 
 // Création des navigateurs Stack (empilement) et Tab (onglets du bas)
@@ -121,17 +124,17 @@ function TabNavigator({ navigation }: any) {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#121212' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Tab.Navigator
         initialRouteName="Home"
         backBehavior="none" // On désactive le retour par défaut pour utiliser notre GlobalBackHandler
         screenOptions={{
           headerShown: true, // Affiche le header natif
-          headerStyle: { backgroundColor: '#121212', elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
+          headerStyle: { backgroundColor: colors.background, elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
           headerTitleAlign: 'left', // Aligne le titre à gauche
-          headerTitleStyle: { fontSize: 22, fontWeight: 'bold', color: 'white' },
+          headerTitleStyle: { fontSize: 22, fontWeight: 'bold', color: colors.text },
           tabBarStyle: {
-            backgroundColor: '#1C1C1E',
+            backgroundColor: colors.card,
             borderTopWidth: 0,
             height: 60,
             paddingBottom: 10,
@@ -139,8 +142,8 @@ function TabNavigator({ navigation }: any) {
             bottom: 0, left: 0, right: 0,
             transform: [{ translateY: scrollY }] // Applique l'animation
           },
-          tabBarActiveTintColor: '#007AFF', // Couleur de l'onglet actif
-          tabBarInactiveTintColor: '#888',   // Couleur des onglets inactifs
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textSecondary,
           tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
         }}
       >
@@ -191,12 +194,13 @@ export default function AppNavigator() {
       <PortalProvider>
         <NavigationContainer ref={navigationRef} theme={MyDarkTheme}>
           <GlobalBackHandler navigationRef={navigationRef} />
-          <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: '#000' }, headerTintColor: 'white', contentStyle: { backgroundColor: '#121212' } }}>
+          <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text, contentStyle: { backgroundColor: colors.background } }}>
             {/* L'écran principal contient les onglets */}
             <Stack.Screen name="MainTabs" component={TabNavigator} options={{ headerShown: false }} />
             {/* Écrans de détail (sans onglets en bas) */}
             <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: 'Gestion de la séance' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Paramètres' }} />
+            <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </PortalProvider>
