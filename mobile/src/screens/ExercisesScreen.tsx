@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
   equipBtnActive: { backgroundColor: colors.secondaryButton, borderWidth: 1, borderColor: colors.primary },
   equipText: { color: colors.textSecondary, fontSize: 13 },
   equipTextActive: { color: colors.text, fontWeight: 'bold' },
-  modalButton: { flex: 0.47, padding: 14, borderRadius: 12, alignItems: 'center' },
   cancelBtn: { flex: 0.47, backgroundColor: colors.secondaryButton, padding: 14, borderRadius: 12, alignItems: 'center' },
   confirmBtn: { flex: 0.47, backgroundColor: colors.primary, padding: 14, borderRadius: 12, alignItems: 'center' },
   btnText: { color: colors.text, fontWeight: 'bold' },

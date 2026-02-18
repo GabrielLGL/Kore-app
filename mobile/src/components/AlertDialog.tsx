@@ -65,15 +65,6 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
     }
   }, [visible])
 
-  // Synchronisation de la tab bar
-  useEffect(() => {
-    if (visible) {
-      // Note: La synchronisation est gérée par le parent via useModalState
-      // ou useMultiModalSync. On pourrait aussi l'ajouter ici directement
-      // mais cela créerait une double émission d'événements.
-    }
-  }, [visible])
-
   const handleConfirm = async () => {
     haptics.onDelete() // Heavy haptic pour action critique
     await onConfirm()

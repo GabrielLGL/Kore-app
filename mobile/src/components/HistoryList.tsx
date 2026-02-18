@@ -4,8 +4,6 @@ import React from 'react'
 import { View, Text, FlatList, StyleSheet } from 'react-native'
 // Importation du HOC withObservables pour lier le composant aux données réactives
 import withObservables from '@nozbe/with-observables'
-// Importation du type Query de WatermelonDB
-import { Query } from '@nozbe/watermelondb'
 // Importation du hook pour accéder à la navigation
 import { useNavigation } from '@react-navigation/native'
 // Importation du type de navigation pour TypeScript
@@ -68,5 +66,5 @@ const styles = StyleSheet.create({
  */
 export default withObservables(['session'], ({ session }: { session: Session }) => ({
   // Récupère et observe les entrées d'historique liées à cette séance
-  histories: (session.histories as unknown as Query<History>).observe()
+  histories: session.histories.observe()
 }))(HistoryList)
