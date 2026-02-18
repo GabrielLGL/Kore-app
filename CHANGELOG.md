@@ -1,6 +1,119 @@
 # CHANGELOG
 
-## [Non publié] — 2026-02-18
+## [Non publié] — 2026-02-18 — Passe 2
+
+### Bugs Corrigés
+
+#### `User.ts` — Champ `username` orphelin absent du schéma (commit `88f37c1`)
+**Fichier :** `mobile/src/model/models/User.ts`
+
+Le modèle déclarait `@text('username') username?: string` mais la table
+`users` dans le schéma (v15) ne possède aucune colonne `username`. Toute
+écriture sur ce champ aurait levé une erreur WatermelonDB. Le champ n'était
+utilisé nulle part dans la codebase.
+
+**Correction :** Suppression du décorateur et de la propriété orphelins.
+
+---
+
+#### `duplicateSession()` — Position absente sur la séance dupliquée (commit `0effd1a`)
+**Fichier :** `mobile/src/hooks/useProgramManager.ts`
+
+La fonction `duplicateSession()` créait la nouvelle séance sans lui assigner
+de `position`. Toutes les autres créations de séances (`saveSession`,
+`moveSession`) appellent `getNextPosition()`. Une séance sans position aurait
+un ordre indéfini dans la liste.
+
+**Correction :** Ajout de `getNextPosition('sessions', Q.where('program_id', ...))`
+avant la création et assignation de `s.position = position`.
+
+---
+
+### Fuites Mémoire Corrigées
+
+#### `GlobalBackHandler` — `setTimeout` non annulé au démontage (commit `5a16ed1`)
+**Fichier :** `mobile/src/navigation/index.tsx`
+
+`setTimeout(() => { backPressRef.current = 0 }, 2000)` était créé mais son
+identifiant était jeté. Si le composant se démontait dans les 2 secondes après
+un premier appui, le timer continuait à tourner.
+
+**Correction :** Ajout de `resetTimerRef` (`useRef<NodeJS.Timeout | null>`)
+et `clearTimeout(resetTimerRef.current)` dans le return du `useEffect`.
+
+---
+
+#### `WorkoutSummarySheet` — Timer de debounce non nettoyé (commit `5a16ed1`)
+**Fichier :** `mobile/src/components/WorkoutSummarySheet.tsx`
+
+Le timer de debounce dans `handleNoteChange` était annulé dans `handleClose()`
+mais pas lors d'un démontage par une autre voie. Si le composant était démonté
+pendant que le debounce était en attente, `updateHistoryNote` s'exécutait sur
+un composant mort.
+
+**Correction :** Ajout de `useEffect(() => () => clearTimeout(debounceRef.current), [])`.
+
+---
+
+### Code Mort Supprimé (commit `bb7ec64`)
+
+- **`AlertDialog.tsx`** — Bloc `useEffect` dont le corps ne contenait qu'un
+  commentaire expliquant pourquoi rien n'y est fait.
+- **`ExercisesScreen.tsx`** — Style `modalButton` présent dans `StyleSheet.create()`
+  mais jamais référencé dans le JSX (les boutons utilisent `cancelBtn`/`confirmBtn`).
+- **`HistoryList.tsx`** — Cast redondant `(session.histories as unknown as Query<History>)`
+  devenu inutile après la correction de `History.sets` en Passe 1 ; import `Query`
+  associé supprimé.
+
+---
+
+### Couleurs Hardcodées Remplacées (commit `99b72b0`)
+
+**Fichiers :** `HistoryItem.tsx`, `SessionItem.tsx`, `ProgramSection.tsx`,
+`SetItem.tsx`, `navigation/index.tsx` (objet `MyDarkTheme`)
+
+Ces composants legacy utilisaient des valeurs hexadécimales brutes (`'#1C1C1E'`,
+`'white'`, `'#007AFF'`, `'#888'`, `'#2C2C2E'`…) au lieu des tokens du thème
+centralisé. `HistoryItem.tsx` était particulièrement critique : il utilisait
+des couleurs de **mode clair** (`backgroundColor: 'white'`, `color: '#333'`)
+dans une application dark-mode uniquement, rendant la carte illisible.
+
+**Correction :** Remplacement systématique par `colors.*` et `borderRadius.*`
+depuis `theme/index.ts`.
+
+---
+
+### Améliorations TypeScript (commit `d7fd06d`)
+
+- **`ChipSelector.tsx`** — Prop `style?: any` → `StyleProp<ViewStyle>`.
+- **`Exercise.ts`** — Double import de `@nozbe/watermelondb` (`Model` ligne 2
+  et `Q` ligne 6) fusionné en un seul `import { Model, Q }`.
+- **`sentry.ts`** — `captureError` et `addBreadcrumb` : paramètre contextuel
+  `Record<string, any>` → `Record<string, unknown>`.
+- **`useProgramManager.ts`** — `database.get('programs').create((p: any) => …)`
+  → `database.get<Program>('programs').create((p) => …)`.
+- **`navigation/index.tsx`** — `GlobalBackHandler` : `navigationRef: any` →
+  `NavigationContainerRef<RootStackParamList>` ; `TabNavigator` : `{ navigation }: any`
+  (prop inutilisée) → `_props: NativeStackScreenProps<RootStackParamList, 'MainTabs'>`.
+- **`SessionDetailScreen.tsx`** / **`WorkoutScreen.tsx`** — `navigation: any`
+  → `NativeStackNavigationProp<RootStackParamList>`.
+
+---
+
+## Récapitulatif des Commits — Passe 2
+
+| Hash | Type | Description |
+|------|------|-------------|
+| `88f37c1` | fix | Supprime le champ `username` orphelin absent du schéma dans `User` |
+| `0effd1a` | fix | `duplicateSession()` omettait la position sur la nouvelle séance |
+| `5a16ed1` | fix | Corrige les fuites de `setTimeout` dans `GlobalBackHandler` et `WorkoutSummarySheet` |
+| `bb7ec64` | chore | Supprime le code mort dans `AlertDialog`, `ExercisesScreen`, `HistoryList` |
+| `99b72b0` | style | Remplace les couleurs hardcodées par les tokens du thème dans les composants legacy |
+| `d7fd06d` | refactor | Remplace les types `any` par des types TypeScript explicites |
+
+---
+
+## [Non publié] — 2026-02-18 — Passe 1
 
 ### Bugs Critiques Corrigés
 
@@ -124,7 +237,7 @@ de thème centralisé défini dans `theme/index.ts`.
 
 ---
 
-## Récapitulatif des Commits
+## Récapitulatif des Commits — Passe 1
 
 | Hash | Type | Description |
 |------|------|-------------|
