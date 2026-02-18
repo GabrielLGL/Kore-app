@@ -76,14 +76,14 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
         .fetch()
 
       recentExercises.forEach(ex => {
-        if (ex.muscles) recentMuscles.push(...ex.muscles.split(',').map(m => m.trim()))
+        if (ex.muscles.length > 0) recentMuscles.push(...ex.muscles)
       })
     }
   }
 
   // 3. PRs depuis performance_logs
   const prs: Record<string, number> = {}
-  const perfLogs = await database.get('performance_logs').query().fetch() as Array<{
+  const perfLogs = (await database.get('performance_logs').query().fetch()) as unknown as Array<{
     exercise: { id: string }
     weight: number
   }>

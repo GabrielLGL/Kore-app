@@ -1,7 +1,7 @@
 // Importation de React et des hooks nécessaires
 import React, { useState, useEffect, useRef } from 'react'
 // Importation des outils de navigation de React Navigation
-import { NavigationContainer, DarkTheme, NavigationContainerRef } from '@react-navigation/native'
+import { NavigationContainer, DarkTheme, NavigationContainerRefWithCurrent } from '@react-navigation/native'
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 // Importation des composants et utilitaires React Native
@@ -41,7 +41,7 @@ export type MainTabParamList = {
 
 // Création des navigateurs Stack (empilement) et Tab (onglets du bas)
 const Stack = createNativeStackNavigator<RootStackParamList>()
-const Tab = createBottomTabNavigator()
+const Tab = createBottomTabNavigator<MainTabParamList>()
 
 // Configuration du thème sombre personnalisé pour l'application
 const MyDarkTheme = {
@@ -60,7 +60,7 @@ const MyDarkTheme = {
  * Composant responsable de gérer le bouton retour matériel sur Android.
  * Il assure que l'utilisateur repasse par l'accueil avant de quitter.
  */
-function GlobalBackHandler({ navigationRef }: { navigationRef: NavigationContainerRef<RootStackParamList> }) {
+function GlobalBackHandler({ navigationRef }: { navigationRef: NavigationContainerRefWithCurrent<RootStackParamList> }) {
   const backPressRef = useRef(0); // Compteur pour le double clic pour quitter
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -73,7 +73,8 @@ function GlobalBackHandler({ navigationRef }: { navigationRef: NavigationContain
       if (!currentRoute) return false;
 
       // On vérifie si l'utilisateur est sur l'onglet 'Home' (Prog)
-      const isHome = currentRoute.name === 'Home';
+      // getCurrentRoute() remonte la route la plus profonde (onglet), pas la route racine du stack
+      const isHome = (currentRoute.name as string) === 'Home';
 
       if (isHome) {
         // DÉJÀ SUR ACCUEIL -> Logique de double clic pour quitter l'application
@@ -203,7 +204,7 @@ function TabNavigator(_props: NativeStackScreenProps<RootStackParamList, 'MainTa
  * Contient les onglets et les écrans de détail profonds.
  */
 export default function AppNavigator() {
-  const navigationRef = useNavigationContainerRef(); // Référence globale pour le GlobalBackHandler
+  const navigationRef = useNavigationContainerRef<RootStackParamList>(); // Référence globale pour le GlobalBackHandler
 
   return (
     // --- ERROR BOUNDARY : Capture les erreurs non gérées pour éviter l'écran blanc ---
