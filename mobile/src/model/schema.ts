@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 14, // <--- ON PASSE EN VERSION 14
+  version: 16, // <--- ON PASSE EN VERSION 16 (ajout ai_provider + ai_api_key)
   tables: [
     tableSchema({
       name: 'programs',
@@ -62,7 +62,10 @@ export const mySchema = appSchema({
         columns: [
             {name: 'email', type: 'string'},
             {name: 'timer_enabled', type: 'boolean'},
-            {name: 'rest_duration', type: 'number'}, // <--- NOUVELLE COLONNE POUR LA DURÉE
+            {name: 'rest_duration', type: 'number'},
+            {name: 'onboarding_completed', type: 'boolean'},
+            {name: 'ai_provider', type: 'string', isOptional: true},
+            {name: 'ai_api_key', type: 'string', isOptional: true},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
         ]
