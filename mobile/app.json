@@ -34,7 +34,8 @@
           }
         }
       ],
-      "@sentry/react-native/expo"
+      "@sentry/react-native/expo",
+      "expo-notifications"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
