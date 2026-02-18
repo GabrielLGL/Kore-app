@@ -91,6 +91,37 @@ export function validateWorkoutInput(
 }
 
 /**
+ * Valide les inputs d'une serie en seance en direct (poids + reps reels)
+ *
+ * @param weight - Poids saisi (string) - doit etre >= 0
+ * @param reps - Repetitions saisies (string) - doit etre un entier >= 1
+ * @returns { valid, errors }
+ *
+ * @example
+ * const { valid } = validateSetInput('80', '10')   // true
+ * const { valid } = validateSetInput('-5', '10')   // false (poids negatif)
+ * const { valid } = validateSetInput('80', '0')    // false (reps < 1)
+ */
+export function validateSetInput(
+  weight: string,
+  reps: string
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  const weightNum = Number(weight)
+  if (weight.trim() === '' || isNaN(weightNum) || weightNum < 0) {
+    errors.push('Le poids doit être un nombre valide (>= 0)')
+  }
+
+  const repsNum = Number(reps)
+  if (reps.trim() === '' || isNaN(repsNum) || repsNum < 1) {
+    errors.push('Les répétitions doivent être >= 1')
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+/**
  * Valide qu'au moins un muscle est sélectionné
  *
  * @param muscles - Tableau de muscles sélectionnés
