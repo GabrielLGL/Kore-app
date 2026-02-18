@@ -141,6 +141,16 @@ const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, user
       <View style={styles.footerContainer}>
         {showRestTimer && ( <RestTimer duration={user?.restDuration ?? 90} onClose={() => setShowRestTimer(false)} /> )}
         <TouchableOpacity
+          style={[styles.launchButton, sessionExercises.length === 0 && { opacity: 0.4 }]}
+          onPress={() => {
+            haptics.onPress()
+            navigation.navigate('Workout', { sessionId: session.id })
+          }}
+          disabled={sessionExercises.length === 0}
+        >
+          <Text style={styles.launchButtonText}>▶ LANCER L'ENTRAINEMENT</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
             haptics.onPress()
@@ -208,15 +218,15 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.placeholder, textAlign: 'center', marginTop: 50, fontSize: 16, fontStyle: 'italic' },
 
   footerContainer: { paddingHorizontal: 20, paddingBottom: 30, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.card },
+  launchButton: { backgroundColor: colors.primary, padding: 18, borderRadius: 12, alignItems: 'center', marginBottom: 10 },
+  launchButtonText: { color: colors.text, fontWeight: 'bold', fontSize: 14 },
   addButton: { backgroundColor: colors.cardSecondary, padding: 18, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   addButtonText: { color: colors.primary, fontWeight: 'bold', fontSize: 14 },
 
   // Modal Edit Styles
-  modalButton: { flex: 0.48, padding: 12, borderRadius: 8, alignItems: 'center' },
   confirmBtn: { flex: 0.48, backgroundColor: colors.primary, padding: 12, borderRadius: 8, alignItems: 'center' },
   cancelBtn: { flex: 0.48, backgroundColor: colors.secondaryButton, padding: 12, borderRadius: 8, alignItems: 'center' },
   btnText: { color: colors.text, fontWeight: 'bold' },
-  alertMessage: { color: colors.textSecondary, textAlign: 'center', marginBottom: 5, fontSize: 15 }
 })
 
 export default withObservables(['route'], ({ route }) => ({
