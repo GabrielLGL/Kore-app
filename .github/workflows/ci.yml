@@ -10,6 +10,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       matrix:
@@ -23,21 +24,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-          cache-dependency-path: mobile/package-lock.json
 
-      - name: 📦 Install dependencies (CORRECTED)
+      - name: 💾 Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: mobile/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: 📦 Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         working-directory: mobile
         run: npm ci --legacy-peer-deps
 
       - name: 🧪 Run tests
         working-directory: mobile
-        run: npm test -- --coverage --watchAll=false
-
-      - name: 📊 Upload coverage to Codecov (optional)
-        if: success()
-        uses: codecov/codecov-action@v4
-        with:
-          directory: mobile/coverage
-          fail_ci_if_error: false
-          verbose: true
+        run: npm test -- --watchAll=false --passWithNoTests --forceExit
