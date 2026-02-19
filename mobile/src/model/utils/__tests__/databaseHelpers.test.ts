@@ -10,6 +10,14 @@ import {
   getExerciseStatsFromSets,
   importPresetProgram,
   markOnboardingCompleted,
+  formatRelativeDate,
+  buildExerciseStatsFromData,
+  getMaxWeightForExercise,
+  completeWorkoutHistory,
+  updateHistoryNote,
+  createWorkoutHistory,
+  saveWorkoutSet,
+  getLastPerformanceForExercise,
 } from '../databaseHelpers'
 import { database } from '../../index'
 import Exercise from '../../models/Exercise'
@@ -433,6 +441,371 @@ describe('databaseHelpers', () => {
       // 1 programme + 1 session seulement (pas de session_exercises)
       expect(mockBatch.mock.calls[0].length).toBe(2)
       warnSpy.mockRestore()
+    })
+  })
+
+  // ─── Pure functions ───────────────────────────────────────────────────────
+
+  describe('formatRelativeDate', () => {
+    it('should return "aujourd\'hui" for a date less than 24h ago', () => {
+      const now = new Date()
+      expect(formatRelativeDate(now)).toBe("aujourd'hui")
+    })
+
+    it('should return "aujourd\'hui" for a date 23h ago', () => {
+      const almostYesterday = new Date(Date.now() - 23 * 3600 * 1000)
+      expect(formatRelativeDate(almostYesterday)).toBe("aujourd'hui")
+    })
+
+    it('should return "hier" for a date 25h ago', () => {
+      const yesterday = new Date(Date.now() - 25 * 3600 * 1000)
+      expect(formatRelativeDate(yesterday)).toBe('hier')
+    })
+
+    it('should return "il y a N jours" for a date N days ago', () => {
+      const threeDaysAgo = new Date(Date.now() - 3 * 24 * 3600 * 1000)
+      expect(formatRelativeDate(threeDaysAgo)).toBe('il y a 3 jours')
+    })
+
+    it('should return "il y a 7 jours" for a week-old date', () => {
+      const weekAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000)
+      expect(formatRelativeDate(weekAgo)).toBe('il y a 7 jours')
+    })
+  })
+
+  describe('buildExerciseStatsFromData', () => {
+    const mkSet = (histId: string, w: number, r: number, order: number) => ({
+      id: `s-${histId}-${order}`,
+      history: { id: histId },
+      weight: w,
+      reps: r,
+      setOrder: order,
+    })
+    const mkHistory = (id: string, startTime: Date, sessId: string) => ({
+      id,
+      startTime,
+      session: { id: sessId },
+    })
+    const mkSession = (id: string, name: string) => ({ id, name })
+
+    it('should return empty array when sets is empty', () => {
+      expect(buildExerciseStatsFromData([], [], [])).toEqual([])
+    })
+
+    it('should build stat for a single history with multiple sets', () => {
+      const date = new Date('2024-03-01')
+      const sets = [mkSet('h1', 80, 8, 1), mkSet('h1', 85, 6, 2)]
+      const histories = [mkHistory('h1', date, 'sess1')]
+      const sessions = [mkSession('sess1', 'Push A')]
+
+      const stats = buildExerciseStatsFromData(
+        sets as any, histories as any, sessions as any
+      )
+
+      expect(stats).toHaveLength(1)
+      expect(stats[0].historyId).toBe('h1')
+      expect(stats[0].maxWeight).toBe(85)
+      expect(stats[0].sessionName).toBe('Push A')
+      expect(stats[0].startTime).toEqual(date)
+      expect(stats[0].sets).toHaveLength(2)
+    })
+
+    it('should sort sets by setOrder within a history', () => {
+      const sets = [mkSet('h1', 70, 6, 3), mkSet('h1', 80, 8, 1), mkSet('h1', 75, 7, 2)]
+      const histories = [mkHistory('h1', new Date(), 'sess1')]
+      const sessions = [mkSession('sess1', 'Leg Day')]
+
+      const stats = buildExerciseStatsFromData(sets as any, histories as any, sessions as any)
+
+      expect(stats[0].sets[0].setOrder).toBe(1)
+      expect(stats[0].sets[1].setOrder).toBe(2)
+      expect(stats[0].sets[2].setOrder).toBe(3)
+    })
+
+    it('should sort multiple histories by startTime ASC', () => {
+      const date1 = new Date('2024-01-01')
+      const date2 = new Date('2024-03-01')
+      const sets = [mkSet('h1', 60, 10, 1), mkSet('h2', 80, 8, 1)]
+      const histories = [mkHistory('h2', date2, 'sess1'), mkHistory('h1', date1, 'sess1')]
+      const sessions = [mkSession('sess1', 'Full Body')]
+
+      const stats = buildExerciseStatsFromData(sets as any, histories as any, sessions as any)
+
+      expect(stats).toHaveLength(2)
+      expect(stats[0].historyId).toBe('h1') // date1 comes first
+      expect(stats[1].historyId).toBe('h2')
+    })
+
+    it('should use empty sessionName when session is not found', () => {
+      const sets = [mkSet('h1', 60, 10, 1)]
+      const histories = [mkHistory('h1', new Date(), 'missing-sess')]
+      const sessions: ReturnType<typeof mkSession>[] = []
+
+      const stats = buildExerciseStatsFromData(sets as any, histories as any, sessions as any)
+
+      expect(stats[0].sessionName).toBe('')
+    })
+
+    it('should skip history entries that have no matching sets', () => {
+      const sets = [mkSet('h1', 60, 10, 1)]
+      const histories = [mkHistory('h1', new Date(), 'sess1'), mkHistory('h2', new Date(), 'sess1')]
+      const sessions = [mkSession('sess1', 'Test')]
+
+      const stats = buildExerciseStatsFromData(sets as any, histories as any, sessions as any)
+
+      expect(stats).toHaveLength(1) // h2 has no sets, skipped
+      expect(stats[0].historyId).toBe('h1')
+    })
+  })
+
+  // ─── DB-dependent functions ───────────────────────────────────────────────
+
+  describe('getMaxWeightForExercise', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should return 0 when no sets exist', async () => {
+      mockGet.mockReturnValue({
+        query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]) }),
+      })
+
+      const result = await getMaxWeightForExercise('exo-1', 'hist-exclude')
+      expect(result).toBe(0)
+    })
+
+    it('should return the maximum weight across all sets', async () => {
+      const mockSets = [{ weight: 60 }, { weight: 80 }, { weight: 70 }]
+      mockGet.mockReturnValue({
+        query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue(mockSets) }),
+      })
+
+      const result = await getMaxWeightForExercise('exo-1', 'hist-exclude')
+      expect(result).toBe(80)
+    })
+
+    it('should return the single set weight when only one set exists', async () => {
+      mockGet.mockReturnValue({
+        query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([{ weight: 55 }]) }),
+      })
+
+      const result = await getMaxWeightForExercise('exo-1', 'hist-exclude')
+      expect(result).toBe(55)
+    })
+  })
+
+  describe('completeWorkoutHistory', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should find history and update its endTime', async () => {
+      const endTimestamp = Date.now()
+      const captured: Record<string, unknown> = {}
+      const mockUpdate = jest.fn().mockImplementation(async (fn: (h: Record<string, unknown>) => void) => {
+        fn(captured)
+      })
+      const mockFind = jest.fn().mockResolvedValue({ update: mockUpdate })
+      const mockWrite = jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn())
+
+      ;(database as unknown as { write: jest.Mock }).write = mockWrite
+      mockGet.mockReturnValue({ find: mockFind })
+
+      await completeWorkoutHistory('hist-1', endTimestamp)
+
+      expect(mockFind).toHaveBeenCalledWith('hist-1')
+      expect(mockUpdate).toHaveBeenCalled()
+      expect(captured.endTime).toEqual(new Date(endTimestamp))
+    })
+  })
+
+  describe('updateHistoryNote', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should find history and update its note', async () => {
+      const captured: Record<string, unknown> = {}
+      const mockUpdate = jest.fn().mockImplementation(async (fn: (h: Record<string, unknown>) => void) => {
+        fn(captured)
+      })
+      const mockFind = jest.fn().mockResolvedValue({ update: mockUpdate })
+      const mockWrite = jest.fn().mockImplementation(async (fn: () => Promise<void>) => fn())
+
+      ;(database as unknown as { write: jest.Mock }).write = mockWrite
+      mockGet.mockReturnValue({ find: mockFind })
+
+      await updateHistoryNote('hist-1', 'Super séance !')
+
+      expect(mockFind).toHaveBeenCalledWith('hist-1')
+      expect(captured.note).toBe('Super séance !')
+    })
+  })
+
+  describe('createWorkoutHistory', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should create a history with correct startTime and session link', async () => {
+      const startTime = Date.now()
+      const mockSession = { id: 'sess-1' }
+      const mockHistoryRecord = { id: 'new-hist', session: { set: jest.fn() }, startTime: null }
+
+      const mockCreate = jest.fn().mockImplementation(async (fn: (r: typeof mockHistoryRecord) => void) => {
+        fn(mockHistoryRecord)
+        return mockHistoryRecord
+      })
+      const mockSessionFind = jest.fn().mockResolvedValue(mockSession)
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'sessions') return { find: mockSessionFind }
+        if (table === 'histories') return { create: mockCreate }
+        return {}
+      })
+
+      const mockWrite = jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn())
+      ;(database as unknown as { write: jest.Mock }).write = mockWrite
+
+      const result = await createWorkoutHistory('sess-1', startTime)
+
+      expect(mockSessionFind).toHaveBeenCalledWith('sess-1')
+      expect(mockCreate).toHaveBeenCalled()
+      expect(mockHistoryRecord.startTime).toEqual(new Date(startTime))
+      expect(result).toBe(mockHistoryRecord)
+    })
+
+    it('should use Date.now() as default startTime', async () => {
+      const before = Date.now()
+      const mockSession = { id: 'sess-1' }
+      const captured: Record<string, unknown> = { session: { set: jest.fn() } }
+
+      const mockCreate = jest.fn().mockImplementation(async (fn: (r: Record<string, unknown>) => void) => {
+        fn(captured)
+        return captured
+      })
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'sessions') return { find: jest.fn().mockResolvedValue(mockSession) }
+        if (table === 'histories') return { create: mockCreate }
+        return {}
+      })
+
+      const mockWrite = jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn())
+      ;(database as unknown as { write: jest.Mock }).write = mockWrite
+
+      await createWorkoutHistory('sess-1')
+      const after = Date.now()
+
+      const capturedTime = (captured.startTime as Date).getTime()
+      expect(capturedTime).toBeGreaterThanOrEqual(before)
+      expect(capturedTime).toBeLessThanOrEqual(after)
+    })
+  })
+
+  describe('saveWorkoutSet', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should create a set with all correct fields', async () => {
+      const mockHistory = { id: 'hist-1' }
+      const mockExercise = { id: 'exo-1' }
+      const captured: Record<string, unknown> = {
+        history: { set: jest.fn() },
+        exercise: { set: jest.fn() },
+      }
+
+      const mockCreate = jest.fn().mockImplementation(async (fn: (r: typeof captured) => void) => {
+        fn(captured)
+        return captured
+      })
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'histories') return { find: jest.fn().mockResolvedValue(mockHistory) }
+        if (table === 'exercises') return { find: jest.fn().mockResolvedValue(mockExercise) }
+        if (table === 'sets') return { create: mockCreate }
+        return {}
+      })
+
+      const mockWrite = jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn())
+      ;(database as unknown as { write: jest.Mock }).write = mockWrite
+
+      await saveWorkoutSet({
+        historyId: 'hist-1',
+        exerciseId: 'exo-1',
+        weight: 80,
+        reps: 10,
+        setOrder: 2,
+        isPr: true,
+      })
+
+      expect(mockCreate).toHaveBeenCalled()
+      expect(captured.weight).toBe(80)
+      expect(captured.reps).toBe(10)
+      expect(captured.setOrder).toBe(2)
+      expect(captured.isPr).toBe(true)
+    })
+  })
+
+  describe('getLastPerformanceForExercise', () => {
+    afterEach(() => mockGet.mockReset())
+
+    it('should return null when no sets exist', async () => {
+      mockGet.mockReturnValue({
+        query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]) }),
+      })
+
+      const result = await getLastPerformanceForExercise('exo-1', 'hist-exclude')
+      expect(result).toBeNull()
+    })
+
+    it('should return performance stats for the most recent history', async () => {
+      const date1 = new Date('2024-01-01')
+      const date2 = new Date('2024-02-01') // most recent
+
+      const mockSets = [
+        { id: 's1', history: { id: 'h1' }, weight: 60, reps: 10 },
+        { id: 's2', history: { id: 'h2' }, weight: 80, reps: 8 },
+        { id: 's3', history: { id: 'h2' }, weight: 85, reps: 6 },
+      ]
+      const hist1 = { id: 'h1', startTime: date1 }
+      const hist2 = { id: 'h2', startTime: date2 }
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'sets') {
+          return { query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue(mockSets) }) }
+        }
+        if (table === 'histories') {
+          return { find: jest.fn().mockImplementation((id: string) => {
+            return Promise.resolve(id === 'h1' ? hist1 : hist2)
+          })}
+        }
+        return {}
+      })
+
+      const result = await getLastPerformanceForExercise('exo-1', 'hist-exclude')
+
+      expect(result).not.toBeNull()
+      expect(result!.maxWeight).toBe(85) // max of h2 sets
+      expect(result!.setsCount).toBe(2) // 2 sets in h2
+      expect(result!.avgReps).toBe(7) // (8 + 6) / 2 = 7
+      expect(result!.date).toEqual(date2)
+    })
+
+    it('should return null when sets exist but histories fetch returns empty', async () => {
+      // This simulates a case where sets exist but their histories are all null/not found
+      // In practice this means recentSets would be empty
+      const mockSets = [
+        { id: 's1', history: { id: 'h1' }, weight: 60, reps: 10 },
+      ]
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'sets') {
+          return { query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue(mockSets) }) }
+        }
+        if (table === 'histories') {
+          // find returns a history but its id doesn't match any set's history.id
+          // after sort, recentSets filter would be empty if mostRecent.id != any set's history.id
+          const fakeHistory = { id: 'h-other', startTime: new Date() }
+          return { find: jest.fn().mockResolvedValue(fakeHistory) }
+        }
+        return {}
+      })
+
+      const result = await getLastPerformanceForExercise('exo-1', 'hist-exclude')
+      // recentSets would be empty (no sets have history.id === 'h-other')
+      expect(result).toBeNull()
     })
   })
 

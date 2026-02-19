@@ -2,6 +2,7 @@ import {
   isValidText,
   isValidNumeric,
   validateWorkoutInput,
+  validateSetInput,
   validateMuscles,
   validateExerciseInput,
 } from '../validationHelpers'
@@ -117,6 +118,65 @@ describe('validationHelpers', () => {
 
     it('should return false for empty muscle array', () => {
       expect(validateMuscles([])).toBe(false)
+    })
+  })
+
+  describe('validateSetInput', () => {
+    it('should accept valid weight and reps', () => {
+      const result = validateSetInput('80', '10')
+      expect(result.valid).toBe(true)
+      expect(result.errors).toEqual([])
+    })
+
+    it('should accept zero weight (bodyweight exercises)', () => {
+      expect(validateSetInput('0', '10').valid).toBe(true)
+    })
+
+    it('should accept decimal weight', () => {
+      expect(validateSetInput('22.5', '8').valid).toBe(true)
+    })
+
+    it('should reject empty weight', () => {
+      const result = validateSetInput('', '10')
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContain('Le poids doit être un nombre valide (>= 0)')
+    })
+
+    it('should reject negative weight', () => {
+      const result = validateSetInput('-5', '10')
+      expect(result.valid).toBe(false)
+    })
+
+    it('should reject non-numeric weight', () => {
+      expect(validateSetInput('abc', '10').valid).toBe(false)
+    })
+
+    it('should reject whitespace-only weight', () => {
+      expect(validateSetInput('   ', '10').valid).toBe(false)
+    })
+
+    it('should reject empty reps', () => {
+      const result = validateSetInput('80', '')
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContain('Les répétitions doivent être >= 1')
+    })
+
+    it('should reject zero reps', () => {
+      expect(validateSetInput('80', '0').valid).toBe(false)
+    })
+
+    it('should reject negative reps', () => {
+      expect(validateSetInput('80', '-1').valid).toBe(false)
+    })
+
+    it('should reject non-numeric reps', () => {
+      expect(validateSetInput('80', 'ten').valid).toBe(false)
+    })
+
+    it('should accumulate errors for both invalid weight and reps', () => {
+      const result = validateSetInput('', '')
+      expect(result.valid).toBe(false)
+      expect(result.errors.length).toBe(2)
     })
   })
 
