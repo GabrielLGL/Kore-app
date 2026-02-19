@@ -1,5 +1,7 @@
 module.exports = {
   preset: 'jest-expo',
+  cacheDirectory: '/tmp/jest-cache',
+  maxWorkers: 1,
 
   // Setup files
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
