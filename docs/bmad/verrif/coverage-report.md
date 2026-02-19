@@ -192,3 +192,56 @@ Pour atteindre 50%+ global, les pistes les plus rentables :
 - **sentry.ts** : Les branches liées à `__DEV__ = false` ne peuvent pas être testées car Jest/jest-expo fixe `__DEV__ = true` au runtime. Seuls les chemins avec `__DEV__ = true` sont couverts.
 - **SessionItem.tsx** : Composant interne testé via un wrapper pur (sans `withObservables`) pour éviter la dépendance à WatermelonDB en tests.
 - **WorkoutSummarySheet.tsx** : Tests complets incluant le debounce de sauvegarde de note et le flush à la fermeture.
+
+---
+
+## Run P6 — 2026-02-19 (session test-coverage)
+
+| Métrique   | Avant (P5) | Après (P6) | Delta  |
+|------------|------------|------------|--------|
+| Statements | 60.70%     | 68.39%     | +7.69% |
+| Branches   | 54.14%     | 58.87%     | +4.73% |
+| Functions  | 52.81%     | 59.96%     | +7.15% |
+| Lines      | 61.72%     | 70.19%     | +8.47% |
+
+**616 → 617 tests, 33 → 39 suites** — tous passent.
+
+### Fichiers ajoutés/modifiés
+
+| Fichier | Action | Tests ajoutés |
+|---------|--------|---------------|
+| `screens/WorkoutScreen.tsx` | Export `WorkoutContent` | — |
+| `screens/SessionDetailScreen.tsx` | Export `SessionDetailContent` | — |
+| `screens/__tests__/WorkoutScreen.test.tsx` | Créé | 10 |
+| `screens/__tests__/SessionDetailScreen.test.tsx` | Créé | 11 |
+| `model/models/__tests__/models.test.ts` | Créé | 29 |
+| `components/__tests__/SetItem.test.tsx` | Créé | 9 |
+| `components/__tests__/SessionExerciseItem.test.tsx` | Créé | 11 |
+| `components/__tests__/WorkoutExerciseCard.test.tsx` | Créé | 13 |
+
+**Total : 83 nouveaux tests** — 6 fichiers créés, 2 fichiers source modifiés (export nommé uniquement)
+
+### Couverture par fichier clé — état final P6
+
+| Fichier                                | Statements | Branches | Functions | Lines  |
+|----------------------------------------|------------|----------|-----------|--------|
+| `screens/WorkoutScreen.tsx`            | 65.06%     | 17.85%   | 53.57%    | 70.66% |
+| `screens/SessionDetailScreen.tsx`      | 48.48%     | 29.16%   | 37.5%     | 50.84% |
+| `model/models/Exercise.ts`             | 46.15%     | 100%     | 33.33%    | 46.15% |
+| `model/models/History.ts`              | 100%       | 100%     | 100%      | 100%   |
+| `model/models/PerformanceLog.ts`       | 100%       | 100%     | 100%      | 100%   |
+| `model/models/Program.ts`              | 8%         | 0%       | 0%        | 8%     |
+| `model/models/Session.ts`              | 100%       | 100%     | 100%      | 100%   |
+| `model/models/SessionExercise.ts`      | 100%       | 100%     | 100%      | 100%   |
+| `model/models/Set.ts`                  | 100%       | 100%     | 100%      | 100%   |
+| `model/models/User.ts`                 | 100%       | 100%     | 100%      | 100%   |
+| `components/SetItem.tsx`               | 80%        | 100%     | 50%       | 100%   |
+| `components/SessionExerciseItem.tsx`   | 88.23%     | 84.21%   | 75%       | 92.85% |
+| `components/WorkoutExerciseCard.tsx`   | 70.58%     | 73.07%   | 55.55%    | 69.69% |
+
+### Notes techniques P6
+
+- **WorkoutContent** : Tests limités aux interactions UI accessibles. La couverture de branches reste basse (17.85%) car les handlers async (abandon, navigation post-résumé, back Android) nécessitent des mocks plus profonds du système de navigation.
+- **SessionDetailContent** : Branches non couvertes concentrées sur `handleAddExercise` (logique après picker) et `handleUpdateTargets` (modale edit) — leur logique réelle est dans `useSessionManager` déjà couvert à 100%.
+- **Program.ts** : La méthode `duplicate()` n'est pas couverte (8%) car elle nécessite un vrai contexte de base de données WatermelonDB. La structure de la classe elle-même (table, associations) est vérifiée.
+- **Exercise.ts** : Couverture à 46% car `deleteAllAssociatedData()` (cascade delete) nécessite un contexte DB réel. Le getter/setter `muscles` est 100% couvert.
