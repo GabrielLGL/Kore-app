@@ -136,7 +136,7 @@ export async function testProviderConnection(
     goal: 'bodybuilding',
     level: 'débutant',
     equipment: [],
-    durationMin: 30,
+    durationMin: 45,
     muscleGroups: ['Pecs'],
   }
   await provider.generate(testForm, { exercises: [{ name: 'Développé couché', muscles: ['Pecs'] }], recentMuscles: [], prs: {} })

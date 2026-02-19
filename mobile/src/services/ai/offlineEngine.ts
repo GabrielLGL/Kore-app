@@ -35,10 +35,10 @@ const SETS_REPS: Record<string, { sets: number; reps: string }> = {
 
 // Nombre d'exercices par séance selon la durée
 function exercisesCount(durationMin: number): number {
-  if (durationMin <= 30) return 4
   if (durationMin <= 45) return 5
   if (durationMin <= 60) return 6
-  return 8
+  if (durationMin <= 90) return 8
+  return 10
 }
 
 // Groupes musculaires par split
@@ -53,6 +53,36 @@ const SPLITS: Record<string, string[][]> = {
     ['Dos', 'Biceps', 'Trapèzes'],
     ['Quadriceps', 'Ischios', 'Mollets', 'Abdos'],
   ],
+  brosplit: [
+    ['Pecs'],
+    ['Dos', 'Trapèzes'],
+    ['Epaules'],
+    ['Quadriceps', 'Ischios', 'Mollets'],
+    ['Biceps', 'Triceps'],
+  ],
+  arnold: [
+    ['Pecs', 'Dos'],
+    ['Epaules', 'Biceps', 'Triceps'],
+    ['Quadriceps', 'Ischios', 'Mollets', 'Abdos'],
+  ],
+  phul: [
+    ['Pecs', 'Dos', 'Epaules'],
+    ['Quadriceps', 'Ischios', 'Mollets'],
+    ['Pecs', 'Dos', 'Biceps', 'Triceps'],
+    ['Quadriceps', 'Ischios', 'Abdos'],
+  ],
+  fiveday: [
+    ['Pecs'],
+    ['Dos', 'Trapèzes'],
+    ['Epaules'],
+    ['Quadriceps', 'Ischios', 'Mollets'],
+    ['Biceps', 'Triceps', 'Abdos'],
+  ],
+  pushpull: [
+    ['Pecs', 'Epaules', 'Triceps'],
+    ['Dos', 'Biceps', 'Trapèzes'],
+  ],
+  fullbodyhi: [['Pecs', 'Dos', 'Quadriceps', 'Epaules', 'Ischios', 'Abdos']],
 }
 
 function getSplit(days: number): string[][] {
@@ -66,6 +96,12 @@ const SESSION_NAMES: Record<string, string[]> = {
   fullbody:   ['Full Body A', 'Full Body B', 'Full Body C', 'Full Body D', 'Full Body E', 'Full Body F'],
   upperlower: ['Upper Body', 'Lower Body', 'Upper Body B', 'Lower Body B', 'Upper Body C', 'Lower Body C'],
   ppl:        ['Push', 'Pull', 'Legs', 'Push B', 'Pull B', 'Legs B'],
+  brosplit:   ['Poitrine', 'Dos', 'Épaules', 'Jambes', 'Bras'],
+  arnold:     ['Poitrine & Dos', 'Épaules & Bras', 'Jambes', 'Poitrine & Dos B', 'Épaules & Bras B', 'Jambes B'],
+  phul:       ['Force Upper', 'Force Lower', 'Hypertrophie Upper', 'Hypertrophie Lower'],
+  fiveday:    ['Poitrine', 'Dos', 'Épaules', 'Jambes', 'Bras'],
+  pushpull:   ['Push', 'Pull', 'Push B', 'Pull B', 'Push C', 'Pull C'],
+  fullbodyhi: ['Full Body A', 'Full Body B', 'Full Body C', 'Full Body D', 'Full Body E', 'Full Body F'],
 }
 
 function getSplitName(days: number, split?: AISplit): string {
@@ -122,7 +158,7 @@ function buildSession(
 function generateProgram(form: AIFormData, context: DBContext): GeneratedPlan {
   const days = form.daysPerWeek ?? 3
   const splitName = getSplitName(days, form.split)
-  const splitGroups = getSplit(days)
+  const splitGroups = (form.split && form.split !== 'auto') ? SPLITS[splitName] : getSplit(days)
   const sessionNames = SESSION_NAMES[splitName]
   const count = exercisesCount(form.durationMin)
   const usedExercises = new Set<string>()

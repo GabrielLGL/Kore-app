@@ -57,7 +57,7 @@ const testForm: AIFormData = {
   goal: 'bodybuilding',
   level: 'débutant',
   equipment: [],
-  durationMin: 30,
+  durationMin: 45,
   muscleGroups: ['Pecs'],
 }
 

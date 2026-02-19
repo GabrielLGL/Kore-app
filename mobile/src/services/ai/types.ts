@@ -1,8 +1,8 @@
 export type AIGoal = 'bodybuilding' | 'power' | 'renfo' | 'cardio'
 export type AILevel = 'débutant' | 'intermédiaire' | 'avancé'
 export type AIProviderName = 'offline' | 'claude' | 'openai' | 'gemini'
-export type AIDuration = 30 | 45 | 60 | 90
-export type AISplit = 'auto' | 'fullbody' | 'upperlower' | 'ppl'
+export type AIDuration = 45 | 60 | 90 | 120
+export type AISplit = 'auto' | 'fullbody' | 'upperlower' | 'ppl' | 'brosplit' | 'arnold' | 'phul' | 'fiveday' | 'pushpull' | 'fullbodyhi'
 
 export interface AIFormData {
   mode: 'program' | 'session'

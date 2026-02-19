@@ -116,10 +116,10 @@ describe('offlineEngine', () => {
       expect(firstEx.repsTarget).toBe('15')
     })
 
-    it('nombre d\'exercices par séance selon durée 30min → 4', async () => {
-      const exercises = Array.from({ length: 10 }, (_, i) => `Ex${i}`)
-      const plan = await offlineEngine.generate(makeForm({ daysPerWeek: 1, durationMin: 30 }), makeContext(exercises))
-      expect(plan.sessions[0].exercises).toHaveLength(4)
+    it('nombre d\'exercices par séance selon durée 120min → 10', async () => {
+      const exercises = Array.from({ length: 15 }, (_, i) => `Ex${i}`)
+      const plan = await offlineEngine.generate(makeForm({ daysPerWeek: 1, durationMin: 120 }), makeContext(exercises))
+      expect(plan.sessions[0].exercises).toHaveLength(10)
     })
 
     it('nombre d\'exercices par séance selon durée 45min → 5', async () => {
@@ -183,7 +183,7 @@ describe('offlineEngine', () => {
         recentMuscles: [],
         prs: {},
       }
-      const plan = await offlineEngine.generate(makeForm({ daysPerWeek: 5, durationMin: 30 }), context)
+      const plan = await offlineEngine.generate(makeForm({ daysPerWeek: 5, durationMin: 45 }), context)
       // Session 0 = Push (split PPL ≥5 jours)
       expect(plan.sessions[0].name).toBe('Push')
       const pushNames = pushExercises.map(e => e.name)
@@ -198,7 +198,7 @@ describe('offlineEngine', () => {
         muscles: ['Quadriceps'],
       }))
       const context: DBContext = { exercises, recentMuscles: [], prs: {} }
-      const form = makeForm({ daysPerWeek: 1, durationMin: 30 })
+      const form = makeForm({ daysPerWeek: 1, durationMin: 45 })
 
       const mockRandom = jest.spyOn(Math, 'random')
 
@@ -246,7 +246,7 @@ describe('offlineEngine', () => {
     it('utilise les exercices du contexte pour la séance', async () => {
       const exercises = ['Développé couché', 'Écartés', 'Dips', 'Pec Deck', 'Câble croisé', 'Pompes']
       const plan = await offlineEngine.generate(
-        makeForm({ mode: 'session', muscleGroups: ['Pecs'], durationMin: 30 }),
+        makeForm({ mode: 'session', muscleGroups: ['Pecs'], durationMin: 45 }),
         makeContext(exercises)
       )
       const exNames = plan.sessions[0].exercises.map(e => e.exerciseName)
@@ -264,7 +264,7 @@ describe('offlineEngine', () => {
         goal: 'bodybuilding',
         level: 'intermédiaire',
         muscleGroups: ['Quadriceps'],
-        durationMin: 30,
+        durationMin: 45,
       })
       const plan = await offlineEngine.generate(form, context)
       const squat = plan.sessions[0].exercises.find(e => e.exerciseName === 'Squat')

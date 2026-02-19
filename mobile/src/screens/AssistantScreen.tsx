@@ -65,10 +65,10 @@ const LEVEL_OPTIONS: StepOption[] = [
 const EQUIPMENT_OPTIONS = ['Poids du corps', 'Haltères', 'Barre & disques', 'Machines']
 
 const DURATION_OPTIONS: StepOption[] = [
-  { value: 30, label: '30 min' },
   { value: 45, label: '45 min' },
   { value: 60, label: '60 min' },
   { value: 90, label: '90 min' },
+  { value: 120, label: '2h' },
 ]
 
 const DAYS_OPTIONS: StepOption[] = [
@@ -92,10 +92,16 @@ const MUSCLE_OPTIONS: StepOption[] = [
 ]
 
 const SPLIT_OPTIONS: StepOption[] = [
-  { value: 'auto',       label: 'Automatique',  sub: "L'IA choisit selon tes jours",  icon: '🔄' },
-  { value: 'fullbody',   label: 'Full Body',     sub: 'Tout le corps à chaque séance', icon: '💪' },
-  { value: 'upperlower', label: 'Upper / Lower', sub: 'Haut du corps / Bas du corps',  icon: '↕️' },
-  { value: 'ppl',        label: 'PPL',           sub: 'Push · Pull · Legs',            icon: '🔁' },
+  { value: 'auto',       label: 'Automatique',       sub: "L'IA choisit selon tes jours",              icon: '🔄' },
+  { value: 'fullbody',   label: 'Full Body',          sub: 'Tout le corps à chaque séance',             icon: '💪' },
+  { value: 'upperlower', label: 'Upper / Lower',      sub: 'Haut du corps / Bas du corps',              icon: '↕️' },
+  { value: 'ppl',        label: 'PPL',                sub: 'Push · Pull · Legs',                        icon: '🔁' },
+  { value: 'brosplit',   label: 'Bro Split',          sub: '1 groupe musculaire par séance',            icon: '🏋️' },
+  { value: 'arnold',     label: 'Arnold Split',       sub: 'Poitrine+Dos / Épaules+Bras / Jambes',      icon: '🦁' },
+  { value: 'phul',       label: 'PHUL',               sub: 'Force + Hypertrophie sur 4 jours',          icon: '⚡' },
+  { value: 'fiveday',    label: '5 Jours',            sub: 'Poitrine / Dos / Épaules / Jambes / Bras',  icon: '5️⃣' },
+  { value: 'pushpull',   label: 'Push / Pull',        sub: '2 jours alternés',                          icon: '↔️' },
+  { value: 'fullbodyhi', label: 'Full Body Intensif', sub: '3 séances haute intensité',                 icon: '🔥' },
 ]
 
 const MUSCLES_FOCUS_OPTIONS = ['Équilibré', 'Pecs', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Abdos']
