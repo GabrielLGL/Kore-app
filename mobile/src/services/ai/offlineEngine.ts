@@ -163,12 +163,14 @@ function generateProgram(form: AIFormData, context: DBContext): GeneratedPlan {
 function generateSession(form: AIFormData, context: DBContext): GeneratedPlan {
   const count = exercisesCount(form.durationMin)
   const usedExercises = new Set<string>()
-  const muscle = form.muscleGroup ?? 'Full Body'
-  const pool = context.exercises.length > 0 ? context.exercises : [{ name: muscle, muscles: [muscle] }]
-  const session = buildSession(`${muscle}`, pool, count, form.goal, form.level, usedExercises, context.prs)
+  const muscleLabel = form.muscleGroups && form.muscleGroups.length > 0
+    ? form.muscleGroups.join(' + ')
+    : 'Full Body'
+  const pool = context.exercises.length > 0 ? context.exercises : [{ name: muscleLabel, muscles: form.muscleGroups ?? ['Full Body'] }]
+  const session = buildSession(muscleLabel, pool, count, form.goal, form.level, usedExercises, context.prs)
 
   return {
-    name: `Séance ${muscle}`,
+    name: `Séance ${muscleLabel}`,
     sessions: [session],
   }
 }

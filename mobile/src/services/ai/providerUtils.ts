@@ -29,7 +29,7 @@ export function buildPrompt(form: AIFormData, context: DBContext): string {
           ? `Muscles prioritaires (plus de volume) : ${form.musclesFocus.join(', ')}.`
           : '',
       ].filter(Boolean).join('\n')
-    : `Groupe musculaire ciblé : ${form.muscleGroup ?? 'Full Body'}.`
+    : `Groupes musculaires ciblés : ${form.muscleGroups && form.muscleGroups.length > 0 ? form.muscleGroups.join(', ') : 'Full Body'}.`
 
   const GOAL_PROMPT: Record<string, string> = {
     bodybuilding: 'bodybuilding (hypertrophie, prise de masse musculaire)',

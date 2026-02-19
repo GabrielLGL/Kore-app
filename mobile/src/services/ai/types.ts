@@ -11,7 +11,7 @@ export interface AIFormData {
   equipment: string[]
   daysPerWeek?: number
   durationMin: AIDuration
-  muscleGroup?: string
+  muscleGroups?: string[]
   targetProgramId?: string
   split?: AISplit          // choix du split programme
   musclesFocus?: string[]  // [] = équilibré, sinon muscles prioritaires

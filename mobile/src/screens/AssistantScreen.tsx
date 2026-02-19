@@ -32,7 +32,7 @@ interface StepOption {
   icon?: string
 }
 
-type WizardStepKind = 'single' | 'multi' | 'programs' | 'multi-focus'
+type WizardStepKind = 'single' | 'multi' | 'programs' | 'multi-focus' | 'multi-muscle'
 
 interface WizardStep {
   id: string
@@ -119,7 +119,7 @@ function buildSteps(data: Partial<AIFormData>): WizardStep[] {
   ]
 
   if (data.mode === 'session') {
-    steps.push({ id: 'muscle',        field: 'muscleGroup',     question: 'Quel groupe musculaire ?', kind: 'single',   options: MUSCLE_OPTIONS })
+    steps.push({ id: 'muscle',        field: 'muscleGroups',    question: 'Quels groupes musculaires ?', kind: 'multi-muscle' })
     steps.push({ id: 'targetProgram', field: 'targetProgramId', question: 'Dans quel programme ?',   kind: 'programs'                           })
   } else {
     steps.push({ id: 'days', field: 'daysPerWeek', question: 'Combien de jours par semaine ?', kind: 'single', options: DAYS_OPTIONS })
@@ -155,7 +155,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
 
   // ── Wizard state ──────────────────────────────────────────────────────────
   const [currentStep, setCurrentStep]     = useState(0)
-  const [formData, setFormData]           = useState<Partial<AIFormData>>({ equipment: [], musclesFocus: [] })
+  const [formData, setFormData]           = useState<Partial<AIFormData>>({ equipment: [], musclesFocus: [], muscleGroups: [] })
   const [isGenerating, setIsGenerating]         = useState(false)
   const [generatedPlan, setGeneratedPlan]       = useState<GeneratedPlan | null>(null)
   const [isResetAlertVisible, setIsResetAlertVisible] = useState(false)
@@ -187,7 +187,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
     useCallback(() => {
       // Reset wizard à l'étape 1
       setCurrentStep(0)
-      setFormData({ equipment: [], musclesFocus: [] })
+      setFormData({ equipment: [], musclesFocus: [], muscleGroups: [] })
       contentAnim.setValue(1)
       // Force re-render pour badge provider (bug WatermelonDB instance réutilisée)
       forceUpdate(n => n + 1)
@@ -268,6 +268,18 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
     })
   }, [haptics])
 
+  const toggleMuscleGroup = useCallback((muscle: string) => {
+    haptics.onSelect()
+    setFormData(prev => {
+      const current = prev.muscleGroups ?? []
+      const isSelected = current.includes(muscle)
+      return {
+        ...prev,
+        muscleGroups: isSelected ? current.filter(m => m !== muscle) : [...current, muscle],
+      }
+    })
+  }, [haptics])
+
   const handleEquipmentNext = useCallback(() => {
     haptics.onPress()
     const currentSteps = buildSteps(formData)
@@ -286,7 +298,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const handleReset = useCallback(() => {
     haptics.onDelete()
     setIsResetAlertVisible(false)
-    setFormData({ equipment: [], musclesFocus: [] })
+    setFormData({ equipment: [], musclesFocus: [], muscleGroups: [] })
     setCurrentStep(0)
     contentAnim.setValue(1)
   }, [haptics, contentAnim])
@@ -309,7 +321,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
     previewModal.close()
     setGeneratedPlan(null)
     setCurrentStep(0)
-    setFormData({ equipment: [], musclesFocus: [] })
+    setFormData({ equipment: [], musclesFocus: [], muscleGroups: [] })
   }, [previewModal])
 
   const handleValidate = useCallback(async (plan: GeneratedPlan) => {
@@ -320,7 +332,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
         await importGeneratedPlan(plan)
         previewModal.close()
         setCurrentStep(0)
-        setFormData({ equipment: [], musclesFocus: [] })
+        setFormData({ equipment: [], musclesFocus: [], muscleGroups: [] })
         setGeneratedPlan(null)
         contentAnim.setValue(1)
         navigation.navigate('Home')
@@ -330,7 +342,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
         const session = await importGeneratedSession(plan.sessions[0], currentTargetProgramId)
         previewModal.close()
         setCurrentStep(0)
-        setFormData({ equipment: [], musclesFocus: [] })
+        setFormData({ equipment: [], musclesFocus: [], muscleGroups: [] })
         setGeneratedPlan(null)
         contentAnim.setValue(1)
         ;(navigation.getParent() as NavigationProp<RootStackParamList> | undefined)
@@ -400,6 +412,38 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
           </View>
           <TouchableOpacity
             style={styles.nextBtn}
+            onPress={handleEquipmentNext}
+          >
+            <Text style={styles.nextBtnText}>Suivant →</Text>
+          </TouchableOpacity>
+        </View>
+      )
+    }
+
+    if (step.kind === 'multi-muscle') {
+      const selected = formData.muscleGroups ?? []
+      const hasSelection = selected.length > 0
+      return (
+        <View>
+          <View style={styles.chipsWrap}>
+            {MUSCLE_OPTIONS.map(opt => {
+              const isActive = selected.includes(String(opt.value))
+              return (
+                <TouchableOpacity
+                  key={String(opt.value)}
+                  style={[styles.chip, isActive && styles.chipActive]}
+                  onPress={() => toggleMuscleGroup(String(opt.value))}
+                >
+                  <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+          <TouchableOpacity
+            style={[styles.nextBtn, !hasSelection && styles.nextBtnDisabled]}
+            disabled={!hasSelection}
             onPress={handleEquipmentNext}
           >
             <Text style={styles.nextBtnText}>Suivant →</Text>

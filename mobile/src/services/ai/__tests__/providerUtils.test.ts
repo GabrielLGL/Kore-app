@@ -68,8 +68,8 @@ describe('buildPrompt', () => {
     expect(prompt).toContain('4')
   })
 
-  it('inclut muscleGroup pour mode session', () => {
-    const prompt = buildPrompt(makeForm({ mode: 'session', muscleGroup: 'Pecs' }), makeContext())
+  it('inclut muscleGroups pour mode session', () => {
+    const prompt = buildPrompt(makeForm({ mode: 'session', muscleGroups: ['Pecs'] }), makeContext())
     expect(prompt).toContain('Pecs')
   })
 

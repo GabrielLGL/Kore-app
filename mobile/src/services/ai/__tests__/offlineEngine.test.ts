@@ -221,7 +221,7 @@ describe('offlineEngine', () => {
   describe('generate — mode session', () => {
     it('génère exactement 1 séance', async () => {
       const plan = await offlineEngine.generate(
-        makeForm({ mode: 'session', muscleGroup: 'Pecs' }),
+        makeForm({ mode: 'session', muscleGroups: ['Pecs'] }),
         makeContext()
       )
       expect(plan.sessions).toHaveLength(1)
@@ -229,7 +229,7 @@ describe('offlineEngine', () => {
 
     it('le nom du plan contient le groupe musculaire', async () => {
       const plan = await offlineEngine.generate(
-        makeForm({ mode: 'session', muscleGroup: 'Dos' }),
+        makeForm({ mode: 'session', muscleGroups: ['Dos'] }),
         makeContext()
       )
       expect(plan.name).toContain('Dos')
@@ -246,7 +246,7 @@ describe('offlineEngine', () => {
     it('utilise les exercices du contexte pour la séance', async () => {
       const exercises = ['Développé couché', 'Écartés', 'Dips', 'Pec Deck', 'Câble croisé', 'Pompes']
       const plan = await offlineEngine.generate(
-        makeForm({ mode: 'session', muscleGroup: 'Pecs', durationMin: 30 }),
+        makeForm({ mode: 'session', muscleGroups: ['Pecs'], durationMin: 30 }),
         makeContext(exercises)
       )
       const exNames = plan.sessions[0].exercises.map(e => e.exerciseName)
@@ -263,7 +263,7 @@ describe('offlineEngine', () => {
         mode: 'session',
         goal: 'bodybuilding',
         level: 'intermédiaire',
-        muscleGroup: 'Quadriceps',
+        muscleGroups: ['Quadriceps'],
         durationMin: 30,
       })
       const plan = await offlineEngine.generate(form, context)

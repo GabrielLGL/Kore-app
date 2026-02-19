@@ -43,9 +43,9 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
       )
     : allExercises
 
-  // Filtre par groupe musculaire si mode séance
-  const byMuscle = form.muscleGroup
-    ? filtered.filter(ex => !ex.muscles || ex.muscles.includes(form.muscleGroup!))
+  // Filtre par groupes musculaires si mode séance
+  const byMuscle = form.muscleGroups && form.muscleGroups.length > 0
+    ? filtered.filter(ex => !ex.muscles || form.muscleGroups!.some(mg => ex.muscles.includes(mg)))
     : filtered
 
   const exerciseInfos = (byMuscle.length > 0 ? byMuscle : filtered).map(ex => ({ name: ex.name, muscles: ex.muscles ?? [] }))
@@ -137,7 +137,7 @@ export async function testProviderConnection(
     level: 'débutant',
     equipment: [],
     durationMin: 30,
-    muscleGroup: 'Pecs',
+    muscleGroups: ['Pecs'],
   }
   await provider.generate(testForm, { exercises: [{ name: 'Développé couché', muscles: ['Pecs'] }], recentMuscles: [], prs: {} })
 }

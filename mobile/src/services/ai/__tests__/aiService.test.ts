@@ -58,7 +58,7 @@ const testForm: AIFormData = {
   level: 'débutant',
   equipment: [],
   durationMin: 30,
-  muscleGroup: 'Pecs',
+  muscleGroups: ['Pecs'],
 }
 
 describe('aiService', () => {
