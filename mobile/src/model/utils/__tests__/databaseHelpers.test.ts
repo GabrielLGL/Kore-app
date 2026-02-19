@@ -18,6 +18,8 @@ import {
   createWorkoutHistory,
   saveWorkoutSet,
   getLastPerformanceForExercise,
+  importGeneratedPlan,
+  importGeneratedSession,
 } from '../databaseHelpers'
 import { database } from '../../index'
 import Exercise from '../../models/Exercise'
@@ -806,6 +808,341 @@ describe('databaseHelpers', () => {
       const result = await getLastPerformanceForExercise('exo-1', 'hist-exclude')
       // recentSets would be empty (no sets have history.id === 'h-other')
       expect(result).toBeNull()
+    })
+  })
+
+  describe('importGeneratedPlan', () => {
+    const mockBatch = jest.fn().mockResolvedValue(undefined)
+
+    const minimalPlan = {
+      name: 'Plan PPL IA',
+      sessions: [
+        {
+          name: 'Push',
+          exercises: [
+            { exerciseName: 'Développé Couché Barre', setsTarget: 3, repsTarget: '8-10', weightTarget: 60 },
+            { exerciseName: 'Exercice Inexistant IA', setsTarget: 2, repsTarget: '10', weightTarget: 0 },
+          ],
+        },
+        {
+          name: 'Pull',
+          exercises: [
+            { exerciseName: 'Tractions', setsTarget: 4, repsTarget: '6-8', weightTarget: 0 },
+          ],
+        },
+      ],
+    }
+
+    const mockExerciseCouche = { id: 'exo1', name: 'Développé Couché Barre' }
+    const mockExerciseTractions = { id: 'exo2', name: 'Tractions' }
+
+    beforeEach(() => {
+      mockBatch.mockClear()
+      ;(database as unknown as { batch: jest.Mock }).batch = mockBatch
+      ;(database as unknown as { write: jest.Mock }).write = jest.fn().mockImplementation(async (cb: () => Promise<void>) => cb())
+    })
+
+    afterEach(() => {
+      mockGet.mockReset()
+    })
+
+    it('importe un plan complet avec exercises existantes en batch unique', async () => {
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        return record
+      })
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          return {
+            query: jest.fn().mockReturnValue({
+              fetch: jest.fn().mockResolvedValue([mockExerciseCouche, mockExerciseTractions]),
+            }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]), fetchCount: jest.fn().mockResolvedValue(0) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      const result = await importGeneratedPlan(minimalPlan)
+
+      // database.batch doit avoir été appelé une seule fois
+      expect(mockBatch).toHaveBeenCalledTimes(1)
+      // Le résultat est le programme créé
+      expect(result).toBeDefined()
+    })
+
+    it('crée un exercice custom via prepareCreate pour les exercices introuvables', async () => {
+      const createdRecords: Record<string, unknown>[] = []
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          name: '',
+          isCustom: false,
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        createdRecords.push(record)
+        return record
+      })
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          // Aucun exercice connu en DB — tous seront créés custom
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]), fetchCount: jest.fn().mockResolvedValue(2) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      await importGeneratedPlan(minimalPlan)
+
+      // batch doit avoir été appelé
+      expect(mockBatch).toHaveBeenCalledTimes(1)
+      // Des records custom ont été créés (isCustom = true)
+      const customExercises = createdRecords.filter(r => r.isCustom === true)
+      expect(customExercises.length).toBeGreaterThan(0)
+    })
+
+    it('utilise la correspondance insensible à la casse pour trouver les exercices', async () => {
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          name: '',
+          isCustom: false,
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        return record
+      })
+
+      // Exercice en DB avec casse différente
+      const exerciceCaseDiff = { id: 'exo-case', name: 'développé couché barre' }
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([exerciceCaseDiff]) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]), fetchCount: jest.fn().mockResolvedValue(0) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      // Ne doit pas crasher — la correspondance lowercase trouve l'exercice
+      await expect(importGeneratedPlan({
+        name: 'Plan Test Casse',
+        sessions: [{
+          name: 'Séance Test',
+          exercises: [{ exerciseName: 'Développé Couché Barre', setsTarget: 3, repsTarget: '8', weightTarget: 60 }],
+        }],
+      })).resolves.toBeDefined()
+    })
+  })
+
+  describe('importGeneratedSession', () => {
+    const mockBatch = jest.fn().mockResolvedValue(undefined)
+
+    const genSession = {
+      name: 'Push IA',
+      exercises: [
+        { exerciseName: 'Développé Couché Barre', setsTarget: 3, repsTarget: '8-10', weightTarget: 60 },
+        { exerciseName: 'Exercice Custom Nouveau', setsTarget: 2, repsTarget: '12', weightTarget: 0 },
+      ],
+    }
+
+    beforeEach(() => {
+      mockBatch.mockClear()
+      ;(database as unknown as { batch: jest.Mock }).batch = mockBatch
+      ;(database as unknown as { write: jest.Mock }).write = jest.fn().mockImplementation(async (cb: () => Promise<void>) => cb())
+    })
+
+    afterEach(() => {
+      mockGet.mockReset()
+    })
+
+    it('importe une séance dans un programme existant en un seul batch', async () => {
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          name: '',
+          isCustom: false,
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        return record
+      })
+
+      const mockProgram = { id: 'prog-1', name: 'Mon Programme' }
+      const mockExercise = { id: 'exo1', name: 'Développé Couché Barre' }
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([mockExercise]) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return { find: jest.fn().mockResolvedValue(mockProgram) }
+        }
+        if (table === 'sessions') {
+          return {
+            query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(2) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      const result = await importGeneratedSession(genSession, 'prog-1')
+
+      expect(mockBatch).toHaveBeenCalledTimes(1)
+      expect(result).toBeDefined()
+    })
+
+    it('crée les exercices custom introuvables en DB lors de l\'import de séance', async () => {
+      const createdRecords: Record<string, unknown>[] = []
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          name: '',
+          isCustom: false,
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        createdRecords.push(record)
+        return record
+      })
+
+      const mockProgram = { id: 'prog-1' }
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([]) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return { find: jest.fn().mockResolvedValue(mockProgram) }
+        }
+        if (table === 'sessions') {
+          return {
+            query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(1) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      await importGeneratedSession(genSession, 'prog-1')
+
+      // Des exercices custom doivent avoir été créés
+      const customExercises = createdRecords.filter(r => r.isCustom === true)
+      expect(customExercises.length).toBeGreaterThan(0)
+    })
+
+    it('positionne la séance après les séances existantes (sessionCount)', async () => {
+      const capturedSessions: Record<string, unknown>[] = []
+      const mockPrepareCreate = jest.fn().mockImplementation(cb => {
+        const record: Record<string, unknown> = {
+          id: 'new-id',
+          name: '',
+          position: -1,
+          isCustom: false,
+          program: { set: jest.fn() },
+          session: { set: jest.fn() },
+          exercise: { set: jest.fn() },
+        }
+        cb(record)
+        capturedSessions.push(record)
+        return record
+      })
+
+      const mockProgram = { id: 'prog-1' }
+      const mockExercise = { id: 'exo1', name: 'Développé Couché Barre' }
+      const EXISTING_SESSION_COUNT = 3
+
+      mockGet.mockImplementation((table: string) => {
+        if (table === 'exercises') {
+          return {
+            query: jest.fn().mockReturnValue({ fetch: jest.fn().mockResolvedValue([mockExercise]) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        if (table === 'programs') {
+          return { find: jest.fn().mockResolvedValue(mockProgram) }
+        }
+        if (table === 'sessions') {
+          return {
+            query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(EXISTING_SESSION_COUNT) }),
+            prepareCreate: mockPrepareCreate,
+          }
+        }
+        return {
+          query: jest.fn().mockReturnValue({ fetchCount: jest.fn().mockResolvedValue(0) }),
+          prepareCreate: mockPrepareCreate,
+        }
+      })
+
+      await importGeneratedSession(
+        { name: 'Séance Simple', exercises: [{ exerciseName: 'Développé Couché Barre', setsTarget: 3, repsTarget: '8', weightTarget: 60 }] },
+        'prog-1'
+      )
+
+      // La première session créée doit avoir position = EXISTING_SESSION_COUNT
+      const sessionRecord = capturedSessions.find(r => r.name === 'Séance Simple')
+      expect(sessionRecord?.position).toBe(EXISTING_SESSION_COUNT)
     })
   })
 
