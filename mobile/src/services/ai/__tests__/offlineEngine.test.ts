@@ -3,7 +3,7 @@ import type { AIFormData, DBContext } from '../types'
 
 const makeForm = (overrides: Partial<AIFormData> = {}): AIFormData => ({
   mode: 'program',
-  goal: 'masse',
+  goal: 'bodybuilding',
   level: 'débutant',
   equipment: [],
   daysPerWeek: 3,
@@ -40,18 +40,18 @@ describe('offlineEngine', () => {
     })
 
     it('inclut le label objectif dans le nom du plan', async () => {
-      const plan = await offlineEngine.generate(makeForm({ goal: 'masse' }), makeContext())
-      expect(plan.name).toContain('Prise de masse')
+      const plan = await offlineEngine.generate(makeForm({ goal: 'bodybuilding' }), makeContext())
+      expect(plan.name).toContain('Bodybuilding')
     })
 
     it('inclut le label force dans le nom du plan', async () => {
-      const plan = await offlineEngine.generate(makeForm({ goal: 'force' }), makeContext())
-      expect(plan.name).toContain('Force')
+      const plan = await offlineEngine.generate(makeForm({ goal: 'power' }), makeContext())
+      expect(plan.name).toContain('Power')
     })
 
     it('inclut le label perte dans le nom du plan', async () => {
-      const plan = await offlineEngine.generate(makeForm({ goal: 'perte' }), makeContext())
-      expect(plan.name).toContain('Perte de poids')
+      const plan = await offlineEngine.generate(makeForm({ goal: 'renfo' }), makeContext())
+      expect(plan.name).toContain('Renfo')
     })
 
     it('inclut le label cardio dans le nom du plan', async () => {
@@ -94,15 +94,15 @@ describe('offlineEngine', () => {
 
     it('objectif force: 5 séries de 5 reps', async () => {
       const exercises = ['Squat', 'Développé couché', 'Tractions', 'Curl', 'Deadlift']
-      const plan = await offlineEngine.generate(makeForm({ goal: 'force', daysPerWeek: 1 }), makeContext(exercises))
+      const plan = await offlineEngine.generate(makeForm({ goal: 'power', daysPerWeek: 1 }), makeContext(exercises))
       const firstEx = plan.sessions[0].exercises[0]
       expect(firstEx.setsTarget).toBe(5)
       expect(firstEx.repsTarget).toBe('5')
     })
 
-    it('objectif perte: 3 séries de 12 reps', async () => {
+    it('objectif renfo: 3 séries de 12 reps', async () => {
       const exercises = ['Squat', 'Développé couché', 'Tractions', 'Curl', 'Deadlift']
-      const plan = await offlineEngine.generate(makeForm({ goal: 'perte', daysPerWeek: 1 }), makeContext(exercises))
+      const plan = await offlineEngine.generate(makeForm({ goal: 'renfo', daysPerWeek: 1 }), makeContext(exercises))
       const firstEx = plan.sessions[0].exercises[0]
       expect(firstEx.setsTarget).toBe(3)
       expect(firstEx.repsTarget).toBe('12')

@@ -16,6 +16,13 @@ export function buildPrompt(form: AIFormData, context: DBContext): string {
     ? `Jours par semaine : ${form.daysPerWeek ?? 3}.`
     : `Groupe musculaire ciblé : ${form.muscleGroup ?? 'Full Body'}.`
 
+  const GOAL_PROMPT: Record<string, string> = {
+    bodybuilding: 'bodybuilding (hypertrophie, prise de masse musculaire)',
+    power:        'force (entraînement de force, powerlifting)',
+    renfo:        'renforcement musculaire (tonification, endurance musculaire)',
+    cardio:       'cardio et endurance cardiovasculaire',
+  }
+
   return `Tu es un coach sportif expert. Génère un ${modeLabel} en JSON valide.
 
 FORMAT EXACT OBLIGATOIRE (réponds UNIQUEMENT avec ce JSON, sans texte autour, sans markdown) :
@@ -32,7 +39,7 @@ FORMAT EXACT OBLIGATOIRE (réponds UNIQUEMENT avec ce JSON, sans texte autour, s
 }
 
 CONTRAINTES :
-- Objectif : ${form.goal}
+- Objectif : ${GOAL_PROMPT[form.goal] ?? form.goal}
 - Niveau : ${form.level}
 - Durée par séance : ${form.durationMin} minutes
 - Équipement disponible : ${form.equipment.join(', ') || 'tous'}

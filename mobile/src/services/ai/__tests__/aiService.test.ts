@@ -54,7 +54,7 @@ import type { AIFormData } from '../types'
 
 const testForm: AIFormData = {
   mode: 'session',
-  goal: 'masse',
+  goal: 'bodybuilding',
   level: 'débutant',
   equipment: [],
   durationMin: 30,

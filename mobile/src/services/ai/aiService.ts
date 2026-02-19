@@ -133,7 +133,7 @@ export async function testProviderConnection(
 
   const testForm: AIFormData = {
     mode: 'session',
-    goal: 'masse',
+    goal: 'bodybuilding',
     level: 'débutant',
     equipment: [],
     durationMin: 30,

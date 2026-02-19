@@ -2,10 +2,10 @@ import type { AIProvider, AIFormData, DBContext, GeneratedPlan, GeneratedExercis
 
 // Séries × reps par objectif
 const SETS_REPS: Record<string, { sets: number; reps: string }> = {
-  masse:  { sets: 4, reps: '8'  },
-  force:  { sets: 5, reps: '5'  },
-  perte:  { sets: 3, reps: '12' },
-  cardio: { sets: 3, reps: '15' },
+  bodybuilding: { sets: 4, reps: '8'  },
+  power:        { sets: 5, reps: '5'  },
+  renfo:        { sets: 3, reps: '12' },
+  cardio:       { sets: 3, reps: '15' },
 }
 
 // Nombre d'exercices par séance selon la durée
@@ -57,7 +57,7 @@ function buildSession(
   goal: string,
   usedExercises: Set<string>
 ): GeneratedSession {
-  const { sets, reps } = SETS_REPS[goal] ?? SETS_REPS.masse
+  const { sets, reps } = SETS_REPS[goal] ?? SETS_REPS.bodybuilding
   const picked: GeneratedExercise[] = []
   const pool = availableExercises.filter(e => !usedExercises.has(e))
   const source = pool.length >= count ? pool : availableExercises
@@ -90,10 +90,10 @@ function generateProgram(form: AIFormData, context: DBContext): GeneratedPlan {
   }
 
   const goalLabels: Record<string, string> = {
-    masse:  'Prise de masse',
-    force:  'Force',
-    perte:  'Perte de poids',
-    cardio: 'Cardio',
+    bodybuilding: 'Bodybuilding',
+    power:        'Power',
+    renfo:        'Renfo',
+    cardio:       'Cardio',
   }
   const levelLabels: Record<string, string> = {
     'débutant':      'Débutant',

@@ -1,4 +1,4 @@
-export type AIGoal = 'masse' | 'force' | 'perte' | 'cardio'
+export type AIGoal = 'bodybuilding' | 'power' | 'renfo' | 'cardio'
 export type AILevel = 'débutant' | 'intermédiaire' | 'avancé'
 export type AIProviderName = 'offline' | 'claude' | 'openai' | 'gemini'
 export type AIDuration = 30 | 45 | 60 | 90

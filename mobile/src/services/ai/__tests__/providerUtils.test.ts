@@ -3,7 +3,7 @@ import type { AIFormData, DBContext } from '../types'
 
 const makeForm = (overrides: Partial<AIFormData> = {}): AIFormData => ({
   mode: 'program',
-  goal: 'masse',
+  goal: 'bodybuilding',
   level: 'débutant',
   equipment: ['Haltères', 'Barre & disques'],
   daysPerWeek: 3,
@@ -37,7 +37,7 @@ describe('buildPrompt', () => {
   })
 
   it('inclut l\'objectif dans le prompt', () => {
-    const prompt = buildPrompt(makeForm({ goal: 'force' }), makeContext())
+    const prompt = buildPrompt(makeForm({ goal: 'power' }), makeContext())
     expect(prompt).toContain('force')
   })
 
