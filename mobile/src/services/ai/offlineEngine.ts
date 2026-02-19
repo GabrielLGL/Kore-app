@@ -49,18 +49,6 @@ function getSplitName(days: number): string {
   return 'ppl'
 }
 
-// Filtre les exercices disponibles par groupe musculaire et équipement
-function filterByMuscleAndEquipment(
-  allExercises: string[],
-  muscles: string[],
-  equipment: string[]
-): string[] {
-  // Le moteur offline n'a que les noms — on retourne tous les exercices disponibles
-  // et on laisse le contexte DB faire le vrai filtrage
-  // En pratique : on retourne les exercices dans l'ordre tel quel (le contexte est déjà filtré)
-  return allExercises
-}
-
 // Construit une séance avec N exercices depuis la liste disponible
 function buildSession(
   name: string,

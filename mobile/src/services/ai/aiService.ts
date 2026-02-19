@@ -102,9 +102,9 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
   }
 }
 
-export async function generatePlan(form: AIFormData, user: User): Promise<GeneratedPlan> {
+export async function generatePlan(form: AIFormData, user: User | null): Promise<GeneratedPlan> {
   const context = await buildDBContext(form)
-  const provider = selectProvider(user.aiProvider, user.aiApiKey)
+  const provider = selectProvider(user?.aiProvider ?? null, user?.aiApiKey ?? null)
 
   try {
     return await provider.generate(form, context)

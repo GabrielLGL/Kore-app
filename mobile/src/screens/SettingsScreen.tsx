@@ -87,10 +87,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     setIsTesting(true)
     try {
       await testProviderConnection(aiProvider, aiApiKey.trim())
-      haptics.onMajorSuccess?.() ?? haptics.onSuccess()
+      haptics.onSuccess()
       Alert.alert('Connexion réussie ✅', `Le provider ${aiProvider} répond correctement.`)
     } catch (error) {
-      haptics.onError?.() ?? haptics.onDelete()
+      haptics.onDelete()
       Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}. Vérifie ta clé API.`)
     } finally {
       setIsTesting(false)

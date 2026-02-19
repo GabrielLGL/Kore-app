@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert,
 } from 'react-native'
+import { Q } from '@nozbe/watermelondb'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model'
 import { generatePlan } from '../services/ai/aiService'
@@ -106,7 +107,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
     }
 
     try {
-      const plan = await generatePlan(form, user ?? ({} as User))
+      const plan = await generatePlan(form, user)
       setGeneratedPlan(plan)
     } catch {
       previewModal.close()
@@ -321,14 +322,13 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
 
 // ─── withObservables — injecte programs ───────────────────────────────────────
 
-const AssistantScreenEnhanced = withObservables([], () => ({
+type ExternalProps = Omit<AssistantScreenInnerProps, 'programs'>
+
+const AssistantScreenEnhanced = withObservables<ExternalProps, { programs: Program[] }>([], () => ({
   programs: database.get<Program>('programs').query(),
-}))(AssistantScreenInner as any)
+}))(AssistantScreenInner)
 
 // ─── Export avec user récupéré via observable ──────────────────────────────
-
-import { useEffect } from 'react'
-import { Q } from '@nozbe/watermelondb'
 
 export default function AssistantScreen(props: BottomTabScreenProps<MainTabParamList, 'Assistant'>) {
   const [user, setUser] = React.useState<User | null>(null)
