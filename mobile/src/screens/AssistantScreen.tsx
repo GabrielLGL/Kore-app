@@ -17,6 +17,7 @@ import type Program from '../model/models/Program'
 import type User from '../model/models/User'
 import type { AIFormData, AIGoal, AILevel, AIDuration, AISplit, GeneratedPlan } from '../services/ai/types'
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
+import { useFocusEffect } from '@react-navigation/native'
 import type { NavigationProp } from '@react-navigation/native'
 import type { MainTabParamList, RootStackParamList } from '../navigation/index'
 
@@ -158,6 +159,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const [isGenerating, setIsGenerating]         = useState(false)
   const [generatedPlan, setGeneratedPlan]       = useState<GeneratedPlan | null>(null)
   const [isResetAlertVisible, setIsResetAlertVisible] = useState(false)
+  const [, forceUpdate] = useState(0)
 
   const progressAnim = useRef(new Animated.Value(0)).current
   const contentAnim  = useRef(new Animated.Value(1)).current
@@ -179,6 +181,18 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
       useNativeDriver: false,
     }).start()
   }, [currentStep, totalSteps, progressAnim])
+
+  // ── Reset au retour sur l'onglet (badge provider + étape 1) ─────────────
+  useFocusEffect(
+    useCallback(() => {
+      // Reset wizard à l'étape 1
+      setCurrentStep(0)
+      setFormData({ equipment: [], musclesFocus: [] })
+      contentAnim.setValue(1)
+      // Force re-render pour badge provider (bug WatermelonDB instance réutilisée)
+      forceUpdate(n => n + 1)
+    }, [contentAnim])
+  )
 
   // ── Transition fade entre étapes ─────────────────────────────────────────
   const goToStep = useCallback((nextIndex: number) => {
