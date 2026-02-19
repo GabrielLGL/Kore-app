@@ -90,6 +90,19 @@ describe('buildPrompt', () => {
     const prompt = buildPrompt(makeForm({ equipment: [] }), makeContext())
     expect(prompt).toContain('tous')
   })
+
+  it('inclut les directives sport science dans le prompt', () => {
+    const prompt = buildPrompt(makeForm(), makeContext())
+    expect(prompt).toContain('DIRECTIVES SPORT SCIENCE')
+  })
+
+  it('formate les PRs avec kg et indique le pourcentage recommandé', () => {
+    const context = makeContext({ prs: { 'Squat': 100, 'Développé couché': 80 } })
+    const prompt = buildPrompt(makeForm(), context)
+    expect(prompt).toContain('Squat: 100kg')
+    expect(prompt).toContain('Développé couché: 80kg')
+    expect(prompt).toContain('%')
+  })
 })
 
 describe('parseGeneratedPlan', () => {

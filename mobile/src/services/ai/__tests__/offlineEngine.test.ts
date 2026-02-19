@@ -167,6 +167,55 @@ describe('offlineEngine', () => {
       // Default 3 jours
       expect(plan.sessions).toHaveLength(3)
     })
+
+    it('doit filtrer les exercices par muscles du split PPL (session Push)', async () => {
+      const pushExercises: ExerciseInfo[] = [
+        { name: 'Développé couché', muscles: ['Pecs', 'Triceps', 'Epaules'] },
+        { name: 'Extension triceps', muscles: ['Triceps'] },
+        { name: 'Élévations latérales', muscles: ['Epaules'] },
+      ]
+      const pullExercises: ExerciseInfo[] = [
+        { name: 'Tractions', muscles: ['Dos', 'Biceps'] },
+        { name: 'Curl biceps', muscles: ['Biceps'] },
+      ]
+      const context: DBContext = {
+        exercises: [...pushExercises, ...pullExercises],
+        recentMuscles: [],
+        prs: {},
+      }
+      const plan = await offlineEngine.generate(makeForm({ daysPerWeek: 5, durationMin: 30 }), context)
+      // Session 0 = Push (split PPL ≥5 jours)
+      expect(plan.sessions[0].name).toBe('Push')
+      const pushNames = pushExercises.map(e => e.name)
+      plan.sessions[0].exercises.forEach(ex => {
+        expect(pushNames).toContain(ex.exerciseName)
+      })
+    })
+
+    it('doit retourner des exercices dans un ordre différent entre deux générations (shuffle)', async () => {
+      const exercises: ExerciseInfo[] = Array.from({ length: 10 }, (_, i) => ({
+        name: `Exercice${i}`,
+        muscles: ['Quadriceps'],
+      }))
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({ daysPerWeek: 1, durationMin: 30 })
+
+      const mockRandom = jest.spyOn(Math, 'random')
+
+      // rand=0 → shuffleArray déplace chaque élément à l'index 0 → [Ex1,Ex2,...,Ex9,Ex0]
+      mockRandom.mockReturnValue(0)
+      const plan1 = await offlineEngine.generate(form, context)
+
+      // rand≈1 → shuffleArray ne déplace aucun élément (j=i) → [Ex0,Ex1,...,Ex9]
+      mockRandom.mockReturnValue(0.9999)
+      const plan2 = await offlineEngine.generate(form, context)
+
+      mockRandom.mockRestore()
+
+      const names1 = plan1.sessions[0].exercises.map(e => e.exerciseName)
+      const names2 = plan2.sessions[0].exercises.map(e => e.exerciseName)
+      expect(names1).not.toEqual(names2)
+    })
   })
 
   describe('generate — mode session', () => {
@@ -202,6 +251,26 @@ describe('offlineEngine', () => {
       )
       const exNames = plan.sessions[0].exercises.map(e => e.exerciseName)
       expect(exNames.every(n => exercises.includes(n))).toBe(true)
+    })
+
+    it('doit calculer weightTarget depuis les PRs (bodybuilding + intermédiaire → 72% du PR)', async () => {
+      const context: DBContext = {
+        exercises: [{ name: 'Squat', muscles: ['Quadriceps', 'Ischios'] }],
+        recentMuscles: [],
+        prs: { 'Squat': 100 },
+      }
+      const form = makeForm({
+        mode: 'session',
+        goal: 'bodybuilding',
+        level: 'intermédiaire',
+        muscleGroup: 'Quadriceps',
+        durationMin: 30,
+      })
+      const plan = await offlineEngine.generate(form, context)
+      const squat = plan.sessions[0].exercises.find(e => e.exerciseName === 'Squat')
+      expect(squat).toBeDefined()
+      // bodybuilding + intermédiaire = 72% du PR → round(100 * 0.72 * 2) / 2 = 72
+      expect(squat?.weightTarget).toBe(72)
     })
   })
 })
