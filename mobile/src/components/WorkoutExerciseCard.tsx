@@ -21,6 +21,8 @@ interface WorkoutSetRowProps {
   onUpdateInput: (key: string, field: 'weight' | 'reps', value: string) => void
   onValidate: () => Promise<void>
   onUnvalidate: () => Promise<void>
+  weightTarget?: string
+  repsTarget?: string
 }
 
 interface WorkoutExerciseCardContentProps {
@@ -44,15 +46,23 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
   onUpdateInput,
   onValidate,
   onUnvalidate,
+  weightTarget,
+  repsTarget,
 }) => {
   if (validated) {
     return (
       <View style={[styles.setRow, styles.setRowValidated]}>
-        <Text style={styles.setLabel}>Série {setOrder}</Text>
+        <View style={styles.setNumberCircle}>
+          <Text style={styles.setNumberCircleText}>{setOrder}</Text>
+        </View>
         <Text style={styles.validatedText}>
           {validated.weight} kg × {validated.reps}
         </Text>
-        {validated.isPr && <Text style={styles.prBadge}>PR !</Text>}
+        {validated.isPr && (
+          <View style={styles.prChip}>
+            <Text style={styles.prBadge}>PR !</Text>
+          </View>
+        )}
         <Text style={styles.checkmark}>✓</Text>
         <TouchableOpacity onPress={onUnvalidate} style={styles.unvalidateBtn}>
           <Text style={styles.unvalidateBtnText}>↩</Text>
@@ -77,7 +87,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
           style={[styles.input, styles.inputWeight, weightError && styles.inputError]}
           value={input.weight}
           onChangeText={v => onUpdateInput(inputKey, 'weight', v)}
-          placeholder="0"
+          placeholder={weightTarget ?? '0'}
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"
           editable
@@ -90,7 +100,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
           style={[styles.input, styles.inputReps, repsError && styles.inputError]}
           value={input.reps}
           onChangeText={v => onUpdateInput(inputKey, 'reps', v)}
-          placeholder="0"
+          placeholder={repsTarget ?? '0'}
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"
           editable
@@ -125,10 +135,30 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   const haptics = useHaptics()
   const setsCount = sessionExercise.setsTarget ?? 0
   const setOrders = Array.from({ length: setsCount }, (_, i) => i + 1)
+  const completedCount = setOrders.filter(
+    i => validatedSets[`${sessionExercise.id}_${i}`]
+  ).length
+  const isComplete = completedCount === setsCount && setsCount > 0
+  const weightTargetStr =
+    sessionExercise.weightTarget != null
+      ? String(sessionExercise.weightTarget)
+      : undefined
 
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { borderLeftColor: isComplete ? colors.success : 'transparent' },
+      ]}
+    >
       <Text style={styles.exerciseName}>{exercise.name}</Text>
+      {sessionExercise.setsTarget != null && (
+        <Text style={styles.target}>
+          Objectif : {sessionExercise.setsTarget}×{' '}
+          {sessionExercise.repsTarget ?? '?'} reps @{' '}
+          {sessionExercise.weightTarget ?? '?'} kg
+        </Text>
+      )}
       <LastPerformanceBadge lastPerformance={lastPerformance} />
       {setsCount === 0 ? (
         <Text style={styles.noSetsText}>Aucune série définie.</Text>
@@ -146,6 +176,8 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
               input={input}
               validated={validated}
               onUpdateInput={onUpdateInput}
+              weightTarget={weightTargetStr}
+              repsTarget={sessionExercise.repsTarget}
               onValidate={async () => {
                 const { valid } = validateSetInput(input.weight, input.reps)
                 if (!valid) {
@@ -191,11 +223,17 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
+    borderLeftWidth: 3,
   },
   exerciseName: {
     color: colors.text,
     fontSize: fontSize.lg,
     fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  target: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
     marginBottom: spacing.sm,
   },
   noSetsText: {
@@ -220,6 +258,20 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.sm,
     width: 62,
+  },
+
+  // Validated set number circle
+  setNumberCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(52,199,89,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  setNumberCircleText: {
+    color: colors.success,
+    fontSize: fontSize.xs,
   },
 
   // Input group
@@ -259,7 +311,7 @@ const styles = StyleSheet.create({
     marginLeft: 'auto',
   },
   validateBtnDisabled: {
-    opacity: 0.35,
+    backgroundColor: colors.cardSecondary,
   },
   validateBtnText: {
     color: colors.text,
@@ -274,11 +326,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
+  prChip: {
+    backgroundColor: 'rgba(0,122,255,0.15)',
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
   prBadge: {
     color: colors.primary,
     fontSize: fontSize.xs,
     fontWeight: '800',
-    letterSpacing: 0.5,
   },
   checkmark: {
     color: colors.success,

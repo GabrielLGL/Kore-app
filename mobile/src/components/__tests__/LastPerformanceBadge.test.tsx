@@ -30,7 +30,7 @@ describe('LastPerformanceBadge', () => {
         <LastPerformanceBadge lastPerformance={null} />
       )
 
-      expect(getByText('Première fois sur cet exercice')).toBeTruthy()
+      expect(getByText('Première fois')).toBeTruthy()
     })
   })
 
@@ -41,9 +41,9 @@ describe('LastPerformanceBadge', () => {
         <LastPerformanceBadge lastPerformance={performance} />
       )
 
-      const text = getByText(/Dernière fois/)
+      // Le nouveau format affiche "↑ {setsCount}×{avgReps} @ {maxWeight} kg"
+      const text = getByText(/↑/)
       expect(text).toBeTruthy()
-      // children est un tableau mixte [string, number, ...], on vérifie la présence des valeurs
       const flatChildren = JSON.stringify(text.props.children)
       expect(flatChildren).toContain('3')
       expect(flatChildren).toContain('8')
@@ -85,7 +85,7 @@ describe('LastPerformanceBadge', () => {
       )
 
       // Le texte doit contenir le poids 0 et les reps
-      const text = getByText(/Dernière fois/)
+      const text = getByText(/↑/)
       expect(text).toBeTruthy()
     })
 
@@ -95,7 +95,7 @@ describe('LastPerformanceBadge', () => {
         <LastPerformanceBadge lastPerformance={performance} />
       )
 
-      const text = getByText(/Dernière fois/)
+      const text = getByText(/↑/)
       const flatChildren = JSON.stringify(text.props.children)
       expect(flatChildren).toContain('250')
     })

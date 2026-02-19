@@ -1,7 +1,7 @@
 import React from 'react'
-import { Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native'
 import { formatRelativeDate } from '../model/utils/databaseHelpers'
-import { colors, fontSize } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 import type { LastPerformance } from '../types/workout'
 
 interface LastPerformanceBadgeProps {
@@ -12,23 +12,51 @@ export const LastPerformanceBadge: React.FC<LastPerformanceBadgeProps> = ({
   lastPerformance,
 }) => {
   if (!lastPerformance) {
-    return <Text style={styles.text}>Première fois sur cet exercice</Text>
+    return (
+      <View style={styles.chip}>
+        <Text style={styles.firstTime}>Première fois</Text>
+      </View>
+    )
   }
 
   const { setsCount, avgReps, maxWeight, date } = lastPerformance
   return (
-    <Text style={styles.text}>
-      Dernière fois : {setsCount}x{avgReps} @ {maxWeight} kg —{' '}
-      {formatRelativeDate(date)}
-    </Text>
+    <View style={styles.chip}>
+      <Text style={styles.values}>
+        ↑ {setsCount}×{avgReps} @ {maxWeight} kg
+      </Text>
+      <Text style={styles.separator}>  •  </Text>
+      <Text style={styles.date}>{formatRelativeDate(date)}</Text>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  text: {
-    color: colors.textSecondary,
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardSecondary,
+    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.sm,
+  },
+  firstTime: {
+    color: colors.warning,
     fontSize: fontSize.xs,
     fontStyle: 'italic',
-    marginBottom: 6,
+  },
+  values: {
+    color: colors.text,
+    fontSize: fontSize.xs,
+  },
+  separator: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+  },
+  date: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
   },
 })
