@@ -17,6 +17,7 @@ import Program from '../model/models/Program'
 import Session from '../model/models/Session'
 import User from '../model/models/User'
 import ProgramSection from '../components/ProgramSection'
+import ProgramDetailBottomSheet from '../components/ProgramDetailBottomSheet'
 import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
 import { useHaptics } from '../hooks/useHaptics'
 import { useMultiModalSync } from '../hooks/useModalState'
@@ -75,6 +76,8 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   const [selectedSessionProgramId, setSelectedSessionProgramId] = useState<string | null>(null)
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [alertConfig, setAlertConfig] = useState({ title: '', message: '', onConfirm: async () => {} })
+  const [selectedProgramForDetail, setSelectedProgramForDetail] = useState<Program | null>(null)
+  const [isDetailVisible, setIsDetailVisible] = useState(false)
 
   // --- SYNCHRONISATION TAB BAR ---
   useMultiModalSync([
@@ -84,12 +87,17 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     isOptionsVisible,
     isSessionOptionsVisible,
     isAlertVisible,
+    isDetailVisible,
   ])
 
   // --- GESTION BOUTON RETOUR ANDROID ---
   useEffect(() => {
     const backAction = () => {
       // Si un BottomSheet est ouvert, le fermer au lieu de naviguer
+      if (isDetailVisible) {
+        setIsDetailVisible(false)
+        return true
+      }
       if (isOptionsVisible) {
         setIsOptionsVisible(false)
         return true // Consomme l'événement
@@ -103,7 +111,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
     return () => backHandler.remove()
-  }, [isOptionsVisible, isSessionOptionsVisible])
+  }, [isDetailVisible, isOptionsVisible, isSessionOptionsVisible])
 
   // --- ONBOARDING ---
 
@@ -162,33 +170,29 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     setIsSessionOptionsVisible(false)
   }
 
+  const handleProgramPress = useCallback((program: Program) => {
+    haptics.onPress()
+    setSelectedProgramForDetail(program)
+    setIsDetailVisible(true)
+  }, [haptics])
+
   const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<Program>) => (
     <ScaleDecorator>
       <View style={{ opacity: isActive ? 0.8 : 1 }}>
         <ProgramSection
           program={item}
           sessions={[]}
-          onOpenSession={(s: Session) => navigation.navigate('SessionDetail', { sessionId: s.id })}
+          onPress={() => handleProgramPress(item)}
           onLongPressProgram={drag}
-          onAddSession={() => {
-            setTargetProgram(item)
-            setIsSessionModalVisible(true)
-          }}
           onOptionsPress={() => {
             haptics.onSelect()
             setSelectedProgram(item)
             setIsOptionsVisible(true)
           }}
-          onSessionOptionsPress={(session: Session) => {
-            haptics.onSelect()
-            setSelectedSession(session)
-            setSelectedSessionProgramId(item.id)
-            setIsSessionOptionsVisible(true)
-          }}
         />
       </View>
     </ScaleDecorator>
-  ), [navigation, haptics])
+  ), [haptics, handleProgramPress])
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -315,6 +319,29 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             <Text style={styles.sheetOptionIcon}>🗑️</Text><Text style={[styles.sheetOptionText, { color: colors.danger }]}>Supprimer la Séance</Text>
           </TouchableOpacity>
         </BottomSheet>
+
+        {/* Détail Programme BottomSheet */}
+        <ProgramDetailBottomSheet
+          program={selectedProgramForDetail}
+          visible={isDetailVisible}
+          onClose={() => setIsDetailVisible(false)}
+          onOpenSession={(s: Session) => {
+            setIsDetailVisible(false)
+            navigation.navigate('SessionDetail', { sessionId: s.id })
+          }}
+          onAddSession={() => {
+            setIsDetailVisible(false)
+            if (selectedProgramForDetail) setTargetProgram(selectedProgramForDetail)
+            setIsSessionModalVisible(true)
+          }}
+          onSessionOptions={(session: Session) => {
+            setIsDetailVisible(false)
+            haptics.onSelect()
+            setSelectedSession(session)
+            setSelectedSessionProgramId(selectedProgramForDetail?.id ?? null)
+            setIsSessionOptionsVisible(true)
+          }}
+        />
 
         {/* Alerte Suppression Générique */}
         <AlertDialog
