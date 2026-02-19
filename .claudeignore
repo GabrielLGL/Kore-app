@@ -1,5 +1,12 @@
+@"
 # Node modules
-mobile/node_modules/
+node_modules/
+**/node_modules/
+
+# Lock files (gros volume de tokens)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Android build artifacts
 mobile/android/
@@ -14,11 +21,29 @@ mobile/.expo/
 mobile/dist/
 mobile/web-build/
 
+# Build & cache
+dist/
+build/
+*.tsbuildinfo
+
 # Test coverage
 mobile/coverage/
+coverage/
 
-# BMAD framework internals (templates, workflows)
+# BMAD framework internals
 _bmad/
+_bmad-output/
+
+# Assets binaires
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.pdf
+*.zip
+*.tar.gz
 
 # Logs & temp
 *.log
@@ -28,8 +53,13 @@ _bmad/
 # IDE
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# EAS / secrets
+# Git
+.git/
+
+# Secrets & EAS
 *.jks
 *.keystore
 key.json
@@ -38,3 +68,4 @@ key.json
 *.mobileprovision
 .env
 .env.*
+"@ | Set-Content .claudeignore

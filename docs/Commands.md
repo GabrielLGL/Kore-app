@@ -1,0 +1,182 @@
+# Guide des commandes — WEGOGYM
+
+## Aide rapide
+
+### `/plan`
+Affiche le workflow quotidien complet en un coup d'oeil. Le memo de toutes les commandes.
+
+---
+
+## Matin
+
+### `/morning`
+Briefing du matin. Résume l'état du projet en 2 min : dernier verrif, dernier push, état git, tests, TODOs, et propose un plan du jour avec priorités.
+
+---
+
+## Journée
+
+### `/task [description]`
+Tâche rapide. Pour tout ce qui n'est ni un bug ni une grosse feature : refactor, ajout d'un spinner, migration de couleurs, etc. Comprend → code → teste → commit.
+```
+/task refactor RestTimer en hook séparé
+/task ajouter loading spinner sur HomeScreen
+/task migrer les couleurs hardcodées de SettingsScreen
+```
+
+### `/fix [description du problème]`
+Correction ciblée d'un bug. Cherche dans les rapports verrif si le bug est documenté, corrige, vérifie, crée un test si besoin, commit.
+```
+/fix RestTimer fuite mémoire setTimeout
+/fix couleurs hardcodées dans SessionItem
+/fix useProgramManager mutation hors write()
+```
+
+### `/idee [description de l'idée]`
+Pipeline complet de l'idée au code déployé. 9 phases, toutes interactives sauf le dev :
+1. Brainstorming (cis-brainstorming-coach)
+2. Product Brief (bmm-analyst)
+3. PRD (bmm-pm)
+4. Validation PRD (bmm-pm)
+5. Architecture (bmm-architect)
+6. UX Design (bmm-ux-designer)
+7. Stories & Sprint (bmm-sm)
+8. Implémentation — autonome (bmm-dev)
+9. QA (bmm-qa)
+
+Tu valides chaque phase avant de passer à la suivante. Les stories sont sauvegardées dans `docs/stories/[nom-feature]/`.
+```
+/idee ajouter un système de notifications push pour les rappels d'entraînement
+/idee intégrer un mode social avec partage de programmes
+```
+
+### `/status`
+État du projet en 10 secondes. Ultra-concis : branche git, fichiers modifiés, build, tests, dernière action, chose la plus urgente. Max 6 lignes.
+
+### `/review`
+Review du code avant push. Analyse le git diff, vérifie bugs/qualité/perf/tests, donne un verdict : PUSH ou CORRIGE D'ABORD. Ne corrige rien, signale seulement.
+
+### `/doc [cible]`
+Génère ou met à jour la documentation.
+```
+/doc RestTimer           → JSDoc sur le composant
+/doc useProgramManager   → JSDoc sur le hook
+/doc claude              → met à jour CLAUDE.md
+/doc commands            → met à jour ce fichier
+/doc all                 → tout documenter d'un coup
+```
+
+### `/gitgo`
+Commit et push intelligent. Vérifie que rien de sensible est staged, lance build + tests, génère des commits atomiques par type (feat/fix/refactor), push, sauvegarde un rapport dans `docs/bmad/git-history/`.
+
+---
+
+## Soir / Nuit
+
+### `.\run-verrif.ps1 [-mode safe|full|scan]`
+Script autonome pour la nuit. Lance dans PowerShell avant de dormir.
+
+**3 modes :**
+- `-mode full` (défaut) — scan + corrections par niveaux + push si clean
+- `-mode safe` — scan + corrections critiques seulement + push si clean
+- `-mode scan` — scan seul, aucune correction, juste les rapports
+
+**Flow du mode full :**
+1. Désactive la mise en veille
+2. Scan 6 passes (build, tests, code review, bugs, WatermelonDB, qualité)
+3. Score de santé AVANT
+4. Corrections par niveaux avec rollback :
+   - Niveau 1 : Critiques (bugs, build, tests fail)
+   - Niveau 2 : Warnings (any, console.log, hardcoded)
+   - Niveau 3 : Suggestions (nommage, TODOs)
+   - Chaque niveau vérifié → rollback si ça casse
+5. Vérification finale
+6. Score de santé APRÈS
+7. Si CLEAN → commit & push. Si DIRTY → revert tout, aucun commit
+8. Réactive la mise en veille
+
+```powershell
+.\run-verrif.ps1              # mode full
+.\run-verrif.ps1 -mode safe   # critiques seulement
+.\run-verrif.ps1 -mode scan   # scan sans correction
+```
+
+### `/verrif`
+Même chose que le script mais en mode interactif dans Claude Code. 8 passes avec correction + push. Utilise quand t'es devant le PC.
+
+---
+
+## Reprise après /compact
+
+| Commande | Reprend quoi |
+|----------|-------------|
+| `/idee-continue` | Pipeline feature |
+| `/verrif-continue` | Vérification (lit STATUS.md pour voir les passes échouées) |
+| `/test-continue` | Couverture de tests |
+
+---
+
+## Qualité & tests
+
+### `/test-coverage`
+Augmente la couverture de tests par priorité :
+- P1 : Hooks critiques — 80%+ (useProgramManager, useSessionManager, useWorkoutState)
+- P2 : Utils & helpers — 90%+ (databaseHelpers, validationHelpers)
+- P3 : Hooks secondaires — 70%+
+- P4 : Composants avec logique — 60%+
+- P5 : Services — 50%+
+
+### Sous-commandes verrif (une seule passe)
+| Commande | Focus |
+|----------|-------|
+| `/verrif-build` | TypeScript |
+| `/verrif-tests` | Tests |
+| `/verrif-code-review` | Code review adversarial |
+| `/verrif-bugs` | Bugs silencieux |
+| `/verrif-db` | Cohérence WatermelonDB |
+| `/verrif-qualite` | Code mort & qualité |
+
+---
+
+## Rapports et historique
+
+```
+docs/bmad/
+├── verrif/
+│   ├── HEALTH.md                    ← Score de santé au fil du temps
+│   └── [YYYYMMDD-HHmm]/            ← Un dossier par run
+│       ├── 01-build.md
+│       ├── 02-tests.md
+│       ├── 03-code-review.md
+│       ├── 04-bugs-silencieux.md
+│       ├── 05-watermelondb.md
+│       ├── 06-qualite.md
+│       ├── 07-fix-niveau1.md
+│       ├── 07-fix-niveau2.md
+│       ├── 07-fix-niveau3.md
+│       ├── STATUS.md                ← Statut du run + instructions si échec
+│       └── RAPPORT.md
+├── git-history/
+│   └── [YYYYMMDD-HHmm]-verrif.md   ← Rapport de chaque push
+└── brainstorm.md, prd.md, etc.      ← Outputs /idee
+```
+
+---
+
+## Commandes BMAD conservées
+
+Agents appelés automatiquement par `/idee` et `/verrif` :
+
+| Agent | Rôle |
+|-------|------|
+| `cis-brainstorming-coach` | Brainstorming |
+| `bmm-analyst` | Analyse métier |
+| `bmm-pm` | Product Manager |
+| `bmm-architect` | Architecte |
+| `bmm-ux-designer` | UX Designer |
+| `bmm-sm` | Scrum Master |
+| `bmm-dev` | Développeur |
+| `bmm-qa` | QA |
+| `bmm-code-review` | Code Review |
+
+Pas besoin de les lancer directement.

@@ -11,7 +11,7 @@
 ## 2. Architecture & Data Flow
 - **Pattern:** Offline-first, Reactive.
 - **Data Access:** MUST use `withObservables` HOC from `@nozbe/with-observables`.
-- **Schema:** v14 (`mobile/src/model/schema.ts`).
+- **Schema:** v15 (`mobile/src/model/schema.ts`).
 - **Models:**
   - `Program` (1:N) `Session` (1:N) `SessionExercise`
   - `History` (Soft-delete `deleted_at`) -> `Set`
@@ -37,7 +37,7 @@ mobile/src/
 │   ├── utils/            # Database & validation utilities
 │   │   ├── databaseHelpers.ts    # getNextPosition, filterExercises, etc.
 │   │   └── validationHelpers.ts  # validateWorkoutInput, isValidText, etc.
-│   ├── schema.ts         # Database schema v14
+│   ├── schema.ts         # Database schema v15
 │   ├── index.ts          # Database initialization
 │   └── constants.ts      # MUSCLES_LIST, EQUIPMENT_LIST
 ├── navigation/           # React Navigation setup
@@ -60,6 +60,17 @@ mobile/src/
     - **Haptics:** Use `useHaptics()` hook - semantic API (`onPress`, `onDelete`, `onSuccess`, `onSelect`).
     - **Delete Confirmations:** Use `<AlertDialog>` component. Title "Supprimer [Name] ?", Cancel (#3A3A3C), Delete (#FF3B30).
 4.  **Inputs:** `keyboardType="numeric"` for performance data. Validate with `validationHelpers.ts` utilities.
+
+### 3.1 Known Pitfalls (from past audits)
+These are bugs that have been found and fixed before. **Never reintroduce them:**
+- **WatermelonDB mutations MUST be inside `database.write()`** — including `database.batch()`, `destroyPermanently()`, `create()`, `update()`.
+- **Every `setTimeout`/`setInterval` MUST have a cleanup** in useEffect return or via refs.
+- **Every `.subscribe()`/`.observe()` MUST have an unsubscribe** in useEffect cleanup.
+- **Schema ↔ Model sync** — every `@field`/`@text`/`@date` in a model MUST have a matching column in schema.ts and vice versa.
+- **No `any` in TypeScript** — use proper types, `Record<string, unknown>`, or type predicates.
+- **No `console.log`/`console.warn` in production** — guard with `__DEV__` or remove.
+- **No hardcoded colors** — always use `colors.*` from `theme/index.ts`.
+- **`duplicate()` methods** must copy ALL fields and child relations, not just create empty shells.
 
 ## 4. Reusable Components & Hooks
 
@@ -138,6 +149,7 @@ mobile/src/
   - `parseNumericInput(value, fallback)`: Parse string to number with fallback.
   - `filterExercises(exercises, muscle?, equipment?)`: Filter exercises by criteria.
   - `searchExercises(exercises, query)`: Search exercises by name.
+  - `buildExerciseStatsFromData(data)`: Build exercise stats (extracted DRY helper).
 
 - **`validationHelpers.ts`**:
   - `isValidText(text)`: Check if text is non-empty after trim.
@@ -157,7 +169,88 @@ mobile/src/
 - **Babel:** Ensure plugin order: decorators -> worklets -> reanimated.
 - **DRY Principle:** Use reusable components and hooks. Never duplicate validation or DB logic.
 
+### 5.1 Commit Conventions
+```
+type(scope): description concise
+
+Types: feat | fix | refactor | test | docs | chore | style | perf
+```
+- Un commit par changement logique
+- Ne jamais mélanger feat et fix dans le même commit
+- Message en anglais, description concise
+
 ## 6. Commands (Root: `mobile/`)
 - `npm start` (Expo)
 - `npm run android` (Build)
+- `npm test` (Jest)
+- `npx tsc --noEmit` (TypeScript check)
 - `eas build --platform android --profile production` (Release)
+
+## 7. Custom Commands Ecosystem
+
+Pour la liste détaillée, voir `docs/COMMANDS.md`.
+
+### Workflow quotidien
+| Commande | Rôle |
+|----------|------|
+| `/plan` | Affiche le workflow complet (memo) |
+| `/morning` | Briefing du matin : état projet, tests, git, plan du jour |
+| `/task [desc]` | Tâche rapide (refactor, ajout, maintenance) |
+| `/fix [desc]` | Correction ciblée d'un bug |
+| `/status` | État du projet en 10 secondes |
+| `/review` | Review du code avant push |
+| `/doc [cible]` | Générer/mettre à jour la documentation |
+| `/gitgo` | Commit + push intelligent |
+
+### Développement de features
+| Commande | Rôle |
+|----------|------|
+| `/idee [desc]` | Pipeline BMAD complet : brainstorming → dev → QA |
+| `/idee-continue` | Reprise après /compact |
+
+### Qualité & vérification
+| Commande | Rôle |
+|----------|------|
+| `/verrif` | Scan 8 passes + correction par niveaux + push |
+| `/verrif-continue` | Reprise (lit STATUS.md pour les passes échouées) |
+| `/verrif-build` | Build & TypeScript uniquement |
+| `/verrif-tests` | Tests uniquement |
+| `/verrif-code-review` | Code review adversarial |
+| `/verrif-bugs` | Bugs silencieux |
+| `/verrif-db` | Cohérence WatermelonDB |
+| `/verrif-qualite` | Code mort & qualité |
+| `/test-coverage` | Augmenter la couverture de tests |
+| `/test-continue` | Reprise coverage |
+
+### Script nuit autonome
+```powershell
+.\run-verrif.ps1              # mode full : scan + fix niveaux 1-2-3 + push
+.\run-verrif.ps1 -mode safe   # critiques seulement
+.\run-verrif.ps1 -mode scan   # scan seul, aucune correction
+```
+
+### Rapports et historique
+```
+docs/bmad/
+├── verrif/
+│   ├── HEALTH.md                    ← Score de santé au fil du temps
+│   └── [YYYYMMDD-HHmm]/            ← Un dossier par run
+│       ├── 01-build.md → 06-qualite.md  ← Rapports de scan
+│       ├── 07-fix-niveau1/2/3.md    ← Rapports de correction
+│       └── STATUS.md                ← Statut + instructions si échec
+├── git-history/                     ← Rapport de chaque push
+└── brainstorm.md, prd.md, etc.      ← Outputs /idee
+
+docs/stories/
+├── WEGO-001 → WEGO-007             ← Stories manuelles
+└── [nom-feature]/                   ← Stories générées par /idee
+```
+
+### Gestion du contexte
+- Quand une commande dit "⚠️ Contexte chargé" → `/compact` puis la commande `-continue`
+- Les commandes `-continue` relisent les rapports/STATUS.md pour reprendre sans perte
+
+### Score de santé
+Le fichier `docs/bmad/verrif/HEALTH.md` suit l'évolution du projet (0-100) :
+- Build (20), Tests (20), Bugs (20), Qualité (20), Coverage (20)
+- Mis à jour automatiquement à chaque run verrif

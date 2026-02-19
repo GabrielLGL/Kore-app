@@ -62,3 +62,6 @@ coverage/
 
 # BMAD Framework (tooling, not project code)
 _bmad/
+_bmad-output/
+
+.idea/
