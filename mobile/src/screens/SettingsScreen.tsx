@@ -99,7 +99,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       Alert.alert('Connexion réussie ✅', `Le provider ${aiProvider} répond correctement.`)
     } catch (error) {
       haptics.onDelete()
-      Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}. Vérifie ta clé API.`)
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+      const isGemini403 = aiProvider === 'gemini' && (errorMessage.includes('403') || errorMessage.includes('API_NOT_ENABLED'))
+      const hint = isGemini403
+        ? '\n\nVérifiez que l\'API Generative Language est activée dans Google Cloud Console.'
+        : ''
+      Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}.\n\n${errorMessage}${hint}`)
     } finally {
       setIsTesting(false)
     }
