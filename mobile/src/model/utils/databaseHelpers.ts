@@ -283,6 +283,8 @@ export async function getLastPerformanceForExercise(
   // Sets de cette seance uniquement
   const recentSets = sets.filter(s => s.history.id === mostRecent.id)
 
+  if (recentSets.length === 0) return null
+
   const maxWeight = Math.max(...recentSets.map(s => s.weight))
   const avgReps = Math.round(
     recentSets.reduce((sum, s) => sum + s.reps, 0) / recentSets.length

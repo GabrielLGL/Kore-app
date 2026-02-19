@@ -16,7 +16,8 @@ import type Program from '../model/models/Program'
 import type User from '../model/models/User'
 import type { AIFormData, AIGoal, AILevel, AIDuration, GeneratedPlan } from '../services/ai/types'
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs'
-import type { MainTabParamList } from '../navigation/index'
+import type { NavigationProp } from '@react-navigation/native'
+import type { MainTabParamList, RootStackParamList } from '../navigation/index'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,16 +124,25 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   }, [])
 
   const handleValidate = useCallback(async (plan: GeneratedPlan) => {
-    if (mode === 'program') {
-      await importGeneratedPlan(plan)
+    try {
+      if (mode === 'program') {
+        await importGeneratedPlan(plan)
+        previewModal.close()
+        navigation.navigate('Home')
+      } else {
+        if (!targetProgramId) return
+        if (!plan.sessions.length) {
+          previewModal.close()
+          return
+        }
+        const session = await importGeneratedSession(plan.sessions[0], targetProgramId)
+        previewModal.close()
+        ;(navigation.getParent() as NavigationProp<RootStackParamList> | undefined)
+          ?.navigate('SessionDetail', { sessionId: session.id })
+      }
+    } catch {
       previewModal.close()
-      navigation.navigate('Home')
-    } else {
-      if (!targetProgramId) return
-      const session = await importGeneratedSession(plan.sessions[0], targetProgramId)
-      previewModal.close()
-      // @ts-ignore — navigate vers un écran du stack parent
-      navigation.getParent()?.navigate('SessionDetail', { sessionId: session.id })
+      Alert.alert('Erreur', "Impossible d'enregistrer le plan. Réessaie.")
     }
   }, [mode, targetProgramId, navigation])
 

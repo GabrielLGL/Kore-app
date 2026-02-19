@@ -64,14 +64,14 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     }
   }
 
-  const handleSelectProvider = (key: AIProviderName) => {
+  const handleSelectProvider = async (key: AIProviderName) => {
     haptics.onSelect()
     setAiProvider(key)
-    handleSaveAI(key, aiApiKey)
+    await handleSaveAI(key, aiApiKey)
   }
 
-  const handleApiKeyBlur = () => {
-    handleSaveAI(aiProvider, aiApiKey)
+  const handleApiKeyBlur = async () => {
+    await handleSaveAI(aiProvider, aiApiKey)
   }
 
   const handleTestConnection = async () => {

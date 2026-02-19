@@ -33,6 +33,12 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
         notificationIdRef.current = id
       })
     }
+    return () => {
+      if (notificationIdRef.current) {
+        cancelNotification(notificationIdRef.current)
+        notificationIdRef.current = null
+      }
+    }
   }, [])
 
   useEffect(() => {

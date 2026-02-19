@@ -38,4 +38,7 @@ export default class Set extends Model {
 
   // Relation "Belongs To" vers l'exercice : permet d'accéder à l'objet Exercise lié
   @relation('exercises', 'exercise_id') exercise!: Relation<Exercise>
+
+  @readonly @date('created_at') createdAt!: Date
+  @readonly @date('updated_at') updatedAt!: Date
 }

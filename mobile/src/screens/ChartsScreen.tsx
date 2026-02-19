@@ -74,19 +74,24 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
 
   const handleDeleteStat = async () => {
     if (!selectedStat) return
-    await database.write(async () => {
-      const setsToDelete = await database
-        .get<WorkoutSet>('sets')
-        .query(
-          Q.where('exercise_id', exerciseId),
-          Q.where('history_id', selectedStat.historyId)
-        )
-        .fetch()
-      await database.batch(...setsToDelete.map(s => s.prepareDestroyPermanently()))
-    })
-    setIsAlertVisible(false)
-    setSelectedStat(null)
-    haptics.onDelete()
+    try {
+      await database.write(async () => {
+        const setsToDelete = await database
+          .get<WorkoutSet>('sets')
+          .query(
+            Q.where('exercise_id', exerciseId),
+            Q.where('history_id', selectedStat.historyId)
+          )
+          .fetch()
+        await database.batch(...setsToDelete.map(s => s.prepareDestroyPermanently()))
+      })
+      haptics.onDelete()
+    } catch {
+      // Erreur DB : on ne bloque pas l'UI
+    } finally {
+      setIsAlertVisible(false)
+      setSelectedStat(null)
+    }
   }
 
   const renderSessionItem = ({ item }: { item: ExerciseSessionStat }) => (
