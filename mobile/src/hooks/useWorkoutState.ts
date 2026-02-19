@@ -82,7 +82,7 @@ export function useWorkoutState(
       setTotalVolume(prev => prev + weight * reps)
       return true
     } catch (error) {
-      console.error('Failed to save workout set:', error)
+      if (__DEV__) console.error('Failed to save workout set:', error)
       return false
     }
   }
@@ -111,7 +111,7 @@ export function useWorkoutState(
       setTotalVolume(prev => prev - validated.weight * validated.reps)
       return true
     } catch (error) {
-      console.error('Failed to delete workout set:', error)
+      if (__DEV__) console.error('Failed to delete workout set:', error)
       return false
     }
   }

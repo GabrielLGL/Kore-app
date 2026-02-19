@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Envoyer l'erreur à Sentry pour monitoring
-    console.error('ErrorBoundary caught:', error, errorInfo)
+    if (__DEV__) console.error('ErrorBoundary caught:', error, errorInfo)
 
     captureError(error, {
       componentStack: errorInfo.componentStack,

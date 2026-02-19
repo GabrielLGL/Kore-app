@@ -53,7 +53,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       })
       haptics.onSuccess()
     } catch (error) {
-      console.error('Failed to update rest duration:', error)
+      if (__DEV__) console.error('Failed to update rest duration:', error)
     }
   }
 
@@ -68,7 +68,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       })
       haptics.onSuccess()
     } catch (error) {
-      console.error('Failed to save AI settings:', error)
+      if (__DEV__) console.error('Failed to save AI settings:', error)
     }
   }
 
@@ -118,7 +118,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       })
       haptics.onPress()
     } catch (error) {
-      console.error('Failed to toggle timer:', error)
+      if (__DEV__) console.error('Failed to toggle timer:', error)
       setTimerEnabled(!enabled) // Revert on error
     }
   }

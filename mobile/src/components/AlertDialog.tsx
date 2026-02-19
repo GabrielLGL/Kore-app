@@ -67,7 +67,11 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
 
   const handleConfirm = async () => {
     haptics.onDelete() // Heavy haptic pour action critique
-    await onConfirm()
+    try {
+      await onConfirm()
+    } catch (error) {
+      if (__DEV__) console.error('[AlertDialog] onConfirm failed:', error)
+    }
   }
 
   const handleCancel = () => {

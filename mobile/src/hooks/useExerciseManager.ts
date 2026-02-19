@@ -76,7 +76,7 @@ export function useExerciseManager(
       resetNewExercise()
       return true
     } catch (error) {
-      console.error('[useExerciseManager] createExercise failed:', error)
+      if (__DEV__) console.error('[useExerciseManager] createExercise failed:', error)
       return false
     }
   }
@@ -109,7 +109,7 @@ export function useExerciseManager(
       setSelectedExercise(null)
       return true
     } catch (error) {
-      console.error('[useExerciseManager] updateExercise failed:', error)
+      if (__DEV__) console.error('[useExerciseManager] updateExercise failed:', error)
       return false
     }
   }
@@ -127,7 +127,7 @@ export function useExerciseManager(
       setSelectedExercise(null)
       return true
     } catch (error) {
-      console.error('[useExerciseManager] deleteExercise failed:', error)
+      if (__DEV__) console.error('[useExerciseManager] deleteExercise failed:', error)
       return false
     }
   }

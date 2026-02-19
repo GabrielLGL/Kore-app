@@ -121,7 +121,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
       setIsOnboardingVisible(false)
       haptics.onSuccess()
     } catch (error) {
-      console.error('[HomeScreen] Erreur import programme :', error)
+      if (__DEV__) console.error('[HomeScreen] Erreur import programme :', error)
       // Ne pas appeler markOnboardingCompleted en cas d'erreur (AC8)
     }
   }
@@ -206,7 +206,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
                   if (updates.length) await database.batch(...updates)
                 })
               } catch (error) {
-                console.error('[HomeScreen] Drag-and-drop batch update failed:', error)
+                if (__DEV__) console.error('[HomeScreen] Drag-and-drop batch update failed:', error)
               }
             }}
             keyExtractor={i => i.id}

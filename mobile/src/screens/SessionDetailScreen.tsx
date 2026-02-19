@@ -76,7 +76,7 @@ const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, user
           .fetch()
         setExercisesList(list)
       } catch (error) {
-        console.error('Failed to load exercises:', error)
+        if (__DEV__) console.error('Failed to load exercises:', error)
         setExercisesList([]) // Fallback to empty list
       }
     }
