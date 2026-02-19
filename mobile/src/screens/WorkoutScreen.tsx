@@ -46,7 +46,7 @@ interface WorkoutContentProps {
   navigation: NativeStackNavigationProp<RootStackParamList>
 }
 
-const WorkoutContent: React.FC<WorkoutContentProps> = ({
+export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   session,
   sessionExercises,
   user,
