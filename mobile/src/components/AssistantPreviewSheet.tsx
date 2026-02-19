@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native'
 import { BottomSheet } from './BottomSheet'
 import { useHaptics } from '../hooks/useHaptics'
 import { colors, spacing, fontSize, borderRadius } from '../theme'
-import type { GeneratedPlan } from '../services/ai/types'
+import type { GeneratedPlan, GeneratedExercise } from '../services/ai/types'
+
+const SCROLL_MAX_HEIGHT = Dimensions.get('window').height * 0.45
+
+function formatExerciseSets(ex: GeneratedExercise): string {
+  if (ex.setsTarget > 0 && ex.repsTarget) {
+    const weight = ex.weightTarget > 0 ? ` · ~${ex.weightTarget} kg` : ''
+    return `${ex.setsTarget} séries × ${ex.repsTarget}${weight}`
+  }
+  if (ex.repsTarget) {
+    return `× ${ex.repsTarget}`
+  }
+  return ''
+}
 
 interface AssistantPreviewSheetProps {
   visible: boolean
@@ -68,26 +81,21 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
             placeholderTextColor={colors.textSecondary}
           />
 
-          {(() => {
-            const totalExercises = plan.sessions.reduce((acc, s) => acc + s.exercises.length, 0)
-            const summary = `${plan.sessions.length} séance${plan.sessions.length > 1 ? 's' : ''} · ${totalExercises} exercice${totalExercises > 1 ? 's' : ''}`
-            return <Text style={styles.summary}>{summary}</Text>
-          })()}
-
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {plan.sessions.map((session, si) => (
               <View key={`${si}-${session.name}`} style={styles.sessionCard}>
                 <Text style={styles.sessionName}>{session.name}</Text>
-                {session.exercises.map((ex, ei) => (
-                  <View key={`${ei}-${ex.exerciseName}`} style={styles.exerciseRow}>
-                    <Text style={styles.exerciseName} numberOfLines={1}>
-                      {ex.exerciseName}
-                    </Text>
-                    <Text style={styles.exerciseSets}>
-                      {ex.setsTarget}×{ex.repsTarget}{ex.weightTarget > 0 ? `  ·  ~${ex.weightTarget} kg` : ''}
-                    </Text>
-                  </View>
-                ))}
+                {session.exercises.map((ex, ei) => {
+                  const setsInfo = formatExerciseSets(ex)
+                  return (
+                    <View key={`${ei}-${ex.exerciseName}`} style={styles.exerciseRow}>
+                      <Text style={styles.exerciseName} numberOfLines={1}>
+                        {'• '}{ex.exerciseName}
+                      </Text>
+                      {setsInfo ? <Text style={styles.exerciseSets}>{setsInfo}</Text> : null}
+                    </View>
+                  )
+                })}
               </View>
             ))}
           </ScrollView>
@@ -138,7 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   scrollView: {
-    flex: 1,
+    maxHeight: SCROLL_MAX_HEIGHT,
     marginBottom: spacing.md,
   },
   sessionCard: {
@@ -148,9 +156,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sessionName: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
+    color: colors.text,
+    fontSize: fontSize.md,
+    fontWeight: '700',
     marginBottom: spacing.sm,
   },
   exerciseRow: {
@@ -169,11 +177,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.sm,
     fontWeight: '600',
-  },
-  summary: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginBottom: spacing.md,
   },
   buttonsRow: {
     flexDirection: 'row',
