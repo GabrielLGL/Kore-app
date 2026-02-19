@@ -105,7 +105,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       const hint = isGemini403
         ? '\n\nVérifiez que l\'API Generative Language est activée dans Google Cloud Console.'
         : isGemini429
-          ? '\n\nClé API sans quota gratuit.\n\n• Créez une clé sur aistudio.google.com (gratuit)\n• OU activez la facturation sur console.cloud.google.com'
+          ? '\n\nFree tier Gemini non disponible en Europe (restriction Google depuis déc. 2025).\n\n• Activez la facturation sur console.cloud.google.com (coût très faible)\n• OU utilisez le provider Claude ou OpenAI'
           : ''
       Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}.\n\n${errorMessage}${hint}`)
     } finally {
