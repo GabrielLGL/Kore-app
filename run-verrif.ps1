@@ -329,6 +329,43 @@ Ne me pose aucune question.
     
     git checkout -- mobile/ 2>$null
 
+    # --- Generer le plan d'action avec parallelisation ---
+    Write-Host "`n========== PLAN D ACTION ==========" -ForegroundColor Cyan
+
+    $cmdPlan = @"
+Lis tous les rapports dans docs/bmad/verrif/$timestamp/.
+Liste TOUS les problemes non corriges.
+Pour chaque probleme, indique les fichiers concernes.
+Puis analyse quels problemes peuvent etre corriges en parallele (pas les memes fichiers).
+
+Reponds UNIQUEMENT avec ce format markdown, rien d autre :
+
+### Problemes a corriger
+
+| # | Probleme | Fichiers | Effort | Groupe |
+|---|----------|----------|--------|--------|
+| 1 | ... | ... | Xmin | A |
+| 2 | ... | ... | Xmin | A |
+| 3 | ... | ... | Xmin | B |
+
+### Parallelisation
+
+Les groupes avec la meme lettre touchent les memes fichiers : les lancer en SEQUENCE.
+Les groupes avec des lettres differentes touchent des fichiers differents : les lancer en PARALLELE.
+
+Exemple :
+- Claude Code 1 : Groupe A (problemes 1, 2)
+- Claude Code 2 : Groupe B (probleme 3)
+- Claude Code 3 : Groupe C (problemes 4, 5)
+
+Ne me pose aucune question.
+"@
+
+    Run-Passe "PLAN" "Plan d action" $cmdPlan '"Read"' | Out-Null
+
+    # Lire le plan genere et l'ajouter au STATUS
+    $planFile = "docs/bmad/verrif/$timestamp/08-plan-action.md"
+
     $n1s = if ($n1ok) { "OK" } else { "FAIL" }
     $n2s = if ($n2ok) { "OK" } else { "FAIL/SKIP" }
     $n3s = if ($n3ok) { "OK" } else { "FAIL/SKIP" }
@@ -343,13 +380,13 @@ Le code a ete revert. Les rapports sont conserves.
 
 ### Action requise le matin :
 1. /morning pour voir l etat
-2. Lis les rapports dans docs/bmad/verrif/$timestamp/
-3. /do [description] pour corriger manuellement
+2. Lis le plan dans docs/bmad/verrif/$timestamp/08-plan-action.md
+3. Lance les groupes en parallele avec /do [description] dans plusieurs Claude Code
 4. /review pour verifier
 5. /gitgo quand c est clean
 "@
     Append-File $statusFile $dirtyResult
-    Write-Host "[STOP] Aucun commit. Rapport dans $statusFile" -ForegroundColor Red
+    Write-Host "[STOP] Aucun commit. Plan dans docs/bmad/verrif/$timestamp/08-plan-action.md" -ForegroundColor Red
 }
 
 # --- Cleanup ---
