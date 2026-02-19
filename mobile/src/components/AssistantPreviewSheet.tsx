@@ -66,10 +66,10 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {plan.sessions.map((session, si) => (
-              <View key={si} style={styles.sessionCard}>
+              <View key={`${si}-${session.name}`} style={styles.sessionCard}>
                 <Text style={styles.sessionName}>{session.name}</Text>
                 {session.exercises.map((ex, ei) => (
-                  <View key={ei} style={styles.exerciseRow}>
+                  <View key={`${ei}-${ex.exerciseName}`} style={styles.exerciseRow}>
                     <Text style={styles.exerciseName} numberOfLines={1}>
                       {ex.exerciseName}
                     </Text>

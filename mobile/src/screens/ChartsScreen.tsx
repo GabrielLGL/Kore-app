@@ -55,7 +55,7 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
     [setsForExercise, histories, sessions]
   )
 
-  const chartStats = statsForSelectedExo.slice(-15)
+  const chartStats = useMemo(() => statsForSelectedExo.slice(-15), [statsForSelectedExo])
 
   const chartData = useMemo(() => {
     if (chartStats.length < 2) return null
