@@ -19,17 +19,18 @@
 | 2026-02-19 | 20 | 20 | 20 | 20 | 10 | **90/100** | — |
 | 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | ↑ +5 |
 | 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable |
+| 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable (638 tests) |
 
 ---
 
-## Détail — 2026-02-19 (verrif run 20260219-1315)
+## Détail — 2026-02-19 (session Gemini 15:40)
 
 **Score : 95/100**
 
 | Dimension | Score | Détail |
 |-----------|-------|--------|
 | Build     | 20/20 | ✅ `npx tsc --noEmit` — 0 erreur |
-| Tests     | 20/20 | ✅ 527 tests, 0 fail |
+| Tests     | 20/20 | ✅ 638 tests, 0 fail |
 | Bugs      | 20/20 | ✅ SCAN-4 bugs silencieux — OK |
 | Qualité   | 20/20 | ✅ SCAN-6 code mort/qualité — OK |
 | Coverage  | 15/20 | 📊 60.88% lignes (seuil 60-80% atteint) |

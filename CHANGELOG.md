@@ -1,5 +1,105 @@
 # CHANGELOG
 
+## [Non publié] — 2026-02-19 — Session Gemini AI
+
+### Ajouté
+
+#### Assistant IA — Wizard interactif step-by-step (commit `48202ee`)
+**Fichier :** `mobile/src/screens/AssistantScreen.tsx`
+
+Le formulaire de génération de programme IA a été refactorisé en un wizard
+interactif à 7 étapes avec barre de progression et auto-avance. Chaque étape
+présente une seule question à la fois (objectif, niveau, durée, fréquence,
+équipement, préférences, confirmation), ce qui réduit la charge cognitive et
+améliore le taux de complétion. La barre de progression se met à jour en temps
+réel et les étapes déjà complétées permettent un retour en arrière.
+
+---
+
+### Corrigé
+
+#### Gemini — Lecture du body d'erreur JSON (commit `16b393e`)
+**Fichier :** `mobile/src/services/aiProviders/geminiProvider.ts`
+
+Le provider Gemini ne lisait pas le corps de la réponse HTTP en cas d'erreur
+non-200. Les messages d'erreur affichés étaient génériques (`"Erreur HTTP 429"`)
+alors que l'API Gemini renvoie des détails exploitables dans le corps JSON
+(champ `error.message`). De plus, le test de connexion ne différenciait pas les
+codes d'erreur.
+
+**Correction :** Ajout de la lecture du body JSON via `response.json()` avant
+de lancer l'erreur. Le message d'erreur inclut désormais le détail renvoyé par
+l'API. Le test de connexion retourne désormais les messages enrichis.
+
+---
+
+#### Settings — Affichage du vrai message d'erreur lors du test de connexion (commit `cff2bd5`)
+**Fichier :** `mobile/src/screens/SettingsScreen.tsx`
+
+Le résultat du test de connexion IA affichait toujours un message générique
+(`"Connexion échouée"`) même quand le provider renvoyait un message d'erreur
+détaillé. L'information utile (429, 403, message API) était perdue.
+
+**Correction :** Propagation du message d'erreur réel issu du provider vers
+l'UI. Ajout de hints contextuels :
+- **429** → indique la restriction EU du free tier et guide vers AI Studio
+- **403** → indique que l'API Gemini n'est pas activée dans le projet Google Cloud
+
+---
+
+#### Gemini — `AbortSignal.timeout` remplacé par `AbortController` (commit `b418839`)
+**Fichier :** `mobile/src/services/aiProviders/geminiProvider.ts`
+
+`AbortSignal.timeout()` n'est pas supporté par l'environnement Hermes (moteur
+JavaScript de React Native). Son utilisation provoquait une erreur silencieuse
+ou un crash au runtime.
+
+**Correction :** Remplacement par le pattern standard `AbortController` +
+`setTimeout` + `clearTimeout` dans le finally, compatible Hermes.
+
+---
+
+#### Gemini — Modèle mis à jour vers `gemini-2.0-flash` (commits `1c027db`, `84cfcc3`)
+**Fichier :** `mobile/src/services/aiProviders/geminiProvider.ts`
+
+Plusieurs modèles ont été testés au cours de la session (`gemini-2.0-flash-lite`,
+`gemini-2.0-flash-exp`) pour trouver un modèle accessible sur le free tier EU.
+Conclusion : aucun modèle Gemini n'est disponible gratuitement en EU depuis
+décembre 2025. Le billing Google Cloud est requis.
+
+**État final :** Modèle stabilisé sur `gemini-2.0-flash` (modèle stable,
+performant, disponible avec billing activé).
+
+---
+
+### Notes
+
+- **Gemini free tier indisponible en EU** depuis décembre 2025 — ni `flash`, ni
+  `flash-lite`, ni `flash-exp` ne répondent sans billing activé depuis la France.
+- **Billing Google Cloud requis** pour utiliser Gemini en production depuis l'UE.
+- **La clé API doit être liée au même projet Google Cloud** que celui sur lequel
+  le billing est activé (une clé d'un projet sans billing retournera 429).
+
+---
+
+## Récapitulatif des Commits — Session Gemini AI (2026-02-19)
+
+| Hash | Type | Description |
+|------|------|-------------|
+| `cff2bd5` | fix | `SettingsScreen` : affiche le vrai message d'erreur lors du test de connexion |
+| `16b393e` | feat | `geminiProvider` : lecture body erreur JSON + robustesse test connexion |
+| `b418839` | fix | `geminiProvider` : remplace `AbortSignal.timeout` par `AbortController` (Hermes) |
+| `1c027db` | fix | `geminiProvider` : mise à jour modèle `gemini-1.5-flash` → `gemini-2.0-flash` |
+| `8ff8ce7` | fix | `geminiProvider` : test modèle `gemini-2.0-flash-lite` (free tier, annulé) |
+| `4a8ec79` | fix | `SettingsScreen` : ajout hint 429 quota Gemini |
+| `0c640e1` | fix | `geminiProvider` : test modèle `gemini-2.0-flash-exp` (annulé) |
+| `331e6ec` | fix | `SettingsScreen` : hint 429 enrichi — guide vers AI Studio |
+| `af73951` | fix | `SettingsScreen` : hint 429 précisé — restriction EU free tier |
+| `48202ee` | feat | `AssistantScreen` : refactoring en wizard interactif 7 étapes |
+| `84cfcc3` | fix | `geminiProvider` : retour à `gemini-2.0-flash` — billing activé, flash-exp retiré |
+
+---
+
 ## [Non publié] — 2026-02-18 — Passe 3
 
 ### Bug Corrigé

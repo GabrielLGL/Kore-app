@@ -77,6 +77,9 @@ These are bugs that have been found and fixed before. **Never reintroduce them:*
 - **No `console.log`/`console.warn` in production** — guard with `__DEV__` or remove.
 - **No hardcoded colors** — always use `colors.*` from `theme/index.ts`.
 - **`duplicate()` methods** must copy ALL fields and child relations, not just create empty shells.
+- **Gemini API — Hermes incompatibility** : `AbortSignal.timeout()` n'existe pas sur Hermes (moteur JS React Native). Utiliser `withTimeout(ms)` de `providerUtils.ts` (retourne `{ signal, clear }`, appeler `clear()` dans un bloc `finally`).
+- **Gemini API — EU free tier** : Depuis déc 2025, le free tier Gemini a `limit: 0` pour les utilisateurs EU/UK/Suisse. Billing Google Cloud requis. La clé API doit appartenir au même projet Google Cloud que le billing activé.
+- **Gemini API — modèle stable** : Utiliser `gemini-2.0-flash` (v1beta). Les modèles `gemini-1.5-flash` (supprimé) et `gemini-2.0-flash-exp` (supprimé) ne fonctionnent plus.
 
 ## 4. Reusable Components & Hooks
 
