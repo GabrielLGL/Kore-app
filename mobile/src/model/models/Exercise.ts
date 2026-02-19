@@ -14,6 +14,8 @@ export default class Exercise extends Model {
     session_exercises: { type: 'has_many', foreignKey: 'exercise_id' },
     // Un exercice peut avoir plusieurs logs de performance dans 'performance_logs'
     performance_logs: { type: 'has_many', foreignKey: 'exercise_id' },
+    // Un exercice peut avoir plusieurs séries enregistrées
+    sets: { type: 'has_many', foreignKey: 'exercise_id' },
   } as const
 
   // Colonne 'name' de type texte (nom de l'exercice)

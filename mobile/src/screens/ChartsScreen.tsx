@@ -174,15 +174,26 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
 const ObservableExerciseStats = withObservables(
   ['exerciseId'],
   ({ exerciseId }: { exerciseId: string }) => ({
-    histories: database
-      .get<History>('histories')
-      .query(Q.where('deleted_at', null))
-      .observe(),
     setsForExercise: database
       .get<WorkoutSet>('sets')
       .query(Q.where('exercise_id', exerciseId))
       .observe(),
-    sessions: database.get<Session>('sessions').query().observe(),
+    histories: database
+      .get<History>('histories')
+      .query(
+        Q.where('deleted_at', null),
+        Q.on('sets', Q.where('exercise_id', exerciseId))
+      )
+      .observe(),
+    sessions: database
+      .get<Session>('sessions')
+      .query(
+        Q.on('histories', [
+          Q.where('deleted_at', null),
+          Q.on('sets', Q.where('exercise_id', exerciseId)),
+        ])
+      )
+      .observe(),
   })
 )(ExerciseStatsContent)
 
@@ -190,25 +201,14 @@ const ObservableExerciseStats = withObservables(
 
 interface Props {
   exercises: Exercise[]
-  allSets: WorkoutSet[]
 }
 
-const ChartsContent: React.FC<Props> = ({ exercises, allSets }) => {
+const ChartsContent: React.FC<Props> = ({ exercises }) => {
   const haptics = useHaptics()
   const { filterMuscle, setFilterMuscle, filterEquipment, setFilterEquipment, filteredExercises } =
     useExerciseFilters(exercises)
 
   const [selectedExoId, setSelectedExoId] = useState<string | null>(null)
-
-  const exerciseIdsWithSets = useMemo(
-    () => new Set(allSets.map(s => s.exercise.id)),
-    [allSets]
-  )
-
-  const availableExercises = useMemo(
-    () => filteredExercises.filter(exo => exerciseIdsWithSets.has(exo.id)),
-    [filteredExercises, exerciseIdsWithSets]
-  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -231,7 +231,7 @@ const ChartsContent: React.FC<Props> = ({ exercises, allSets }) => {
 
       <View style={styles.selectorContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.exoScroll}>
-          {availableExercises.map(exo => (
+          {filteredExercises.map(exo => (
             <TouchableOpacity
               key={exo.id}
               style={[styles.exoChip, selectedExoId === exo.id && styles.exoChipActive]}
@@ -332,8 +332,13 @@ const styles = StyleSheet.create({
 })
 
 const ObservableContent = withObservables([], () => ({
-  exercises: database.get<Exercise>('exercises').query(Q.sortBy('name', Q.asc)).observe(),
-  allSets: database.get<WorkoutSet>('sets').query().observe(),
+  exercises: database
+    .get<Exercise>('exercises')
+    .query(
+      Q.sortBy('name', Q.asc),
+      Q.on('sets', Q.where('id', Q.notEq(null)))
+    )
+    .observe(),
 }))(ChartsContent)
 
 const ChartsScreen = () => (
