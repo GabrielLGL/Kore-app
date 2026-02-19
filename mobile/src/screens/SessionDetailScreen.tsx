@@ -28,7 +28,7 @@ interface Props {
   navigation: NativeStackNavigationProp<RootStackParamList>
 }
 
-const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, user, navigation }) => {
+export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, user, navigation }) => {
   // --- HOOKS ---
   const haptics = useHaptics()
   const {
