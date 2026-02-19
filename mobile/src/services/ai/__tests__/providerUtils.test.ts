@@ -196,4 +196,13 @@ describe('parseGeneratedPlan', () => {
   it('lève une erreur si le JSON est un tableau vide (name manquant)', () => {
     expect(() => parseGeneratedPlan(JSON.stringify([]))).toThrow()
   })
+
+  it('normalise weightTarget à 0 si absent ou non-number', () => {
+    const withoutWeight = {
+      name: 'Plan',
+      sessions: [{ name: 'S1', exercises: [{ exerciseName: 'Squat', setsTarget: 3, repsTarget: '10' }] }]
+    }
+    const result = parseGeneratedPlan(JSON.stringify(withoutWeight))
+    expect(result.sessions[0].exercises[0].weightTarget).toBe(0)
+  })
 })

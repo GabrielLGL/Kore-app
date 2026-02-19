@@ -85,6 +85,9 @@ export function parseGeneratedPlan(raw: string): GeneratedPlan {
       }
       if (typeof e.setsTarget !== 'number') throw new Error('Structure JSON invalide : setsTarget doit être un nombre')
       if (typeof e.repsTarget !== 'string') throw new Error('Structure JSON invalide : repsTarget doit être une string')
+      if (typeof e.weightTarget !== 'number') {
+        e.weightTarget = 0
+      }
     }
   }
 
