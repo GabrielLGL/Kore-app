@@ -78,7 +78,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       summaryWasOpenRef.current = true
     } else if (summaryWasOpenRef.current) {
       summaryWasOpenRef.current = false
-      navigation.navigate('MainTabs', { screen: 'Home' })
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
     }
   }, [summaryVisible, navigation])
 
@@ -148,7 +148,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       await completeWorkoutHistory(historyId, Date.now()).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (abandon):', e) })
     }
     setAbandonVisible(false)
-    navigation.navigate('MainTabs', { screen: 'Home' })
+    navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
   }
 
   const handleValidateSet = async (
