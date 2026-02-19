@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Switch, Alert, ActivityIndicator } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
@@ -22,11 +22,19 @@ interface Props {
 
 const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
-  const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() || '90')
+  const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
   const [aiProvider, setAiProvider] = useState<AIProviderName>((user?.aiProvider as AIProviderName) ?? 'offline')
   const [aiApiKey, setAiApiKey] = useState(user?.aiApiKey ?? '')
   const [isTesting, setIsTesting] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    setRestDuration(user.restDuration?.toString() ?? '90')
+    setTimerEnabled(user.timerEnabled ?? true)
+    setAiProvider((user.aiProvider as AIProviderName) ?? 'offline')
+    setAiApiKey(user.aiApiKey ?? '')
+  }, [user])
 
   const handleSaveRestDuration = async () => {
     if (!user) return
@@ -405,6 +413,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 })
+
+export { SettingsContent }
 
 export default withObservables([], () => ({
   user: database.get<User>('users').query().observe().pipe(
