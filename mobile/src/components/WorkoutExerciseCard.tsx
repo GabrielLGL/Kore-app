@@ -20,6 +20,7 @@ interface WorkoutSetRowProps {
   validated: ValidatedSetData | undefined
   onUpdateInput: (key: string, field: 'weight' | 'reps', value: string) => void
   onValidate: () => Promise<void>
+  onUnvalidate: () => Promise<void>
 }
 
 interface WorkoutExerciseCardContentProps {
@@ -30,6 +31,7 @@ interface WorkoutExerciseCardContentProps {
   validatedSets: Record<string, ValidatedSetData>
   onUpdateInput: (key: string, field: 'weight' | 'reps', value: string) => void
   onValidateSet: (sessionExercise: SessionExercise, setOrder: number) => Promise<void>
+  onUnvalidateSet: (sessionExercise: SessionExercise, setOrder: number) => Promise<void>
 }
 
 // --- WorkoutSetRow ---
@@ -41,6 +43,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
   validated,
   onUpdateInput,
   onValidate,
+  onUnvalidate,
 }) => {
   if (validated) {
     return (
@@ -51,6 +54,9 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
         </Text>
         {validated.isPr && <Text style={styles.prBadge}>PR !</Text>}
         <Text style={styles.checkmark}>✓</Text>
+        <TouchableOpacity onPress={onUnvalidate} style={styles.unvalidateBtn}>
+          <Text style={styles.unvalidateBtnText}>↩</Text>
+        </TouchableOpacity>
       </View>
     )
   }
@@ -114,6 +120,7 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   validatedSets,
   onUpdateInput,
   onValidateSet,
+  onUnvalidateSet,
 }) => {
   const haptics = useHaptics()
   const setsCount = sessionExercise.setsTarget ?? 0
@@ -147,6 +154,10 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
                 }
                 haptics.onSuccess()
                 await onValidateSet(sessionExercise, setOrder)
+              }}
+              onUnvalidate={async () => {
+                haptics.onDelete()
+                await onUnvalidateSet(sessionExercise, setOrder)
               }}
             />
           )
@@ -273,5 +284,12 @@ const styles = StyleSheet.create({
     color: colors.success,
     fontSize: fontSize.lg,
     fontWeight: 'bold',
+  },
+  unvalidateBtn: {
+    padding: 6,
+  },
+  unvalidateBtnText: {
+    color: colors.textSecondary,
+    fontSize: 16,
   },
 })

@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   BackHandler,
+  Animated,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
@@ -22,6 +23,7 @@ import {
 } from '../model/utils/databaseHelpers'
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer'
 import { useWorkoutState } from '../hooks/useWorkoutState'
+import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
 import { useHaptics } from '../hooks/useHaptics'
 import { useMultiModalSync } from '../hooks/useModalState'
 import { WorkoutHeader } from '../components/WorkoutHeader'
@@ -63,8 +65,9 @@ const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const [durationSeconds, setDurationSeconds] = useState(0)
 
   const haptics = useHaptics()
+  const footerSlide = useKeyboardAnimation(120)
   const { formattedTime } = useWorkoutTimer(startTimestampRef.current)
-  const { setInputs, validatedSets, totalVolume, updateSetInput, validateSet } =
+  const { setInputs, validatedSets, totalVolume, updateSetInput, validateSet, unvalidateSet } =
     useWorkoutState(sessionExercises, historyId)
 
   useMultiModalSync([confirmEndVisible, summaryVisible, abandonVisible])
@@ -174,6 +177,7 @@ const WorkoutContent: React.FC<WorkoutContentProps> = ({
             validatedSets={validatedSets}
             onUpdateInput={updateSetInput}
             onValidateSet={handleValidateSet}
+            onUnvalidateSet={unvalidateSet}
           />
         )}
         contentContainerStyle={styles.listContent}
@@ -192,8 +196,8 @@ const WorkoutContent: React.FC<WorkoutContentProps> = ({
         </View>
       )}
 
-      {/* Footer fixe - toujours visible */}
-      <View style={styles.footer}>
+      {/* Footer fixe - passe sous le clavier quand il est ouvert */}
+      <Animated.View style={[styles.footer, { transform: [{ translateY: footerSlide }] }]}>
         <TouchableOpacity
           style={styles.endButton}
           onPress={() => {
@@ -204,7 +208,7 @@ const WorkoutContent: React.FC<WorkoutContentProps> = ({
         >
           <Text style={styles.endButtonText}>Terminer la séance</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* AlertDialog — confirmation fin de seance */}
       <AlertDialog
