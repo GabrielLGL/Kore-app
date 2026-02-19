@@ -82,9 +82,12 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
     }
   }
 
-  // 3. PRs depuis performance_logs
+  // 3. PRs depuis performance_logs (top 500 par poids desc — suffit pour capturer les PRs)
   const prs: Record<string, number> = {}
-  const perfLogs = await database.get<PerformanceLog>('performance_logs').query().fetch()
+  const perfLogs = await database
+    .get<PerformanceLog>('performance_logs')
+    .query(Q.sortBy('weight', Q.desc), Q.take(500))
+    .fetch()
 
   const exerciseById = new Map(allExercises.map(ex => [ex.id, ex]))
   perfLogs.forEach(log => {
