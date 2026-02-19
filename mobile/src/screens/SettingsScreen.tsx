@@ -101,9 +101,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       haptics.onDelete()
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
       const isGemini403 = aiProvider === 'gemini' && (errorMessage.includes('403') || errorMessage.includes('API_NOT_ENABLED'))
+      const isGemini429 = aiProvider === 'gemini' && errorMessage.includes('429')
       const hint = isGemini403
         ? '\n\nVérifiez que l\'API Generative Language est activée dans Google Cloud Console.'
-        : ''
+        : isGemini429
+          ? '\n\nQuota gratuit dépassé. Attendez quelques secondes et réessayez, ou activez la facturation sur console.cloud.google.com.'
+          : ''
       Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}.\n\n${errorMessage}${hint}`)
     } finally {
       setIsTesting(false)
