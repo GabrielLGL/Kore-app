@@ -1,6 +1,6 @@
 import { createClaudeProvider } from '../claudeProvider'
 import { createOpenAIProvider } from '../openaiProvider'
-import { createGeminiProvider } from '../geminiProvider'
+import { createGeminiProvider, testGeminiConnection } from '../geminiProvider'
 import type { AIFormData, DBContext } from '../types'
 
 // JSON valide conforme à GeneratedPlan
@@ -166,5 +166,56 @@ describe('createGeminiProvider', () => {
 
     const provider = createGeminiProvider('test-key')
     await expect(provider.generate(testForm, testContext)).rejects.toThrow()
+  })
+
+  it("inclut le message d'erreur API dans l'exception HTTP", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: { message: 'API_NOT_ENABLED' } }),
+    })
+
+    const provider = createGeminiProvider('test-key')
+    await expect(provider.generate(testForm, testContext)).rejects.toThrow(
+      'Gemini API erreur 403: API_NOT_ENABLED',
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// testGeminiConnection
+// ---------------------------------------------------------------------------
+describe('testGeminiConnection', () => {
+  it('résout sans valeur si la réponse est ok', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({}),
+    })
+
+    await expect(testGeminiConnection('test-key')).resolves.toBeUndefined()
+  })
+
+  it("throw avec le message d'erreur API si !response.ok", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({ error: { message: 'API_NOT_ENABLED' } }),
+    })
+
+    await expect(testGeminiConnection('test-key')).rejects.toThrow(
+      'Gemini API erreur 403: API_NOT_ENABLED',
+    )
+  })
+
+  it("throw 'Erreur inconnue' si le body d'erreur est vide", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({}),
+    })
+
+    await expect(testGeminiConnection('test-key')).rejects.toThrow(
+      'Gemini API erreur 400: Erreur inconnue',
+    )
   })
 })

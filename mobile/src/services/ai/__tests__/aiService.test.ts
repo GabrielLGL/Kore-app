@@ -42,12 +42,13 @@ jest.mock('../geminiProvider', () => ({
   createGeminiProvider: jest.fn().mockReturnValue({
     generate: jest.fn().mockResolvedValue({ name: 'Plan Gemini', sessions: [] }),
   }),
+  testGeminiConnection: jest.fn().mockResolvedValue(undefined),
 }))
 
 import { generatePlan, testProviderConnection } from '../aiService'
 import { createClaudeProvider } from '../claudeProvider'
 import { createOpenAIProvider } from '../openaiProvider'
-import { createGeminiProvider } from '../geminiProvider'
+import { createGeminiProvider, testGeminiConnection } from '../geminiProvider'
 import { offlineEngine } from '../offlineEngine'
 import type { AIFormData } from '../types'
 
@@ -135,6 +136,13 @@ describe('aiService', () => {
       expect(createClaudeProvider).toHaveBeenCalledWith('sk-ant-test-key')
       const provider = (createClaudeProvider as jest.Mock).mock.results[0].value as { generate: jest.Mock }
       expect(provider.generate).toHaveBeenCalled()
+    })
+
+    it("appelle testGeminiConnection si provider='gemini'", async () => {
+      await testProviderConnection('gemini', 'ai-google-test-key')
+
+      expect(testGeminiConnection as jest.Mock).toHaveBeenCalledWith('ai-google-test-key')
+      expect(createGeminiProvider).not.toHaveBeenCalled()
     })
   })
 })

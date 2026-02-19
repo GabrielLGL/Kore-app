@@ -8,7 +8,7 @@ import type User from '../../model/models/User'
 import { offlineEngine } from './offlineEngine'
 import { createClaudeProvider } from './claudeProvider'
 import { createOpenAIProvider } from './openaiProvider'
-import { createGeminiProvider } from './geminiProvider'
+import { createGeminiProvider, testGeminiConnection } from './geminiProvider'
 import type { AIFormData, AIProvider, DBContext, GeneratedPlan } from './types'
 
 function selectProvider(aiProvider: string | null, apiKey: string | null): AIProvider {
@@ -121,6 +121,13 @@ export async function testProviderConnection(
   providerName: string,
   apiKey: string
 ): Promise<void> {
+  if (!apiKey || !providerName || providerName === 'offline') return
+
+  if (providerName === 'gemini') {
+    await testGeminiConnection(apiKey)
+    return
+  }
+
   const provider = selectProvider(providerName, apiKey)
   if (provider === offlineEngine) return
 

@@ -1,12 +1,17 @@
 import type { AIProvider, AIFormData, DBContext, GeneratedPlan } from './types'
 import { buildPrompt, parseGeneratedPlan } from './providerUtils'
 
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
+
+async function throwGeminiError(response: Response): Promise<never> {
+  const errorBody = await response.json().catch(() => ({})) as { error?: { message?: string } }
+  throw new Error(`Gemini API erreur ${response.status}: ${errorBody?.error?.message ?? 'Erreur inconnue'}`)
+}
+
 export function createGeminiProvider(apiKey: string): AIProvider {
   return {
     async generate(form: AIFormData, context: DBContext): Promise<GeneratedPlan> {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent'
-
-      const response = await fetch(url, {
+      const response = await fetch(GEMINI_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,7 +30,7 @@ export function createGeminiProvider(apiKey: string): AIProvider {
       })
 
       if (!response.ok) {
-        throw new Error(`Gemini API erreur ${response.status}`)
+        return throwGeminiError(response)
       }
 
       const data = await response.json() as {
@@ -34,5 +39,29 @@ export function createGeminiProvider(apiKey: string): AIProvider {
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
       return parseGeneratedPlan(text)
     },
+  }
+}
+
+export async function testGeminiConnection(apiKey: string): Promise<void> {
+  const response = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+    },
+    body: JSON.stringify({
+      contents: [
+        { parts: [{ text: 'Réponds uniquement "ok".' }] },
+      ],
+      generationConfig: {
+        maxOutputTokens: 10,
+        temperature: 0,
+      },
+    }),
+    signal: AbortSignal.timeout(10000),
+  })
+
+  if (!response.ok) {
+    return throwGeminiError(response)
   }
 }
