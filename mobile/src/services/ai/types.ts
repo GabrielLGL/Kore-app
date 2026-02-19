@@ -31,8 +31,13 @@ export interface GeneratedPlan {
   sessions: GeneratedSession[]
 }
 
+export interface ExerciseInfo {
+  name: string
+  muscles: string[]
+}
+
 export interface DBContext {
-  exercises: string[]
+  exercises: ExerciseInfo[]
   recentMuscles: string[]
   prs: Record<string, number>
 }

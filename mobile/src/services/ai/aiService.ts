@@ -48,7 +48,7 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
     ? filtered.filter(ex => !ex.muscles || ex.muscles.includes(form.muscleGroup!))
     : filtered
 
-  const exerciseNames = (byMuscle.length > 0 ? byMuscle : filtered).map(ex => ex.name)
+  const exerciseInfos = (byMuscle.length > 0 ? byMuscle : filtered).map(ex => ({ name: ex.name, muscles: ex.muscles ?? [] }))
 
   // 2. Muscles travaillés les 7 derniers jours
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -99,7 +99,7 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
   })
 
   return {
-    exercises: exerciseNames,
+    exercises: exerciseInfos,
     recentMuscles: [...new Set(recentMuscles)],
     prs,
   }
@@ -139,5 +139,5 @@ export async function testProviderConnection(
     durationMin: 30,
     muscleGroup: 'Pecs',
   }
-  await provider.generate(testForm, { exercises: ['Développé couché'], recentMuscles: [], prs: {} })
+  await provider.generate(testForm, { exercises: [{ name: 'Développé couché', muscles: ['Pecs'] }], recentMuscles: [], prs: {} })
 }
