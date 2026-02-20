@@ -43,7 +43,7 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
         notificationIdRef.current = null
       }
     }
-  }, [])
+  }, [duration, notificationEnabled])
 
   useEffect(() => {
     // Animation d'entrée

@@ -28,6 +28,9 @@ export const colors = {
 
   // Secondary buttons
   secondaryButton: '#3A3A3C',
+
+  // Shadow (iOS)
+  shadow: '#000',
 }
 
 /**

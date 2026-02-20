@@ -450,8 +450,11 @@ export async function getExerciseStatsFromSets(
  * @param preset - Structure PresetProgram depuis onboardingPrograms.ts
  */
 export async function importPresetProgram(preset: PresetProgram): Promise<void> {
-  // Lectures hors transaction (operations de lecture)
-  const exercises = await database.get<Exercise>('exercises').query().fetch()
+  // Lectures hors transaction — on filtre par les noms attendus pour éviter de charger toute la table
+  const exerciseNames = preset.sessions.flatMap(s => s.exercises.map(e => e.exerciseName))
+  const exercises = exerciseNames.length > 0
+    ? await database.get<Exercise>('exercises').query(Q.where('name', Q.oneOf(exerciseNames))).fetch()
+    : []
   const programCount = await database.get<Program>('programs').query().fetchCount()
 
   const exercisesByName = new Map(exercises.map(e => [e.name, e]))
@@ -599,12 +602,14 @@ function resolveExercisesForBatch(
  * @returns Le Program créé
  */
 export async function importGeneratedPlan(plan: GeneratedPlan): Promise<Program> {
-  const exercises = await database.get<Exercise>('exercises').query().fetch()
+  const names = collectExerciseNames(plan.sessions)
+  const exercises = names.length > 0
+    ? await database.get<Exercise>('exercises').query(Q.where('name', Q.oneOf(names))).fetch()
+    : []
   const programCount = await database.get<Program>('programs').query().fetchCount()
   const exercisesByName = new Map(exercises.map(e => [e.name, e]))
   const exercisesByNameLower = new Map(exercises.map(e => [e.name.toLowerCase(), e]))
 
-  const names = collectExerciseNames(plan.sessions)
   const { resolved, newExercises } = resolveExercisesForBatch(names, exercisesByName, exercisesByNameLower)
 
   const newProgram = database.get<Program>('programs').prepareCreate(p => {
@@ -724,7 +729,10 @@ export async function importGeneratedSession(
   genSession: GeneratedSession,
   programId: string
 ): Promise<Session> {
-  const exercises = await database.get<Exercise>('exercises').query().fetch()
+  const names = genSession.exercises.map(e => e.exerciseName)
+  const exercises = names.length > 0
+    ? await database.get<Exercise>('exercises').query(Q.where('name', Q.oneOf(names))).fetch()
+    : []
   const program = await database.get<Program>('programs').find(programId)
   const sessionCount = await database
     .get<Session>('sessions')
@@ -734,7 +742,6 @@ export async function importGeneratedSession(
   const exercisesByName = new Map(exercises.map(e => [e.name, e]))
   const exercisesByNameLower = new Map(exercises.map(e => [e.name.toLowerCase(), e]))
 
-  const names = genSession.exercises.map(e => e.exerciseName)
   const { resolved, newExercises } = resolveExercisesForBatch(names, exercisesByName, exercisesByNameLower)
 
   const newSession = database.get<Session>('sessions').prepareCreate(s => {

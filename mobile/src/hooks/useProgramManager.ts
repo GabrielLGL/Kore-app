@@ -82,7 +82,7 @@ export function useProgramManager(onSuccess?: () => void) {
       resetProgramForm()
       return true
     } catch (error) {
-      console.error('Failed to save program:', error)
+      if (__DEV__) console.error('[useProgramManager] saveProgram failed:', error)
       return false
     }
   }
@@ -101,7 +101,7 @@ export function useProgramManager(onSuccess?: () => void) {
       setSelectedProgram(null)
       return true
     } catch (error) {
-      console.error('Failed to duplicate program:', error)
+      if (__DEV__) console.error('[useProgramManager] duplicateProgram failed:', error)
       return false
     }
   }
@@ -121,7 +121,7 @@ export function useProgramManager(onSuccess?: () => void) {
       setSelectedProgram(null)
       return true
     } catch (error) {
-      console.error('Failed to delete program:', error)
+      if (__DEV__) console.error('[useProgramManager] deleteProgram failed:', error)
       return false
     }
   }
@@ -156,7 +156,7 @@ export function useProgramManager(onSuccess?: () => void) {
       resetSessionForm()
       return true
     } catch (error) {
-      console.error('Failed to save session:', error)
+      if (__DEV__) console.error('[useProgramManager] saveSession failed:', error)
       return false
     }
   }
@@ -205,7 +205,7 @@ export function useProgramManager(onSuccess?: () => void) {
       setSelectedSession(null)
       return true
     } catch (error) {
-      console.error('Failed to duplicate session:', error)
+      if (__DEV__) console.error('[useProgramManager] duplicateSession failed:', error)
       return false
     }
   }
@@ -224,7 +224,7 @@ export function useProgramManager(onSuccess?: () => void) {
       setSelectedSession(null)
       return true
     } catch (error) {
-      console.error('Failed to delete session:', error)
+      if (__DEV__) console.error('[useProgramManager] deleteSession failed:', error)
       return false
     }
   }
@@ -250,7 +250,7 @@ export function useProgramManager(onSuccess?: () => void) {
       setSelectedSession(null)
       return true
     } catch (error) {
-      console.error('Failed to move session:', error)
+      if (__DEV__) console.error('[useProgramManager] moveSession failed:', error)
       return false
     }
   }

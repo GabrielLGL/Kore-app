@@ -105,7 +105,7 @@ export function useSessionManager(
       if (onSuccess) onSuccess()
       return true
     } catch (error) {
-      console.error('Failed to add exercise:', error)
+      if (__DEV__) console.error('[useSessionManager] addExercise failed:', error)
       return false
     }
   }
@@ -145,7 +145,7 @@ export function useSessionManager(
       setSelectedSessionExercise(null)
       return true
     } catch (error) {
-      console.error('Failed to update targets:', error)
+      if (__DEV__) console.error('[useSessionManager] updateTargets failed:', error)
       return false
     }
   }
@@ -167,7 +167,7 @@ export function useSessionManager(
 
       return true
     } catch (error) {
-      console.error('Failed to remove exercise:', error)
+      if (__DEV__) console.error('[useSessionManager] removeExercise failed:', error)
       return false
     }
   }
@@ -210,7 +210,7 @@ export function useSessionManager(
       })
       return true
     } catch (error) {
-      console.error('Failed to reorder exercises:', error)
+      if (__DEV__) console.error('[useSessionManager] reorderExercises failed:', error)
       return false
     }
   }
