@@ -20,13 +20,11 @@ import { render, fireEvent } from '@testing-library/react-native'
 import { SessionExerciseItem } from '../SessionExerciseItem'
 import type SessionExercise from '../../model/models/SessionExercise'
 import type Exercise from '../../model/models/Exercise'
-import type PerformanceLog from '../../model/models/PerformanceLog'
 
 const makeSessionExercise = (overrides: Partial<SessionExercise> = {}): SessionExercise => ({
   id: 'se-1',
   setsTarget: 3,
   repsTarget: '10',
-  weightTarget: 60,
   position: 0,
   exercise: {
     observe: jest.fn(),
@@ -48,16 +46,6 @@ const makeExercise = (overrides: Partial<Exercise> = {}): Exercise => ({
   ...overrides,
 } as unknown as Exercise)
 
-const makePerformanceLog = (overrides: Partial<PerformanceLog> = {}): PerformanceLog => ({
-  id: 'log-1',
-  weight: 80,
-  reps: 10,
-  sets: 3,
-  observe: jest.fn(),
-  exercise: { observe: jest.fn(), fetch: jest.fn(), id: 'ex-1' },
-  ...overrides,
-} as unknown as PerformanceLog)
-
 describe('SessionExerciseItem', () => {
   describe('rendu des données', () => {
     it('affiche le nom de l\'exercice', () => {
@@ -65,7 +53,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={makeSessionExercise()}
           exercise={makeExercise({ name: 'Squat Arrière' })}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={jest.fn()}
         />
@@ -79,7 +66,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={makeSessionExercise()}
           exercise={makeExercise({ muscles: ['Pecs', 'Triceps'], equipment: 'Barre' })}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={jest.fn()}
         />
@@ -94,7 +80,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={makeSessionExercise({ setsTarget: 4 })}
           exercise={makeExercise()}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={jest.fn()}
         />
@@ -108,7 +93,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={makeSessionExercise({ repsTarget: '12' })}
           exercise={makeExercise()}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={jest.fn()}
         />
@@ -117,84 +101,17 @@ describe('SessionExerciseItem', () => {
       expect(getByText('12')).toBeTruthy()
     })
 
-    it('affiche les objectifs de poids', () => {
-      const { getByText } = render(
-        <SessionExerciseItem
-          item={makeSessionExercise({ weightTarget: 100 })}
-          exercise={makeExercise()}
-          history={[]}
-          onEditTargets={jest.fn()}
-          onRemove={jest.fn()}
-        />
-      )
-
-      expect(getByText('100')).toBeTruthy()
-    })
-
     it('retourne null si exercise est null', () => {
       const { toJSON } = render(
         <SessionExerciseItem
           item={makeSessionExercise()}
           exercise={null as unknown as Exercise}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={jest.fn()}
         />
       )
 
       expect(toJSON()).toBeNull()
-    })
-  })
-
-  describe('record personnel', () => {
-    it('n\'affiche pas le badge PR sans historique', () => {
-      const { queryByText } = render(
-        <SessionExerciseItem
-          item={makeSessionExercise()}
-          exercise={makeExercise()}
-          history={[]}
-          onEditTargets={jest.fn()}
-          onRemove={jest.fn()}
-        />
-      )
-
-      expect(queryByText(/PR:/)).toBeNull()
-    })
-
-    it('affiche le badge PR avec la valeur max de l\'historique', () => {
-      const history = [
-        makePerformanceLog({ weight: 70 }),
-        makePerformanceLog({ weight: 85, id: 'log-2' }),
-        makePerformanceLog({ weight: 60, id: 'log-3' }),
-      ]
-
-      const { getByText } = render(
-        <SessionExerciseItem
-          item={makeSessionExercise()}
-          exercise={makeExercise()}
-          history={history}
-          onEditTargets={jest.fn()}
-          onRemove={jest.fn()}
-        />
-      )
-
-      expect(getByText('PR: 85')).toBeTruthy()
-    })
-
-    it('n\'affiche pas le badge PR si tous les poids sont à 0', () => {
-      const history = [makePerformanceLog({ weight: 0 })]
-
-      const { queryByText } = render(
-        <SessionExerciseItem
-          item={makeSessionExercise()}
-          exercise={makeExercise()}
-          history={history}
-          onEditTargets={jest.fn()}
-          onRemove={jest.fn()}
-        />
-      )
-
-      expect(queryByText(/PR:/)).toBeNull()
     })
   })
 
@@ -207,7 +124,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={se}
           exercise={makeExercise()}
-          history={[]}
           onEditTargets={onEditTargets}
           onRemove={jest.fn()}
         />
@@ -227,7 +143,6 @@ describe('SessionExerciseItem', () => {
         <SessionExerciseItem
           item={se}
           exercise={makeExercise({ name: 'Curl biceps' })}
-          history={[]}
           onEditTargets={jest.fn()}
           onRemove={onRemove}
         />

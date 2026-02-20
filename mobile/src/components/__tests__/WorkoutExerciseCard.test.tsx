@@ -181,7 +181,7 @@ describe('WorkoutExerciseCard', () => {
         />
       )
 
-      expect(getByText('80 kg × 10')).toBeTruthy()
+      expect(getByText('80 kg × 10 reps')).toBeTruthy()
     })
 
     it('affiche le badge PR quand isPr est true', () => {
@@ -228,7 +228,7 @@ describe('WorkoutExerciseCard', () => {
       expect(queryByText('PR !')).toBeNull()
     })
 
-    it('affiche le bouton de dé-validation (↩) sur une série validée', () => {
+    it('affiche le bouton de dé-validation (✓) sur une série validée', () => {
       const validatedSets: Record<string, ValidatedSetData> = {
         'se-1_1': { weight: 80, reps: 10, isPr: false },
       }
@@ -247,7 +247,7 @@ describe('WorkoutExerciseCard', () => {
         />
       )
 
-      expect(getByText('↩')).toBeTruthy()
+      expect(getByText('✓')).toBeTruthy()
     })
   })
 
