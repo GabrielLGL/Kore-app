@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Animated, ScrollView, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Animated, ScrollView, BackHandler, Alert } from 'react-native'
 import { database } from '../model/index'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -211,6 +211,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
                 })
               } catch (error) {
                 if (__DEV__) console.error('[HomeScreen] Drag-and-drop batch update failed:', error)
+                Alert.alert('Erreur', 'Impossible de réorganiser les programmes.')
               }
             }}
             keyExtractor={i => i.id}
