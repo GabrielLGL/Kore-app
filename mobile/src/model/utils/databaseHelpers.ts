@@ -316,12 +316,15 @@ export async function getLastPerformanceForExercise(
   if (recentSets.length === 0) return null
 
   const maxWeight = Math.max(...recentSets.map(s => s.weight))
+  const avgWeight = Math.round(
+    recentSets.reduce((sum, s) => sum + s.weight, 0) / recentSets.length
+  )
   const avgReps = Math.round(
     recentSets.reduce((sum, s) => sum + s.reps, 0) / recentSets.length
   )
   const setsCount = recentSets.length
 
-  return { maxWeight, avgReps, setsCount, date: mostRecent.startTime }
+  return { maxWeight, avgWeight, avgReps, setsCount, date: mostRecent.startTime }
 }
 
 /**
@@ -641,6 +644,72 @@ export async function importGeneratedPlan(plan: GeneratedPlan): Promise<Program>
   })
 
   return newProgram
+}
+
+/**
+ * Retourne les derniers poids enregistrés par exercice et par set_order,
+ * en se basant sur la History la plus récente de chaque exercice.
+ *
+ * Utilisé pour pré-remplir les inputs poids au lancement d'une séance.
+ *
+ * @param exerciseIds - IDs des exercices de la séance
+ * @returns { [exerciseId]: { [setOrder]: weight } }
+ */
+export async function getLastSetsForExercises(
+  exerciseIds: string[]
+): Promise<Record<string, Record<number, number>>> {
+  if (exerciseIds.length === 0) return {}
+
+  const sets = await database
+    .get<WorkoutSet>('sets')
+    .query(Q.where('exercise_id', Q.oneOf(exerciseIds)))
+    .fetch()
+
+  if (sets.length === 0) return {}
+
+  const historyIdSet = new Set(sets.map(s => s.history.id))
+  const historyIds = Array.from(historyIdSet)
+
+  const histories = await database
+    .get<History>('histories')
+    .query(Q.where('id', Q.oneOf(historyIds)), Q.where('deleted_at', null))
+    .fetch()
+
+  if (histories.length === 0) return {}
+
+  const historiesById = new Map(histories.map(h => [h.id, h]))
+
+  const result: Record<string, Record<number, number>> = {}
+
+  for (const exerciseId of exerciseIds) {
+    const exerciseSets = sets.filter(s => s.exercise.id === exerciseId)
+    if (exerciseSets.length === 0) continue
+
+    let mostRecentHistory: History | null = null
+    let mostRecentTime = 0
+
+    for (const s of exerciseSets) {
+      const h = historiesById.get(s.history.id)
+      if (!h) continue
+      const t = h.startTime.getTime()
+      if (t > mostRecentTime) {
+        mostRecentTime = t
+        mostRecentHistory = h
+      }
+    }
+
+    if (!mostRecentHistory) continue
+
+    const recentSets = exerciseSets.filter(s => s.history.id === mostRecentHistory!.id)
+    const setWeights: Record<number, number> = {}
+    recentSets.forEach(s => {
+      setWeights[s.setOrder] = s.weight
+    })
+
+    result[exerciseId] = setWeights
+  }
+
+  return result
 }
 
 /**

@@ -17,6 +17,7 @@ import type { LastPerformance } from '../../types/workout'
 
 const makeLastPerformance = (overrides: Partial<LastPerformance> = {}): LastPerformance => ({
   maxWeight: 80,
+  avgWeight: 80,
   setsCount: 3,
   avgReps: 8,
   date: new Date(),

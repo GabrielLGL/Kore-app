@@ -11,6 +11,7 @@ export interface ValidatedSetData {
 
 export interface LastPerformance {
   maxWeight: number
+  avgWeight: number
   avgReps: number
   setsCount: number
   date: Date

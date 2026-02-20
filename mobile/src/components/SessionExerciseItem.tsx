@@ -1,11 +1,8 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import withObservables from '@nozbe/with-observables'
-import { database } from '../model/index'
-import { Q } from '@nozbe/watermelondb'
 import SessionExercise from '../model/models/SessionExercise'
 import Exercise from '../model/models/Exercise'
-import PerformanceLog from '../model/models/PerformanceLog'
 import { of } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { colors } from '../theme'
@@ -20,19 +17,10 @@ interface SessionExerciseItemProps {
 
 interface EnhancedProps extends SessionExerciseItemProps {
   exercise: Exercise | null
-  history: PerformanceLog[]
 }
 
-const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise, onEditTargets, onRemove, history, drag, dragActive }) => {
+const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise, onEditTargets, onRemove, drag, dragActive }) => {
   if (!exercise) return null
-
-  const personalRecord = useMemo(() => {
-    if (!history || history.length === 0) return 0
-    const validWeights = history
-      .map(h => h.weight)
-      .filter(w => typeof w === 'number' && !isNaN(w) && w > 0)
-    return validWeights.length === 0 ? 0 : Math.max(...validWeights)
-  }, [history])
 
   return (
     <View style={[styles.itemContainer, dragActive && styles.itemContainerDragging]}>
@@ -55,16 +43,6 @@ const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise,
           <View style={styles.targetBox}>
             <Text style={styles.targetValue}>{item.repsTarget || '0'}</Text>
             <Text style={styles.targetLabel}>Reps</Text>
-          </View>
-          <Text style={styles.targetSeparator}>à</Text>
-          <View style={[styles.targetBox, { backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1.5 }]}>
-            <Text style={styles.targetValue}>{item.weightTarget || 0}</Text>
-            <Text style={styles.targetLabel}>kg</Text>
-            {personalRecord > 0 && (
-              <View style={styles.prBadge}>
-                <Text style={styles.prText}>PR: {personalRecord}</Text>
-              </View>
-            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -127,7 +105,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     minWidth: 55,
-    position: 'relative',
   },
   targetValue: {
     color: colors.text,
@@ -146,20 +123,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     fontWeight: '300',
   },
-  prBadge: {
-    position: 'absolute',
-    top: -12,
-    right: -5,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  prText: {
-    color: colors.text,
-    fontSize: 8,
-    fontWeight: 'bold',
-  },
   deleteBtn: { padding: 15 },
   deleteIcon: { fontSize: 20, color: colors.placeholder },
 })
@@ -167,7 +130,4 @@ const styles = StyleSheet.create({
 export const SessionExerciseItem = withObservables(['item'], ({ item }: SessionExerciseItemProps) => ({
   item,
   exercise: item.exercise.observe().pipe(catchError(() => of(null))),
-  history: database.get<PerformanceLog>('performance_logs')
-    .query(Q.where('exercise_id', item.exercise.id))
-    .observe(),
 }))(SessionExerciseItemComponent)

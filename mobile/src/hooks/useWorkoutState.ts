@@ -1,17 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SessionExercise from '../model/models/SessionExercise'
-import { saveWorkoutSet, getMaxWeightForExercise, deleteWorkoutSet } from '../model/utils/databaseHelpers'
+import {
+  saveWorkoutSet,
+  getMaxWeightForExercise,
+  deleteWorkoutSet,
+  getLastSetsForExercises,
+} from '../model/utils/databaseHelpers'
 import { validateSetInput } from '../model/utils/validationHelpers'
 import type { SetInputData, ValidatedSetData } from '../types/workout'
 
-function buildInitialInputs(sessionExercises: SessionExercise[]): Record<string, SetInputData> {
+function buildInitialInputs(
+  sessionExercises: SessionExercise[],
+  initialWeights: Record<string, Record<number, number>>
+): Record<string, SetInputData> {
   const initial: Record<string, SetInputData> = {}
   for (const se of sessionExercises) {
+    const exerciseId = se.exercise.id
     for (let i = 1; i <= (se.setsTarget ?? 0); i++) {
       const key = `${se.id}_${i}`
+      const historyWeight = initialWeights[exerciseId]?.[i]
       initial[key] = {
-        weight: se.weightTarget?.toString() ?? '',
-        reps: se.repsTarget ?? '',
+        weight: historyWeight != null ? String(historyWeight) : '',
+        reps: '',
       }
     }
   }
@@ -21,6 +31,7 @@ function buildInitialInputs(sessionExercises: SessionExercise[]): Record<string,
 /**
  * Gere l'etat local de la seance en direct :
  * saisies des sets, sets valides, volume total accumule.
+ * Charge les derniers poids depuis l'historique au montage (pré-remplissage).
  *
  * @param sessionExercises - Exercices de la seance (depuis withObservables)
  * @param historyId - ID de la History en cours (disponible apres creation async)
@@ -34,10 +45,27 @@ export function useWorkoutState(
   historyId: string
 ) {
   const [setInputs, setSetInputs] = useState<Record<string, SetInputData>>(
-    () => buildInitialInputs(sessionExercises)
+    () => buildInitialInputs(sessionExercises, {})
   )
   const [validatedSets, setValidatedSets] = useState<Record<string, ValidatedSetData>>({})
   const [totalVolume, setTotalVolume] = useState(0)
+
+  useEffect(() => {
+    const exerciseIds = sessionExercises.map(se => se.exercise.id)
+    if (exerciseIds.length === 0) return
+
+    let cancelled = false
+
+    getLastSetsForExercises(exerciseIds).then(lastWeights => {
+      if (cancelled) return
+      setSetInputs(buildInitialInputs(sessionExercises, lastWeights))
+    }).catch(() => {
+      // inputs restent vides si erreur
+    })
+
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const updateSetInput = (key: string, field: 'weight' | 'reps', value: string) => {
     setSetInputs(prev => ({

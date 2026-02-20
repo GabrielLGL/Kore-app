@@ -1,166 +1,76 @@
-# PRD — Assistant IA Refonte Wizard — 2026-02-19
+# PRD — Redesign Liste Exercices Séance
+> Date : 2026-02-20
 
-## Contexte
-Refonte de l'assistant IA : suppression du mode chat, wizard unifié premium,
-nouvelles options de personnalisation (split type + focus musculaire).
+## User Stories
 
----
+### MUST HAVE
 
-## MUST HAVE
-
-### US-1 — Suppression du mode chat
-> En tant qu'utilisateur, je vois toujours le wizard, quel que soit mon provider configuré.
+#### US-01 — Suppression du poids cible dans l'édition
+En tant qu'utilisateur, je veux que la liste des exercices d'une séance affiche uniquement séries × reps (sans poids cible) pour simplifier la configuration.
 
 **Critères d'acceptation :**
-- `isConnectedMode` supprimé — plus de branching UI
-- Supprimé : `chatMessages`, `chatStep`, `chatFormData`, `chatScrollRef`, `chatInitRef`
-- Supprimé : `renderChatUI`, `handleChatSelect`, `handleEquipmentChatNext`, `toggleChatEquipment`
-- Les providers cloud fonctionnent toujours via `generatePlan()` — seul l'UI change
-- Tous les styles `chat*` supprimés des StyleSheet
+- `SessionExerciseItem` n'affiche plus le champ `weightTarget`
+- Le tap pour éditer les objectifs ne propose plus le poids
+- Les données `weight_target` en DB restent intactes (juste masquées)
 
----
-
-### US-2 — Wizard unifié & nettoyage DRY
-> En tant que développeur, le code ne contient qu'un seul `toggleEquipment` et qu'un seul état de formulaire.
+#### US-02 — Pré-remplissage des poids depuis la dernière session
+En tant qu'utilisateur, je veux que les champs poids soient pré-remplis avec mes poids de la dernière fois pour ne pas avoir à les retaper.
 
 **Critères d'acceptation :**
-- `formData` unique (plus de `chatFormData`)
-- `toggleEquipment` unique (plus de `toggleChatEquipment`)
-- `buildSteps()` conservé et étendu (cf US-7)
-- AssistantScreen.tsx < 500 lignes après refonte
+- Au lancement du workout, chaque input poids est rempli avec la valeur de la dernière `Set` correspondante (même exercice, même `set_order`)
+- Si pas d'historique → champ vide (0 en placeholder gris)
+- Les reps restent toujours en placeholder gris "6-8" (champ vide)
 
----
-
-### US-3 — Progress bar & transitions améliorées
-> En tant qu'utilisateur, je vois clairement ma progression et les transitions entre étapes sont fluides.
+#### US-03 — Affichage de la dernière perf par exercice
+En tant qu'utilisateur, je veux voir un résumé de ma dernière performance pour chaque exercice afin de me donner un repère.
 
 **Critères d'acceptation :**
-- Progress bar : hauteur 6px (au lieu de 3px), `colors.primary`, `borderRadius.sm`
-- Transition entre étapes : fade out/in (`Animated.timing`, 150ms) sur le contenu
-- Step counter : `fontSize.md` (au lieu de sm), couleur `colors.text`
+- Dans chaque `WorkoutExerciseCard`, afficher : "Dernière : Moy. X kg × Y reps sur Z séries"
+- Données issues de la dernière `History` associée à cet exercice (via `Set`)
+- Si pas d'historique → ne pas afficher la ligne
 
----
-
-### US-4 — Badge provider dans le wizard
-> En tant qu'utilisateur, je sais quel moteur génère mon plan sans lire un texte gris minuscule.
+#### US-04 — Toggle de validation des séries
+En tant qu'utilisateur, je veux pouvoir valider une série d'un clic (✓ passe vert) et annuler d'un re-clic pour corriger une erreur.
 
 **Critères d'acceptation :**
-- Remplacer `providerHint` (texte xs en bas) par un badge dans le header
-- Format : `⚡ Gemini` / `⚡ Claude` / `⚡ GPT-4o` / `🔌 Offline`
-- Style badge : `colors.card`, `borderRadius.lg`, `fontSize.sm`, `fontWeight: '600'`
-- Positionnement : coin supérieur droit du header (à côté du step counter)
+- Bouton ✓ rond : état normal → état vert validé au clic
+- Re-clic sur ✓ vert → retour à l'état normal (série invalidée)
+- Pas de flèche ↩, pas de dialog de confirmation
 
----
-
-### US-5 — PreviewSheet enrichie
-> En tant qu'utilisateur, je vois les poids cibles et un résumé du plan pour évaluer rapidement.
+#### US-05 — Header workout : volume + séries
+En tant qu'utilisateur, je veux voir en permanence le volume total soulevé et le nombre de séries validées pour suivre ma progression en temps réel.
 
 **Critères d'acceptation :**
-- Afficher `weightTarget` quand > 0 : format `~45 kg` en `colors.textSecondary`
-- Résumé sous le titre : `"3 séances · 15 exercices"` (ou `"1 séance · 6 exercices"`)
-- Titre dynamique : `"Programme généré"` ou `"Séance générée"` selon `form.mode`
-- ScrollView → `flex: 1` (plus de `maxHeight: 320` fixe)
+- Header affiche : Timer | Séries validées (ex: "6 séries") | Volume (ex: "1 840 kg")
+- Volume = somme (poids × reps) de toutes les séries validées
+- Mis à jour instantanément à chaque validation/invalidation
 
----
+### SHOULD HAVE
 
-### US-6 — Choix du type de split (mode programme)
-> En tant qu'utilisateur, je peux choisir le style de mon programme plutôt que de laisser l'algo décider.
-
-**Critères d'acceptation :**
-- Nouveau type : `AIFormData.split?: 'auto' | 'fullbody' | 'upperlower' | 'ppl'`
-- Nouvelle étape wizard (après `daysPerWeek`, mode programme uniquement) :
-  - "Quel style de programme ?" — 4 options avec sous-titres :
-    - Automatique — *L'IA choisit selon tes jours*
-    - Full Body — *Tout le corps à chaque séance*
-    - Upper / Lower — *Haut et bas du corps en alternance*
-    - PPL — *Push · Pull · Legs*
-- `offlineEngine.ts` : si `form.split !== 'auto'`, utiliser le split fourni plutôt qu'auto-calculer depuis les jours
-- Les providers cloud reçoivent `split` dans le prompt système
-
----
-
-### US-7 — Focus musculaire (mode programme)
-> En tant qu'utilisateur, je peux indiquer les muscles que je veux prioriser, et le programme leur donne plus de volume.
+#### US-06 — Objectif visible par exercice
+Afficher l'objectif de la séance (ex: "Objectif : 4×8 reps") dans chaque card pendant l'entraînement.
 
 **Critères d'acceptation :**
-- Nouveau type : `AIFormData.musclesFocus?: string[]`
-- Nouvelle étape wizard (après `split`, mode programme uniquement) :
-  - "Sur quels muscles veux-tu progresser ?" — multi-select + option "Équilibré"
-  - Options : Pecs, Dos, Épaules, Bras, Jambes, Abdos, Équilibré
-  - "Équilibré" est une option exclusive : la sélectionner vide les autres sélections
-- Sélectionner un muscle désélectionne automatiquement "Équilibré"
-- "Équilibré" sélectionné → `musclesFocus: []` (tableau vide = pas de biais)
-- `offlineEngine.ts` comportement priorité de volume :
-  - Si `musclesFocus` non vide : lors du `buildSession`, placer en premier les exercices ciblant les muscles focus, puis compléter avec les autres
-  - Les muscles non-focus restent présents mais minoritaires (pas de filtre strict)
-- Les providers cloud reçoivent `musclesFocus` dans le prompt système via `buildPrompt`
-- `buildPrompt` ajoute dans CONTRAINTES : `Split souhaité : PPL` + `Muscles prioritaires : Dos, Bras`
+- Texte "Objectif : [setsTarget]×[repsTarget] reps" affiché sous le nom de l'exercice
+- Données issues de `SessionExercise.setsTarget` et `SessionExercise.repsTarget`
 
----
+### COULD HAVE
 
-## SHOULD HAVE
+#### US-07 — Animation du ✓ lors de la validation
+Petite animation (scale + couleur) quand une série est validée pour feedback haptique/visuel.
 
-### US-8 — Bouton Recommencer
-> En tant qu'utilisateur, je peux recommencer le wizard depuis le début en un tap.
+### WON'T HAVE (ce sprint)
+- Modification du schéma DB
+- Changement de WorkoutSummarySheet
+- Statistiques avancées / graphiques
 
-**Critères d'acceptation :**
-- Bouton "✕" dans le header, visible dès step > 0
-- Confirmation `AlertDialog` si step > 2 : "Recommencer depuis le début ?"
-- Remet `formData` à `{ equipment: [] }` et `currentStep` à 0
-- `useHaptics().onDelete()` sur l'action de reset
-
----
-
-## Wizard steps — récapitulatif final
-
-### Mode Programme (8 étapes)
-| # | Step | Field | Kind |
-|---|------|-------|------|
-| 1 | Que veux-tu générer ? | mode | single |
-| 2 | Quel est ton objectif ? | goal | single |
-| 3 | Quel est ton niveau ? | level | single |
-| 4 | Quel équipement as-tu ? | equipment | multi |
-| 5 | Combien de temps par séance ? | durationMin | single |
-| 6 | Combien de jours par semaine ? | daysPerWeek | single |
-| 7 | Quel style de programme ? | split | single — NEW |
-| 8 | Sur quels muscles progresser ? | musclesFocus | multi — NEW |
-
-### Mode Séance (7 étapes — inchangé)
-| # | Step | Field | Kind |
-|---|------|-------|------|
-| 1 | Que veux-tu générer ? | mode | single |
-| 2 | Quel est ton objectif ? | goal | single |
-| 3 | Quel est ton niveau ? | level | single |
-| 4 | Quel équipement as-tu ? | equipment | multi |
-| 5 | Combien de temps par séance ? | durationMin | single |
-| 6 | Quel groupe musculaire ? | muscleGroup | single |
-| 7 | Dans quel programme ? | targetProgramId | programs |
-
----
-
-## Fichiers impactés
-
-| Fichier | Type de changement |
-|---------|-------------------|
-| `services/ai/types.ts` | + `split`, `musclesFocus` dans AIFormData |
-| `services/ai/offlineEngine.ts` | Utiliser `form.split` + logique `musclesFocus` priorité volume |
-| `services/ai/providerUtils.ts` | Injecter `split` + `musclesFocus` dans le prompt |
-| `screens/AssistantScreen.tsx` | Refonte complète : suppression chat, ajout steps, badge |
-| `components/AssistantPreviewSheet.tsx` | Afficher poids, résumé, titre dynamique |
-
----
-
-## Priorisation MoSCoW
-
-| Story | Priorité | Effort |
-|-------|----------|--------|
-| US-1 Suppression chat | Must | M |
-| US-2 DRY wizard | Must | S |
-| US-3 Progress + transitions | Must | S |
-| US-4 Badge provider | Must | XS |
-| US-5 PreviewSheet enrichie | Must | S |
-| US-6 Split type | Must | S |
-| US-7 Focus musculaire | Must | M |
-| US-8 Bouton recommencer | Should | XS |
-
-**Total : 7 Must + 1 Should — 8 stories**
+## MoSCoW Summary
+| Story | Priorité | Complexité estimée |
+|-------|----------|-------------------|
+| US-01 | Must | Faible |
+| US-02 | Must | Moyenne |
+| US-03 | Must | Moyenne |
+| US-04 | Must | Faible |
+| US-05 | Must | Faible |
+| US-06 | Should | Faible |
+| US-07 | Could | Faible |

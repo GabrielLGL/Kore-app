@@ -7,7 +7,6 @@ import Exercise from '../model/models/Exercise'
 import { validateSetInput } from '../model/utils/validationHelpers'
 import { getLastPerformanceForExercise } from '../model/utils/databaseHelpers'
 import { useHaptics } from '../hooks/useHaptics'
-import { LastPerformanceBadge } from './LastPerformanceBadge'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
 import type { SetInputData, ValidatedSetData, LastPerformance } from '../types/workout'
 
@@ -21,7 +20,6 @@ interface WorkoutSetRowProps {
   onUpdateInput: (key: string, field: 'weight' | 'reps', value: string) => void
   onValidate: () => Promise<void>
   onUnvalidate: () => Promise<void>
-  weightTarget?: string
   repsTarget?: string
 }
 
@@ -46,26 +44,22 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
   onUpdateInput,
   onValidate,
   onUnvalidate,
-  weightTarget,
   repsTarget,
 }) => {
   if (validated) {
     return (
       <View style={[styles.setRow, styles.setRowValidated]}>
-        <View style={styles.setNumberCircle}>
-          <Text style={styles.setNumberCircleText}>{setOrder}</Text>
-        </View>
+        <Text style={styles.setLabel}>Série {setOrder}</Text>
         <Text style={styles.validatedText}>
-          {validated.weight} kg × {validated.reps}
+          {validated.weight} kg × {validated.reps} reps
         </Text>
         {validated.isPr && (
           <View style={styles.prChip}>
             <Text style={styles.prBadge}>PR !</Text>
           </View>
         )}
-        <Text style={styles.checkmark}>✓</Text>
-        <TouchableOpacity onPress={onUnvalidate} style={styles.unvalidateBtn}>
-          <Text style={styles.unvalidateBtnText}>↩</Text>
+        <TouchableOpacity onPress={onUnvalidate} style={styles.validateBtnActive}>
+          <Text style={styles.validateBtnText}>✓</Text>
         </TouchableOpacity>
       </View>
     )
@@ -87,7 +81,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
           style={[styles.input, styles.inputWeight, weightError && styles.inputError]}
           value={input.weight}
           onChangeText={v => onUpdateInput(inputKey, 'weight', v)}
-          placeholder={weightTarget ?? '0'}
+          placeholder="0"
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"
           editable
@@ -100,7 +94,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
           style={[styles.input, styles.inputReps, repsError && styles.inputError]}
           value={input.reps}
           onChangeText={v => onUpdateInput(inputKey, 'reps', v)}
-          placeholder={repsTarget ?? '0'}
+          placeholder={repsTarget ?? '6-8'}
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"
           editable
@@ -139,10 +133,6 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
     i => validatedSets[`${sessionExercise.id}_${i}`]
   ).length
   const isComplete = completedCount === setsCount && setsCount > 0
-  const weightTargetStr =
-    sessionExercise.weightTarget != null
-      ? String(sessionExercise.weightTarget)
-      : undefined
 
   return (
     <View
@@ -154,12 +144,14 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
       <Text style={styles.exerciseName}>{exercise.name}</Text>
       {sessionExercise.setsTarget != null && (
         <Text style={styles.target}>
-          Objectif : {sessionExercise.setsTarget}×{' '}
-          {sessionExercise.repsTarget ?? '?'} reps @{' '}
-          {sessionExercise.weightTarget ?? '?'} kg
+          Objectif : {sessionExercise.setsTarget}×{sessionExercise.repsTarget ?? '?'} reps
         </Text>
       )}
-      <LastPerformanceBadge lastPerformance={lastPerformance} />
+      {lastPerformance && (
+        <Text style={styles.lastPerfText}>
+          Dernière : Moy. {lastPerformance.avgWeight} kg × {lastPerformance.avgReps} sur {lastPerformance.setsCount} série{lastPerformance.setsCount > 1 ? 's' : ''}
+        </Text>
+      )}
       {setsCount === 0 ? (
         <Text style={styles.noSetsText}>Aucune série définie.</Text>
       ) : (
@@ -176,7 +168,6 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
               input={input}
               validated={validated}
               onUpdateInput={onUpdateInput}
-              weightTarget={weightTargetStr}
               repsTarget={sessionExercise.repsTarget}
               onValidate={async () => {
                 const { valid } = validateSetInput(input.weight, input.reps)
@@ -234,6 +225,11 @@ const styles = StyleSheet.create({
   target: {
     color: colors.textSecondary,
     fontSize: fontSize.xs,
+    marginBottom: 2,
+  },
+  lastPerfText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
     marginBottom: spacing.sm,
   },
   noSetsText: {
@@ -258,20 +254,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.sm,
     width: 62,
-  },
-
-  // Validated set number circle
-  setNumberCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(52,199,89,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  setNumberCircleText: {
-    color: colors.success,
-    fontSize: fontSize.xs,
   },
 
   // Input group
@@ -300,7 +282,7 @@ const styles = StyleSheet.create({
     width: 28,
   },
 
-  // Validate button
+  // Validate button (not validated)
   validateBtn: {
     width: 38,
     height: 38,
@@ -312,6 +294,15 @@ const styles = StyleSheet.create({
   },
   validateBtnDisabled: {
     backgroundColor: colors.cardSecondary,
+  },
+  validateBtnActive: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 'auto',
   },
   validateBtnText: {
     color: colors.text,
@@ -336,17 +327,5 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: fontSize.xs,
     fontWeight: '800',
-  },
-  checkmark: {
-    color: colors.success,
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-  },
-  unvalidateBtn: {
-    padding: 6,
-  },
-  unvalidateBtnText: {
-    color: colors.textSecondary,
-    fontSize: 16,
   },
 })
