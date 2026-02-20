@@ -44,8 +44,8 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} durationSeconds={3661} />
       )
 
-      // 3661 secondes = 61 minutes 1 seconde → "61:01"
-      expect(getByText('61:01')).toBeTruthy()
+      // 3661 secondes = 61 minutes 1 seconde → "⏱ 61:01"
+      expect(getByText('⏱ 61:01')).toBeTruthy()
     })
 
     it('affiche la durée zéro', () => {
@@ -53,7 +53,7 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} durationSeconds={0} />
       )
 
-      expect(getByText('00:00')).toBeTruthy()
+      expect(getByText('⏱ 00:00')).toBeTruthy()
     })
 
     it('affiche le volume total avec décimale', () => {
@@ -61,7 +61,7 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} totalVolume={2500.5} />
       )
 
-      expect(getByText('2500.5 kg')).toBeTruthy()
+      expect(getByText('🏋️ 2500.5 kg')).toBeTruthy()
     })
 
     it('affiche le nombre de séries validées', () => {
@@ -69,7 +69,7 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} totalSets={12} />
       )
 
-      expect(getByText('12 validées')).toBeTruthy()
+      expect(getByText('✅ 12 validées')).toBeTruthy()
     })
 
     it('affiche le nombre de PR', () => {
@@ -77,7 +77,7 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} totalPrs={3} />
       )
 
-      expect(getByText('3 PR')).toBeTruthy()
+      expect(getByText('🏆 3 PR')).toBeTruthy()
     })
 
     it('affiche les labels des stats (Durée, Volume, Séries, Records)', () => {
@@ -89,10 +89,10 @@ describe('WorkoutSummarySheet', () => {
       expect(getByText('Records')).toBeTruthy()
     })
 
-    it('affiche le bouton Fermer', () => {
+    it('affiche le bouton Terminer', () => {
       const { getByText } = render(<WorkoutSummarySheet {...defaultProps} />)
 
-      expect(getByText('Fermer')).toBeTruthy()
+      expect(getByText('Terminer')).toBeTruthy()
     })
   })
 
@@ -100,13 +100,13 @@ describe('WorkoutSummarySheet', () => {
     it('affiche le champ de note avec placeholder', () => {
       const { getByPlaceholderText } = render(<WorkoutSummarySheet {...defaultProps} />)
 
-      expect(getByPlaceholderText('Ajouter une note (optionnel)...')).toBeTruthy()
+      expect(getByPlaceholderText('Ressenti, conditions, progrès...')).toBeTruthy()
     })
 
     it('met à jour la note quand on tape du texte', () => {
       const { getByPlaceholderText } = render(<WorkoutSummarySheet {...defaultProps} />)
 
-      const noteInput = getByPlaceholderText('Ajouter une note (optionnel)...')
+      const noteInput = getByPlaceholderText('Ressenti, conditions, progrès...')
       fireEvent.changeText(noteInput, 'Super séance !')
 
       expect(noteInput.props.value).toBe('Super séance !')
@@ -116,7 +116,7 @@ describe('WorkoutSummarySheet', () => {
       jest.useFakeTimers()
 
       const { getByPlaceholderText } = render(<WorkoutSummarySheet {...defaultProps} />)
-      const noteInput = getByPlaceholderText('Ajouter une note (optionnel)...')
+      const noteInput = getByPlaceholderText('Ressenti, conditions, progrès...')
 
       fireEvent.changeText(noteInput, 'Bonne séance')
 
@@ -136,7 +136,7 @@ describe('WorkoutSummarySheet', () => {
       jest.useFakeTimers()
 
       const { getByPlaceholderText } = render(<WorkoutSummarySheet {...defaultProps} />)
-      const noteInput = getByPlaceholderText('Ajouter une note (optionnel)...')
+      const noteInput = getByPlaceholderText('Ressenti, conditions, progrès...')
 
       // Taper 3 fois rapidement
       fireEvent.changeText(noteInput, 'A')
@@ -163,13 +163,13 @@ describe('WorkoutSummarySheet', () => {
   })
 
   describe('fermeture', () => {
-    it('appelle onClose quand le bouton Fermer est pressé', () => {
+    it('appelle onClose quand le bouton Terminer est pressé', () => {
       const onClose = jest.fn()
       const { getByText } = render(
         <WorkoutSummarySheet {...defaultProps} onClose={onClose} />
       )
 
-      fireEvent.press(getByText('Fermer'))
+      fireEvent.press(getByText('Terminer'))
 
       expect(onClose).toHaveBeenCalledTimes(1)
     })
@@ -183,11 +183,11 @@ describe('WorkoutSummarySheet', () => {
       )
 
       // Taper une note sans attendre le debounce
-      const noteInput = getByPlaceholderText('Ajouter une note (optionnel)...')
+      const noteInput = getByPlaceholderText('Ressenti, conditions, progrès...')
       fireEvent.changeText(noteInput, 'Note à sauvegarder')
 
       // Fermer avant le délai de debounce
-      fireEvent.press(getByText('Fermer'))
+      fireEvent.press(getByText('Terminer'))
 
       await waitFor(() => {
         expect(mockUpdateHistoryNote).toHaveBeenCalledWith('hist-test-1', 'Note à sauvegarder')
