@@ -29,4 +29,4 @@ CLAUDE.md (fichier principal modifié)
 ✅ Résolu — 20260220-2240
 
 ## Commit
-[sera rempli]
+980af5c chore(docs): update schema version reference v15 → v16 in CLAUDE.md
