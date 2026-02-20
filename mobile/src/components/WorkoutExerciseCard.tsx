@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   setRowValidated: {
-    backgroundColor: 'rgba(52, 199, 89, 0.12)',
+    backgroundColor: colors.successBg,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
   },
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   prChip: {
-    backgroundColor: 'rgba(0,122,255,0.15)',
+    backgroundColor: colors.primaryBg,
     borderRadius: borderRadius.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,

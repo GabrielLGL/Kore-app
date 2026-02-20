@@ -31,6 +31,11 @@ export const colors = {
 
   // Shadow (iOS)
   shadow: '#000',
+
+  // Transparent tints (pour les chips et fonds semi-transparents)
+  successBg: 'rgba(52, 199, 89, 0.12)',
+  primaryBg: 'rgba(0, 122, 255, 0.15)',
+  surfaceOverlay: 'rgba(255, 255, 255, 0.08)',
 }
 
 /**

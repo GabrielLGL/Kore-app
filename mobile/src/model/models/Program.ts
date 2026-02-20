@@ -1,5 +1,5 @@
 import { Model, Q, Query } from '@nozbe/watermelondb'
-import { field, date, readonly, children } from '@nozbe/watermelondb/decorators'
+import { text, field, date, readonly, children } from '@nozbe/watermelondb/decorators'
 import type Session from './Session'
 import type SessionExercise from './SessionExercise'
 
@@ -9,7 +9,7 @@ export default class Program extends Model {
     sessions: { type: 'has_many', foreignKey: 'program_id' },
   } as const
 
-  @field('name') name!: string
+  @text('name') name!: string
   @field('position') position?: number
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date

@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   label: { color: colors.textSecondary, fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
   timer: { fontSize: 22, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   hintChip: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.surfaceOverlay,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.xs,
     paddingHorizontal: 10,
