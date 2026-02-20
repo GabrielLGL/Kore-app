@@ -1,6 +1,15 @@
-# Code mort & qualité — 2026-02-19
+# Code mort & qualité — 2026-02-20
 
-## Résumé : 21 problèmes trouvés
+## Résumé : 57 problèmes trouvés
+
+| Catégorie | Problèmes |
+|-----------|-----------|
+| Code mort | 3 |
+| TypeScript (`as any` en tests) | ~50 (low priority) |
+| Logs de production non gardés | 11 |
+| Valeurs hardcodées (couleurs) | 9 |
+| Valeurs hardcodées (magic numbers) | 30+ |
+| Conventions | 0 |
 
 ---
 
@@ -8,9 +17,11 @@
 
 | Fichier | Type | Élément |
 |---------|------|---------|
-| `src/constants/strings.ts` | Fichier orphelin | `STRINGS` — jamais importé nulle part dans le projet |
-| `src/theme/index.ts` | Export inutilisé | `commonStyles` — exporté mais jamais importé dans aucun fichier |
-| `src/services/sentry.ts` | Fonctions inutilisées | `captureMessage`, `setUser`, `clearUser`, `addBreadcrumb` — exportées, jamais utilisées hors du fichier (`captureError` seul est importé par ErrorBoundary) |
+| `components/SetItem.tsx` | Fichier orphelin | Composant exporté mais jamais importé en production (seulement dans les tests) |
+| `services/ai/aiService.ts` | Export inutilisé | `testProviderConnection` — exportée mais jamais appelée |
+| `services/ai/geminiProvider.ts` | Export inutilisé | `testGeminiConnection` — exportée mais jamais appelée |
+
+> ✅ Aucun import inutilisé, variable non-lue, style non-référencé détecté en production.
 
 ---
 
@@ -18,37 +29,63 @@
 
 | Fichier | Ligne | Problème |
 |---------|-------|----------|
-| `src/services/sentry.ts` | 11 | `(process.env as Record<string, string \| undefined>)` — cast contournable si la variable est déclarée dans `types/env.d.ts` |
-| `src/services/ai/providerUtils.ts` | 91 | `return obj as unknown as GeneratedPlan` — double cast `as unknown as` = signal d'insécurité de type ; préférer une validation explicite |
-| `src/screens/SettingsScreen.tsx` | 27 | `(user?.aiProvider as AIProviderName)` — cast qui masque le fait que WatermelonDB stocke en `string` ; une type guard ou un helper `toProviderName()` serait plus sûr |
+| `hooks/__tests__/useWorkoutState.test.ts` | ~50 occurrences | `as any` pour les mocks (`se1 as any`) — acceptable en tests mais masse importante |
+| `hooks/__tests__/useSessionManager.test.ts` | ~40 occurrences | `as any` pour les mocks (`mockSession as any`) |
+| `hooks/__tests__/useProgramManager.test.ts` | ~30 occurrences | `as any` pour les mocks (`mockProgram as any`) |
+| `services/ai/__tests__/aiService.test.ts` | 80, 90, 100, 115 | `as any` avec `eslint-disable` (intentionnel) |
+| `model/utils/__tests__/databaseHelpers.test.ts` | 504–556 | `as any` pour les mocks de données |
 
-> **Aucun `any` trouvé** — le projet est propre sur ce point.
+> ⚠️ Aucun `any` ni paramètre sans type détecté en code de **production**. Les `as any` sont tous en fichiers de tests.
 
 ---
 
 ### Logs de production
 
-| Fichier | Ligne | Problème |
-|---------|-------|----------|
-| `src/services/sentry.ts` | 26 | `console.warn('[Sentry] DSN not configured...')` — PAS gardé par `__DEV__`, s'exécute en production si le DSN est absent |
-| `src/model/utils/databaseHelpers.ts` | 444 | `console.warn('[importPresetProgram] Exercice introuvable...')` — PAS gardé par `__DEV__` |
-| `src/model/index.ts` | 18 | `console.error("Erreur chargement DB:", error)` — dans le callback `onSetUpError` (cas limite), mais non gardé par `__DEV__` |
+| Fichier | Ligne | Code |
+|---------|-------|------|
+| `hooks/useProgramManager.ts` | 85 | `console.error('Failed to save program:', error)` |
+| `hooks/useProgramManager.ts` | 104 | `console.error('Failed to duplicate program:', error)` |
+| `hooks/useProgramManager.ts` | 124 | `console.error('Failed to delete program:', error)` |
+| `hooks/useProgramManager.ts` | 159 | `console.error('Failed to save session:', error)` |
+| `hooks/useProgramManager.ts` | 208 | `console.error('Failed to duplicate session:', error)` |
+| `hooks/useProgramManager.ts` | 227 | `console.error('Failed to delete session:', error)` |
+| `hooks/useProgramManager.ts` | 253 | `console.error('Failed to move session:', error)` |
+| `hooks/useSessionManager.ts` | 108 | `console.error('Failed to add exercise:', error)` |
+| `hooks/useSessionManager.ts` | 148 | `console.error('Failed to update targets:', error)` |
+| `hooks/useSessionManager.ts` | 170 | `console.error('Failed to remove exercise:', error)` |
+| `hooks/useSessionManager.ts` | 213 | `console.error('Failed to reorder exercises:', error)` |
 
-> Les `console.error` des hooks (useProgramManager, useSessionManager, useWorkoutState, useExerciseManager) et des screens (HomeScreen, SettingsScreen, SessionDetailScreen) sont tous dans des blocs `catch` légitimes → **acceptés**.
+> Fix : envelopper avec `if (__DEV__)` ou router vers Sentry en prod.
 
 ---
 
 ### Valeurs hardcodées
 
+#### Couleurs (hex/rgba hors thème)
+
 | Fichier | Ligne | Valeur |
 |---------|-------|--------|
-| `src/components/WorkoutExerciseCard.tsx` | 204 | `'rgba(52, 199, 89, 0.12)'` — `colors.success` (#34C759) avec opacité 12% ; pas de token disponible |
-| `src/screens/ChartsScreen.tsx` | 269 | `` `rgba(0, 122, 255, ${opacity})` `` — `colors.primary` en rgba dynamique (contrainte API chart-kit) |
-| `src/screens/ChartsScreen.tsx` | 270 | `` `rgba(255, 255, 255, ${opacity})` `` — `colors.text` en rgba dynamique (contrainte API chart-kit) |
-| `src/components/RestTimer.tsx` | 131 | `'rgba(255,255,255,0.8)'` — blanc 80% ; devrait utiliser `colors.text` + opacité |
-| `src/components/RestTimer.tsx` | 133 | `'rgba(255,255,255,0.6)'` — blanc 60% ; même problème |
-| `src/components/WorkoutHeader.tsx` | 32 | `fontSize: 40` — nombre magique pour le chrono ; devrait être une constante (`TIMER_FONT_SIZE = 40`) |
-| `src/screens/HomeScreen.tsx` | 362 | `shadowColor: '#000'` — idem dans CustomModal:87, BottomSheet:137, AlertDialog:141 — `#000` absent du thème |
+| `components/AlertDialog.tsx` | 145 | `shadowColor: '#000'` |
+| `components/BottomSheet.tsx` | 137 | `shadowColor: '#000'` |
+| `components/CustomModal.tsx` | 87 | `shadowColor: '#000'` |
+| `screens/HomeScreen.tsx` | 389 | `shadowColor: '#000'` |
+| `components/RestTimer.tsx` | 175 | `backgroundColor: 'rgba(255,255,255,0.08)'` |
+| `components/WorkoutExerciseCard.tsx` | 249 | `backgroundColor: 'rgba(52, 199, 89, 0.12)'` |
+| `components/WorkoutExerciseCard.tsx` | 321 | `backgroundColor: 'rgba(0,122,255,0.15)'` |
+| `screens/ChartsScreen.tsx` | 277 | `(opacity) => rgba(0, 122, 255, opacity)` |
+| `screens/ChartsScreen.tsx` | 278 | `(opacity) => rgba(255, 255, 255, opacity)` |
+
+#### Magic numbers (spacing / fontSize hors tokens)
+
+| Fichier | Lignes | Valeurs problématiques |
+|---------|--------|------------------------|
+| `screens/ExercisesScreen.tsx` | 171, 285–308 | `height: 45`, `fontSize: 13/15/17`, `marginTop: 3/10`, `marginBottom: 15`, `paddingHorizontal: 15` |
+| `components/ErrorBoundary.tsx` | 87–134 | `padding: 20`, `borderRadius: 16`, `fontSize: 48/15`, `marginBottom: 12` |
+| `components/RestTimer.tsx` | 144–180 | `marginHorizontal: 20`, `borderRadius: 15`, `fontSize: 10/22`, `paddingVertical: 4`, `paddingHorizontal: 10` |
+| `screens/ChartsScreen.tsx` | 279–331 | `borderRadius: 16`, `fontSize: 11/13/15`, `marginTop: 25`, `marginBottom: 15`, `marginTop: 2` |
+| `components/CustomModal.tsx` | 85–100 | `padding: 24`, `fontSize: 20`, `marginBottom: 16/20` |
+
+> Ces valeurs devraient utiliser `spacing.*`, `borderRadius.*` et `fontSize.*` du thème.
 
 ---
 
@@ -56,28 +93,24 @@
 
 | Fichier | Problème |
 |---------|----------|
-| `src/components/SessionItem.tsx:61` | Utilise `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)` directement — CLAUDE.md impose `useHaptics()` |
-| `src/components/RestTimer.tsx:76-78` | Utilise `Haptics.impactAsync` directement (×3) — doit passer par `useHaptics()` |
-| `src/navigation/index.tsx:83,97,179` | Utilise `Haptics.impactAsync` directement (×3 appels) — doit passer par `useHaptics()` |
-| `src/components/CustomModal.tsx` | Commentaires de style "tutoriel" excessifs laissés (lignes 15-16, 27, 36-37, 40, 43-44, 53-54, 69, 74) — ne décrivent pas la logique, parasitent la lecture |
-| `src/components/SessionItem.tsx` | Commentaires tutoriel excessifs sur toutes les lignes (lignes 1-6, 18-25, 31-35, 39-40…) |
-| `src/screens/AssistantScreen.tsx:93,114` | `Alert.alert()` natif utilisé pour feedback utilisateur — cohérence avec `<AlertDialog>` à évaluer |
+| — | Aucun problème détecté |
+
+> ✅ Pas de TODO/FIXME/HACK, pas de code commenté, pas de snake_case hors DB, pas d'incohérence de nommage.
 
 ---
 
-## Priorisation
+## Priorités de correction
 
-### 🔴 Priorité haute
-1. **`constants/strings.ts`** — fichier mort (150 lignes inutiles), supprimer
-2. **Logs de production non gardés** — `sentry.ts:26`, `databaseHelpers.ts:444`, `model/index.ts:18` — envelopper dans `if (__DEV__)`
-3. **Haptics directs** — `SessionItem`, `RestTimer`, `navigation/index` — 7 appels à migrer vers `useHaptics()`
+### 🔴 Critique
+1. **11 `console.error` non gardés** — `useProgramManager.ts` (7) + `useSessionManager.ts` (4)
+   → Ajouter `if (__DEV__)` ou intégrer Sentry
 
-### 🟡 Priorité moyenne
-4. **`commonStyles` inutilisé** — supprimer de `theme/index.ts` ou commencer à l'utiliser
-5. **Fonctions sentry inutilisées** — supprimer `captureMessage`, `setUser`, `clearUser`, `addBreadcrumb`
-6. **Couleurs rgba hardcodées** — `RestTimer` (2 occurrences), `WorkoutExerciseCard` (1)
+### 🟡 Modéré
+2. **`SetItem.tsx` orphelin** — supprimer ou intégrer dans le workflow d'historique
+3. **`testProviderConnection` / `testGeminiConnection`** — déplacer dans les tests ou supprimer
 
-### 🟢 Priorité basse
-7. **`as` casts** — `providerUtils.ts:91` (double cast), `SettingsScreen.tsx:27`
-8. **Nombre magique** — `WorkoutHeader:32` `fontSize: 40`
-9. **Commentaires tutoriel** — nettoyer `CustomModal` et `SessionItem`
+### 🟢 Faible
+4. **Couleurs rgba hardcodées** (5 occurrences) → ajouter des tokens `colors.successOverlay12`, `colors.primaryOverlay15`, `colors.whiteOverlay08`
+5. **`shadowColor: '#000'`** (4 fichiers) → `colors.shadow: '#000'` dans le thème
+6. **Magic numbers** dans `ExercisesScreen`, `ErrorBoundary`, `RestTimer`, `ChartsScreen` → utiliser les tokens existants ou en ajouter
+7. **`as any` en tests** → progressivement typer les mocks avec des factories typées
