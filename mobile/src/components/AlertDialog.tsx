@@ -71,6 +71,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
       await onConfirm()
     } catch (error) {
       if (__DEV__) console.error('[AlertDialog] onConfirm failed:', error)
+      haptics.onError() // Feedback tactile si l'action échoue
     }
   }
 

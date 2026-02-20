@@ -51,6 +51,29 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
   showLabels = true,
   autoFocus = false,
 }) => {
+  const handleSetsChange = (value: string) => {
+    if (value === '') { onSetsChange(value); return }
+    const num = parseInt(value, 10)
+    if (isNaN(num)) return
+    onSetsChange(String(Math.min(Math.max(num, 1), 10)))
+  }
+
+  const handleRepsChange = (value: string) => {
+    if (value === '') { onRepsChange(value); return }
+    const num = parseInt(value, 10)
+    if (isNaN(num)) return
+    onRepsChange(String(Math.min(Math.max(num, 1), 99)))
+  }
+
+  const handleWeightChange = (value: string) => {
+    if (value === '' || value === '.') { onWeightChange(value); return }
+    const num = parseFloat(value)
+    if (isNaN(num)) return
+    if (num < 0) { onWeightChange('0'); return }
+    if (num > 999) { onWeightChange('999'); return }
+    onWeightChange(value)
+  }
+
   return (
     <View style={styles.row}>
       {/* Séries */}
@@ -60,7 +83,7 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
           style={styles.input}
           keyboardType="numeric"
           value={sets}
-          onChangeText={onSetsChange}
+          onChangeText={handleSetsChange}
           placeholder="0"
           placeholderTextColor={colors.placeholder}
           autoFocus={autoFocus}
@@ -74,7 +97,7 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
           style={styles.input}
           keyboardType="numeric"
           value={reps}
-          onChangeText={onRepsChange}
+          onChangeText={handleRepsChange}
           placeholder="0"
           placeholderTextColor={colors.placeholder}
         />
@@ -87,7 +110,7 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
           style={styles.input}
           keyboardType="numeric"
           value={weight}
-          onChangeText={onWeightChange}
+          onChangeText={handleWeightChange}
           placeholder="0"
           placeholderTextColor={colors.placeholder}
         />

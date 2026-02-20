@@ -190,6 +190,26 @@ describe('AlertDialog', () => {
     })
   })
 
+  it('should trigger error haptic when onConfirm throws', async () => {
+    const onConfirm = jest.fn(() => Promise.reject(new Error('oops')))
+    const { getByText } = render(
+      <AlertDialog
+        visible={true}
+        title="Test Title"
+        onConfirm={onConfirm}
+        onCancel={jest.fn()}
+      />
+    )
+
+    fireEvent.press(getByText('Confirmer'))
+
+    await waitFor(() => {
+      expect(Haptics.notificationAsync).toHaveBeenCalledWith(
+        Haptics.NotificationFeedbackType.Error
+      )
+    })
+  })
+
   it('should use default button texts when not provided', () => {
     const { getByText } = render(
       <AlertDialog

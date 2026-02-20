@@ -46,6 +46,19 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
   onUnvalidate,
   repsTarget,
 }) => {
+  // Hooks AVANT tout return conditionnel (règle des hooks React)
+  const [localWeight, setLocalWeight] = React.useState(input.weight)
+  const [localReps, setLocalReps] = React.useState(input.reps)
+  const weightTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const repsTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  React.useEffect(() => {
+    return () => {
+      if (weightTimerRef.current) clearTimeout(weightTimerRef.current)
+      if (repsTimerRef.current) clearTimeout(repsTimerRef.current)
+    }
+  }, [])
+
   if (validated) {
     return (
       <View style={[styles.setRow, styles.setRowValidated]}>
@@ -65,13 +78,25 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
     )
   }
 
-  const weightNum = Number(input.weight)
-  const repsNum = Number(input.reps)
-  const weightHasValue = input.weight.trim() !== ''
-  const repsHasValue = input.reps.trim() !== ''
+  const handleWeightChange = (v: string) => {
+    setLocalWeight(v)
+    if (weightTimerRef.current) clearTimeout(weightTimerRef.current)
+    weightTimerRef.current = setTimeout(() => onUpdateInput(inputKey, 'weight', v), 300)
+  }
+
+  const handleRepsChange = (v: string) => {
+    setLocalReps(v)
+    if (repsTimerRef.current) clearTimeout(repsTimerRef.current)
+    repsTimerRef.current = setTimeout(() => onUpdateInput(inputKey, 'reps', v), 300)
+  }
+
+  const weightNum = Number(localWeight)
+  const repsNum = Number(localReps)
+  const weightHasValue = localWeight.trim() !== ''
+  const repsHasValue = localReps.trim() !== ''
   const weightError = weightHasValue && (isNaN(weightNum) || weightNum < 0)
   const repsError = repsHasValue && (isNaN(repsNum) || repsNum < 1)
-  const { valid } = validateSetInput(input.weight, input.reps)
+  const { valid } = validateSetInput(localWeight, localReps)
 
   return (
     <View style={styles.setRow}>
@@ -79,8 +104,8 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
       <View style={styles.inputGroup}>
         <TextInput
           style={[styles.input, styles.inputWeight, weightError && styles.inputError]}
-          value={input.weight}
-          onChangeText={v => onUpdateInput(inputKey, 'weight', v)}
+          value={localWeight}
+          onChangeText={handleWeightChange}
           placeholder="0"
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"
@@ -92,8 +117,8 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
       <View style={styles.inputGroup}>
         <TextInput
           style={[styles.input, styles.inputReps, repsError && styles.inputError]}
-          value={input.reps}
-          onChangeText={v => onUpdateInput(inputKey, 'reps', v)}
+          value={localReps}
+          onChangeText={handleRepsChange}
           placeholder={repsTarget ?? '6-8'}
           placeholderTextColor={colors.placeholder}
           keyboardType="numeric"

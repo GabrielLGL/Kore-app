@@ -31,4 +31,7 @@
 - ExerciseTargetInputs : impossible de saisir > seuils définis
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260220-2020
+
+## Résolution
+Rapport do : docs/bmad/do/20260220-2020-fix-alertdialog-debounce-clamping.md

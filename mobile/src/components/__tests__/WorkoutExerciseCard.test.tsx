@@ -252,6 +252,14 @@ describe('WorkoutExerciseCard', () => {
   })
 
   describe('série non validée — inputs', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
     it('affiche les champs de saisie poids et reps', () => {
       const setInputs: Record<string, SetInputData> = {
         'se-1_1': { weight: '60', reps: '10' },
@@ -275,7 +283,7 @@ describe('WorkoutExerciseCard', () => {
       expect(getAllByDisplayValue('10').length).toBeGreaterThan(0)
     })
 
-    it('appelle onUpdateInput lors du changement de poids', () => {
+    it('appelle onUpdateInput après 300ms de pause (debounce poids)', () => {
       const onUpdateInput = jest.fn()
       const setInputs: Record<string, SetInputData> = {
         'se-1_1': { weight: '60', reps: '10' },
@@ -298,7 +306,44 @@ describe('WorkoutExerciseCard', () => {
       const weightInput = getAllByDisplayValue('60')[0]
       fireEvent.changeText(weightInput, '80')
 
+      // Pas encore appelé (debounce en attente)
+      expect(onUpdateInput).not.toHaveBeenCalled()
+
+      jest.advanceTimersByTime(300)
+
       expect(onUpdateInput).toHaveBeenCalledWith('se-1_1', 'weight', '80')
+    })
+
+    it('n\'appelle onUpdateInput qu\'une seule fois pour plusieurs frappes rapides', () => {
+      const onUpdateInput = jest.fn()
+      const setInputs: Record<string, SetInputData> = {
+        'se-1_1': { weight: '60', reps: '10' },
+      }
+
+      const { getAllByDisplayValue } = render(
+        <WorkoutExerciseCard
+          sessionExercise={makeSessionExercise({ setsTarget: 1 })}
+          exercise={makeExercise()}
+          lastPerformance={null}
+          historyId="hist-1"
+          setInputs={setInputs}
+          validatedSets={{}}
+          onUpdateInput={onUpdateInput}
+          onValidateSet={jest.fn()}
+          onUnvalidateSet={jest.fn()}
+        />
+      )
+
+      const weightInput = getAllByDisplayValue('60')[0]
+      fireEvent.changeText(weightInput, '7')
+      jest.advanceTimersByTime(100)
+      fireEvent.changeText(weightInput, '70')
+      jest.advanceTimersByTime(100)
+      fireEvent.changeText(weightInput, '705')
+      jest.advanceTimersByTime(300)
+
+      expect(onUpdateInput).toHaveBeenCalledTimes(1)
+      expect(onUpdateInput).toHaveBeenCalledWith('se-1_1', 'weight', '705')
     })
 
     it('affiche le bouton de validation ✓', () => {

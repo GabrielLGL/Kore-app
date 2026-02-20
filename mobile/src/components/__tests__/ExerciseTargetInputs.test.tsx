@@ -116,6 +116,85 @@ describe('ExerciseTargetInputs', () => {
     })
   })
 
+  describe('clamping des valeurs', () => {
+    it('clamp les séries à 10 si la valeur dépasse le max', () => {
+      const onSetsChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('3'), '99')
+
+      expect(onSetsChange).toHaveBeenCalledWith('10')
+    })
+
+    it('clamp les séries à 1 si la valeur est inférieure au min', () => {
+      const onSetsChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('3'), '-5')
+
+      expect(onSetsChange).toHaveBeenCalledWith('1')
+    })
+
+    it('clamp les reps à 99 si la valeur dépasse le max', () => {
+      const onRepsChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('10'), '200')
+
+      expect(onRepsChange).toHaveBeenCalledWith('99')
+    })
+
+    it('clamp le poids à 999 si la valeur dépasse le max', () => {
+      const onWeightChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('60'), '1500')
+
+      expect(onWeightChange).toHaveBeenCalledWith('999')
+    })
+
+    it('clamp le poids à 0 si la valeur est négative', () => {
+      const onWeightChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('60'), '-10')
+
+      expect(onWeightChange).toHaveBeenCalledWith('0')
+    })
+
+    it('passe les valeurs vides sans modification', () => {
+      const onSetsChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('3'), '')
+
+      expect(onSetsChange).toHaveBeenCalledWith('')
+    })
+
+    it('préserve la chaîne originale pour le poids si dans les limites', () => {
+      const onWeightChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
+      )
+
+      fireEvent.changeText(getByDisplayValue('60'), '85.5')
+
+      expect(onWeightChange).toHaveBeenCalledWith('85.5')
+    })
+  })
+
   describe('props optionnelles', () => {
     it('se rend sans crash avec autoFocus à true', () => {
       expect(() =>
