@@ -1,7 +1,7 @@
 import React, { Component, ReactNode } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { captureError } from '../services/sentry'
-import { colors } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 
 interface Props {
   children: ReactNode
@@ -89,17 +89,17 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 24,
+    padding: spacing.lg,
     maxWidth: 400,
     alignItems: 'center',
   },
   emoji: {
     fontSize: 48,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   title: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.xl,
     fontWeight: 'bold',
     marginBottom: 12,
     textAlign: 'center',
@@ -114,24 +114,24 @@ const styles = StyleSheet.create({
   errorDetails: {
     backgroundColor: colors.cardSecondary,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     marginBottom: 20,
     maxWidth: '100%',
   },
   errorText: {
     color: colors.danger,
-    fontSize: 12,
+    fontSize: fontSize.xs,
     fontFamily: 'monospace',
   },
   button: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing.lg,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
   },
   buttonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
   },
 })

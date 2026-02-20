@@ -31,4 +31,7 @@ Rend les ajustements UI globaux difficiles.
 - grep `StyleSheet.create` dans les 9 fichiers → 0 valeurs numériques hardcodées pour spacing/borderRadius
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260220-2120
+
+## Résolution
+Rapport do : docs/bmad/do/20260220-2120-style-magic-numbers.md

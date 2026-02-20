@@ -5,7 +5,7 @@ import SessionExercise from '../model/models/SessionExercise'
 import Exercise from '../model/models/Exercise'
 import { of } from 'rxjs'
 import { catchError } from 'rxjs/operators'
-import { colors } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 
 interface SessionExerciseItemProps {
   item: SessionExercise
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     marginHorizontal: 15,
     marginTop: 10,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     padding: 15,
     flexDirection: 'row',
     alignItems: 'center',
@@ -70,11 +70,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSecondary,
   },
   dragHandle: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginRight: spacing.sm,
     justifyContent: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   dragBar: {
     width: 18,
@@ -85,13 +85,13 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1 },
   itemTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.lg,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: spacing.xs,
   },
   itemTags: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: fontSize.xs,
     marginBottom: 12,
   },
   targetRow: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSecondary,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
     minWidth: 55,
   },
@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
   },
   targetSeparator: {
     color: colors.placeholder,
-    fontSize: 16,
-    marginHorizontal: 8,
+    fontSize: fontSize.md,
+    marginHorizontal: spacing.sm,
     fontWeight: '300',
   },
   deleteBtn: { padding: 15 },
-  deleteIcon: { fontSize: 20, color: colors.placeholder },
+  deleteIcon: { fontSize: fontSize.xl, color: colors.placeholder },
 })
 
 export const SessionExerciseItem = withObservables(['item'], ({ item }: SessionExerciseItemProps) => ({

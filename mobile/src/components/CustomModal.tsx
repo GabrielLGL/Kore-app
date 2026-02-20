@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated } from 'react-native'
 import { Portal } from '@gorhom/portal' // <--- La magie opère ici
-import { colors, borderRadius, spacing } from '../theme/index' // On utilise ton thème !
+import { colors, borderRadius, spacing, fontSize } from '../theme/index' // On utilise ton thème !
 
 interface Props {
   visible: boolean
@@ -81,8 +81,8 @@ const styles = StyleSheet.create({
     width: '85%',
     maxWidth: 400,
     backgroundColor: colors.card,
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
@@ -91,9 +91,9 @@ const styles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.xl,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: spacing.md,
     textAlign: 'center',
   },
   body: {

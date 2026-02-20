@@ -7,7 +7,7 @@ import withObservables from '@nozbe/with-observables'
 // Importation des modèles de données
 import Set from '../model/models/Set'
 import Exercise from '../model/models/Exercise'
-import { colors, borderRadius } from '../theme'
+import { colors, borderRadius, fontSize } from '../theme'
 
 // Définition des propriétés attendues
 interface Props {
@@ -58,10 +58,10 @@ const styles = StyleSheet.create({
     borderColor: colors.cardSecondary
   },
   info: { flexDirection: 'column' },
-  exerciseName: { fontSize: 16, fontWeight: 'bold', color: colors.text, marginBottom: 2 },
-  setOrder: { fontSize: 12, color: colors.textSecondary },
-  perf: { fontSize: 20, fontWeight: 'bold', color: colors.primary },
-  x: { fontSize: 14, color: colors.textSecondary }
+  exerciseName: { fontSize: fontSize.md, fontWeight: 'bold', color: colors.text, marginBottom: 2 },
+  setOrder: { fontSize: fontSize.xs, color: colors.textSecondary },
+  perf: { fontSize: fontSize.xl, fontWeight: 'bold', color: colors.primary },
+  x: { fontSize: fontSize.sm, color: colors.textSecondary }
 })
 
 /**

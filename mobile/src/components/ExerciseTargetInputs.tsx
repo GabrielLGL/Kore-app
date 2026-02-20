@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text, TextInput, StyleSheet } from 'react-native'
-import { colors } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 
 interface ExerciseTargetInputsProps {
   sets: string
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   inputWrapperLast: {
     flex: 1,
@@ -134,14 +134,14 @@ const styles = StyleSheet.create({
   label: {
     color: colors.textSecondary,
     marginBottom: 5,
-    fontSize: 12,
+    fontSize: fontSize.xs,
   },
   input: {
     backgroundColor: colors.cardSecondary,
     color: colors.text,
     padding: 12,
-    borderRadius: 8,
-    fontSize: 16,
+    borderRadius: borderRadius.sm,
+    fontSize: fontSize.md,
     marginBottom: 15,
   },
 })

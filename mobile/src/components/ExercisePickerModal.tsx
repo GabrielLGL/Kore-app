@@ -7,7 +7,7 @@ import { ChipSelector } from './ChipSelector'
 import { ExerciseTargetInputs } from './ExerciseTargetInputs'
 import { filterExercises } from '../model/utils/databaseHelpers'
 import { validateWorkoutInput } from '../model/utils/validationHelpers'
-import { colors } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 
 interface ExercisePickerModalProps {
   visible: boolean
@@ -123,7 +123,7 @@ export const ExercisePickerModal: React.FC<ExercisePickerModalProps> = ({
               selectedValue={filterEquipment}
               onChange={setFilterEquipment}
               noneLabel="Tout équipement"
-              style={[styles.filterRow, { marginTop: 8 }]}
+              style={[styles.filterRow, { marginTop: spacing.sm }]}
             />
           </View>
 
@@ -186,12 +186,12 @@ const styles = StyleSheet.create({
     width: '90%',
     backgroundColor: colors.card,
     padding: 25,
-    borderRadius: 20,
+    borderRadius: borderRadius.lg,
     elevation: 20,
   },
   modalTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.lg,
     fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
@@ -210,14 +210,14 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: colors.cardSecondary,
     marginBottom: 5,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
   },
   exoChipSelected: {
     backgroundColor: colors.primary,
   },
   exoText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.md,
   },
   exoTextSelected: {
     color: colors.text,
@@ -231,14 +231,14 @@ const styles = StyleSheet.create({
     flex: 0.48,
     backgroundColor: colors.secondaryButton,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
   },
   confirmBtn: {
     flex: 0.48,
     backgroundColor: colors.primary,
     padding: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.sm,
     alignItems: 'center',
   },
   btnText: {

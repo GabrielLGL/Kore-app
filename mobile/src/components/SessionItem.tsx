@@ -12,7 +12,7 @@ import { database } from '../model/index'
 import Session from '../model/models/Session'
 import Exercise from '../model/models/Exercise'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, borderRadius } from '../theme'
+import { colors, borderRadius, spacing, fontSize } from '../theme'
 
 // Définition des propriétés (Props) attendues par le composant
 interface Props {
@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
   clickableArea: { flex: 1, padding: 15 },
   optionsButton: { padding: 15 },
   title: { fontSize: 17, fontWeight: 'bold', color: colors.text },
-  preview: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
-  moreIcon: { color: colors.placeholder, fontSize: 16, fontWeight: 'bold' },
+  preview: { fontSize: 13, color: colors.textSecondary, marginTop: spacing.xs },
+  moreIcon: { color: colors.placeholder, fontSize: fontSize.md, fontWeight: 'bold' },
 })
 
 /**

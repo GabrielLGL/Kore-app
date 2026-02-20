@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 import {
   scheduleRestEndNotification,
   cancelNotification,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: colors.cardSecondary,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -175,11 +175,11 @@ const styles = StyleSheet.create({
   timer: { fontSize: 22, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   hintChip: {
     backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 8,
-    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.xs,
     paddingHorizontal: 10,
   },
-  hint: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  hint: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: '600' },
 })
 
 export default RestTimer
