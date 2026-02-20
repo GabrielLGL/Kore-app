@@ -59,7 +59,8 @@ export function useWorkoutState(
     getLastSetsForExercises(exerciseIds).then(lastWeights => {
       if (cancelled) return
       setSetInputs(buildInitialInputs(sessionExercises, lastWeights))
-    }).catch(() => {
+    }).catch(e => {
+      if (__DEV__) console.warn('[useWorkoutState] getLastSetsForExercises failed:', e)
       // inputs restent vides si erreur
     })
 

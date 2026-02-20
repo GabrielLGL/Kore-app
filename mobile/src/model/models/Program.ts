@@ -10,7 +10,7 @@ export default class Program extends Model {
   } as const
 
   @field('name') name!: string
-  @field('position') position!: number
+  @field('position') position?: number
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
   @children('sessions') sessions!: Query<Session>

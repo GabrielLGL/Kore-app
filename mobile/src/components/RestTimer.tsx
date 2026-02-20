@@ -31,9 +31,11 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
 
   useEffect(() => {
     if (notificationEnabled) {
-      scheduleRestEndNotification(duration).then(id => {
-        notificationIdRef.current = id
-      })
+      scheduleRestEndNotification(duration)
+        .then(id => {
+          notificationIdRef.current = id
+        })
+        .catch(e => { if (__DEV__) console.warn('[RestTimer] scheduleRestEndNotification failed:', e) })
     }
     return () => {
       if (notificationIdRef.current) {

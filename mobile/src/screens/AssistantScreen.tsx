@@ -252,7 +252,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
     // Auto-corriger daysPerWeek si le split change et que le nombre de jours courant n'est plus valide
     if (field === 'split') {
       const validDays = getDaysForSplit(value as AISplit)
-      if (newData.daysPerWeek !== undefined && !validDays.includes(newData.daysPerWeek)) {
+      if (validDays.length > 0 && newData.daysPerWeek !== undefined && !validDays.includes(newData.daysPerWeek)) {
         newData = { ...newData, daysPerWeek: validDays[0] }
       }
     }
