@@ -20,6 +20,7 @@
 | 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | ↑ +5 |
 | 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable |
 | 2026-02-19 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable (638 tests) |
+| 2026-02-20 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable (642 tests, cov 68.21%) |
 
 ---
 
@@ -58,3 +59,8 @@
 ### Prochains objectifs pour augmenter le score
 - Coverage 80% (+5 pts) → tests screens complexes (SessionDetailScreen, WorkoutScreen)
 - Tests E2E Detox pour les flows critiques
+| 20260219-2149 | 48 | 20 | 0 | 10 | 5 | 13 | full |
+| 20260219-2149 | 48 | 20 | 0 | 10 | 5 | 13 | full |
+| 20260220-0733 | 44 | 20 | 0 | 10 | 0 | 14 | full |
+| 20260220-1423 | 43 | 20 | 0 | 10 | 0 | 13 | full |
+| 20260220-1423 | 43 | 20 | 0 | 10 | 0 | 13 | full |
