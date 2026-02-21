@@ -88,4 +88,7 @@ cohérentes avec le projet : stack technique, fonctionnalités existantes, contr
 Aucune dépendance — premier groupe.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1702
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1700-feat-brainstorm-context.md
