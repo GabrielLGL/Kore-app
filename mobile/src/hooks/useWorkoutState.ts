@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import SessionExercise from '../model/models/SessionExercise'
 import {
   saveWorkoutSet,
@@ -47,6 +47,11 @@ export function useWorkoutState(
   const [setInputs, setSetInputs] = useState<Record<string, SetInputData>>(
     () => buildInitialInputs(sessionExercises, {})
   )
+  // Ref synchronisé : permet à validateSet de lire la valeur courante même quand
+  // le debounce est flushé synchroniquement juste avant l'appel (race condition).
+  const setInputsRef = useRef<Record<string, SetInputData>>({})
+  setInputsRef.current = setInputs
+
   const [validatedSets, setValidatedSets] = useState<Record<string, ValidatedSetData>>({})
   const [totalVolume, setTotalVolume] = useState(0)
 
@@ -72,10 +77,11 @@ export function useWorkoutState(
   }, [])
 
   const updateSetInput = (key: string, field: 'weight' | 'reps', value: string) => {
-    setSetInputs(prev => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value },
-    }))
+    setSetInputs(prev => {
+      const next = { ...prev, [key]: { ...prev[key], [field]: value } }
+      setInputsRef.current = next
+      return next
+    })
   }
 
   const validateSet = async (
@@ -85,7 +91,7 @@ export function useWorkoutState(
     if (!historyId) return false
 
     const key = `${sessionExercise.id}_${setOrder}`
-    const input = setInputs[key]
+    const input = setInputsRef.current[key]
     if (!input) return false
 
     const { valid } = validateSetInput(input.weight, input.reps)
