@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, SafeAreaView, ScrollView, Animated, Platform, UIManager, BackHandler, Keyboard } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
@@ -119,6 +119,27 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
     }
   }
 
+  const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
+    <View style={styles.exoItem}>
+      <View style={styles.exoInfo}>
+        <Text style={styles.exoTitle}>{item.name}</Text>
+        <Text style={styles.exoSubtitle}>{item.muscles?.join(', ')} • {item.equipment}</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.moreBtn}
+        onPress={() => {
+          haptics.onPress()
+          setSelectedExercise(item)
+          setIsOptionsVisible(true)
+        }}
+      >
+        <Text style={styles.moreIcon}>•••</Text>
+      </TouchableOpacity>
+    </View>
+  ), [haptics, setSelectedExercise, setIsOptionsVisible])
+
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
+
   return (
     <View style={styles.baseContainer}>
       <SafeAreaView style={styles.container}>
@@ -177,27 +198,10 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
             <FlatList
               data={filteredExercises}
               keyExtractor={item => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.exoItem}>
-                  <View style={styles.exoInfo}>
-                    <Text style={styles.exoTitle}>{item.name}</Text>
-                    <Text style={styles.exoSubtitle}>{item.muscles?.join(', ')} • {item.equipment}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.moreBtn}
-                    onPress={() => {
-                      haptics.onPress()
-                      setSelectedExercise(item)
-                      setIsOptionsVisible(true)
-                    }}
-                  >
-                    <Text style={styles.moreIcon}>•••</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+              renderItem={renderExerciseItem}
               style={styles.list}
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 150 }}
-              ItemSeparatorComponent={() => <View style={styles.separator} />}
+              ItemSeparatorComponent={renderSeparator}
               ListEmptyComponent={<Text style={styles.emptyList}>Aucun exercice trouvé.</Text>}
             />
           </View>
