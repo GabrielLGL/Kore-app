@@ -147,6 +147,9 @@ const MUSCLES_FOCUS_OPTIONS = ['Équilibré', 'Pecs', 'Dos', 'Épaules', 'Bras',
 
 const PROVIDER_LABELS: Record<string, string> = {
   offline: 'Offline',
+  openai:  'OpenAI',
+  gemini:  'Gemini',
+  claude:  'Claude',
 }
 
 // ─── buildSteps ───────────────────────────────────────────────────────────────
@@ -206,6 +209,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const [isGenerating, setIsGenerating]         = useState(false)
   const [generatedPlan, setGeneratedPlan]       = useState<GeneratedPlan | null>(null)
   const [isResetAlertVisible, setIsResetAlertVisible] = useState(false)
+  const [fallbackNotice, setFallbackNotice]           = useState<string | null>(null)
 
   const progressAnim = useRef(new Animated.Value(0)).current
   const contentAnim  = useRef(new Animated.Value(1)).current
@@ -259,10 +263,15 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const triggerGenerate = useCallback(async (data: AIFormData) => {
     haptics.onPress()
     setIsGenerating(true)
+    setFallbackNotice(null)
     previewModal.open()
     try {
-      const plan = await generatePlan(data, user)
-      setGeneratedPlan(plan)
+      const result = await generatePlan(data, user)
+      setGeneratedPlan(result.plan)
+      if (result.usedFallback) {
+        const providerName = PROVIDER_LABELS[result.fallbackReason ?? ''] ?? result.fallbackReason ?? 'cloud'
+        setFallbackNotice(`Plan généré hors ligne — ${providerName} indisponible`)
+      }
     } catch {
       previewModal.close()
       Alert.alert('Erreur', 'Impossible de générer le plan. Réessaie.')
@@ -389,6 +398,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const handleModify = useCallback(() => {
     previewModal.close()
     setGeneratedPlan(null)
+    setFallbackNotice(null)
     setCurrentStep(0)
     setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
   }, [previewModal])
@@ -673,6 +683,7 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
         onClose={previewModal.close}
         onModify={handleModify}
         onValidate={handleValidate}
+        fallbackNotice={fallbackNotice ?? undefined}
       />
 
       <AlertDialog

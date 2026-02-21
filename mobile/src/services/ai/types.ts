@@ -41,6 +41,12 @@ export interface GeneratedPlan {
   includeDeload?: boolean
 }
 
+export interface GeneratePlanResult {
+  plan: GeneratedPlan
+  usedFallback: boolean
+  fallbackReason?: string
+}
+
 export interface ExerciseInfo {
   name: string
   muscles: string[]

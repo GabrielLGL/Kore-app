@@ -72,41 +72,45 @@ describe('aiService', () => {
 
   describe('generatePlan — sélection du provider', () => {
     it('utilise offlineEngine si user est null', async () => {
-      const plan = await generatePlan(testForm, null)
+      const result = await generatePlan(testForm, null)
 
       expect(offlineEngine.generate as jest.Mock).toHaveBeenCalled()
       expect(createClaudeProvider).not.toHaveBeenCalled()
-      expect(plan.name).toBe('Plan Offline')
+      expect(result.plan.name).toBe('Plan Offline')
+      expect(result.usedFallback).toBe(false)
     })
 
     it("utilise offlineEngine si aiProvider est 'offline'", async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const user = { aiProvider: 'offline', aiApiKey: 'any-key' } as any
-      const plan = await generatePlan(testForm, user)
+      const result = await generatePlan(testForm, user)
 
       expect(offlineEngine.generate as jest.Mock).toHaveBeenCalled()
       expect(createClaudeProvider).not.toHaveBeenCalled()
-      expect(plan.name).toBe('Plan Offline')
+      expect(result.plan.name).toBe('Plan Offline')
+      expect(result.usedFallback).toBe(false)
     })
 
     it('utilise offlineEngine si aiApiKey est null', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const user = { aiProvider: 'claude', aiApiKey: null } as any
-      const plan = await generatePlan(testForm, user)
+      const result = await generatePlan(testForm, user)
 
       expect(offlineEngine.generate as jest.Mock).toHaveBeenCalled()
       expect(createClaudeProvider).not.toHaveBeenCalled()
-      expect(plan.name).toBe('Plan Offline')
+      expect(result.plan.name).toBe('Plan Offline')
+      expect(result.usedFallback).toBe(false)
     })
 
     it("utilise claudeProvider si aiProvider='claude' avec clé valide", async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const user = { aiProvider: 'claude', aiApiKey: 'sk-ant-test-key' } as any
-      const plan = await generatePlan(testForm, user)
+      const result = await generatePlan(testForm, user)
 
       expect(createClaudeProvider).toHaveBeenCalledWith('sk-ant-test-key')
       expect(offlineEngine.generate as jest.Mock).not.toHaveBeenCalled()
-      expect(plan.name).toBe('Plan Claude')
+      expect(result.plan.name).toBe('Plan Claude')
+      expect(result.usedFallback).toBe(false)
     })
 
     it('retombe sur offlineEngine si le provider cloud throw', async () => {
@@ -117,11 +121,13 @@ describe('aiService', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const user = { aiProvider: 'claude', aiApiKey: 'sk-ant-test-key' } as any
-      const plan = await generatePlan(testForm, user)
+      const result = await generatePlan(testForm, user)
 
       expect(createClaudeProvider).toHaveBeenCalledWith('sk-ant-test-key')
       expect(offlineEngine.generate as jest.Mock).toHaveBeenCalled()
-      expect(plan.name).toBe('Plan Offline')
+      expect(result.plan.name).toBe('Plan Offline')
+      expect(result.usedFallback).toBe(true)
+      expect(result.fallbackReason).toBe('claude')
     })
   })
 

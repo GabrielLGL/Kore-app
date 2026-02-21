@@ -9,7 +9,7 @@ import { offlineEngine } from './offlineEngine'
 import { createClaudeProvider } from './claudeProvider'
 import { createOpenAIProvider, testOpenAIConnection } from './openaiProvider'
 import { createGeminiProvider, testGeminiConnection } from './geminiProvider'
-import type { AIFormData, AIProvider, DBContext, GeneratedPlan } from './types'
+import type { AIFormData, AIProvider, DBContext, GeneratedPlan, GeneratePlanResult } from './types'
 import { generateProgram, toDatabasePlan } from './programGenerator'
 import type { UserProfile } from './programGenerator'
 
@@ -112,15 +112,22 @@ async function buildDBContext(form: AIFormData): Promise<DBContext> {
   }
 }
 
-export async function generatePlan(form: AIFormData, user: User | null): Promise<GeneratedPlan> {
+export async function generatePlan(form: AIFormData, user: User | null): Promise<GeneratePlanResult> {
   const context = await buildDBContext(form)
   const provider = selectProvider(user?.aiProvider ?? null, user?.aiApiKey ?? null)
 
+  if (provider === offlineEngine) {
+    const plan = await offlineEngine.generate(form, context)
+    return { plan, usedFallback: false }
+  }
+
   try {
-    return await provider.generate(form, context)
+    const plan = await provider.generate(form, context)
+    return { plan, usedFallback: false }
   } catch (error) {
     if (__DEV__) console.warn('[aiService] Provider cloud échoué, fallback offline:', error)
-    return await offlineEngine.generate(form, context)
+    const plan = await offlineEngine.generate(form, context)
+    return { plan, usedFallback: true, fallbackReason: user?.aiProvider ?? 'cloud' }
   }
 }
 

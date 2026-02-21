@@ -26,6 +26,7 @@ interface AssistantPreviewSheetProps {
   onClose: () => void
   onModify: () => void
   onValidate: (plan: GeneratedPlan) => Promise<void>
+  fallbackNotice?: string
 }
 
 export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
@@ -36,6 +37,7 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
   onClose,
   onModify,
   onValidate,
+  fallbackNotice,
 }) => {
   const haptics = useHaptics()
   const [editableName, setEditableName] = useState('')
@@ -99,6 +101,10 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
               </View>
             ))}
           </ScrollView>
+
+          {fallbackNotice ? (
+            <Text style={styles.fallbackNotice}>{fallbackNotice}</Text>
+          ) : null}
 
           <View style={styles.buttonsRow}>
             <TouchableOpacity style={styles.modifyButton} onPress={handleModify}>
@@ -177,6 +183,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.sm,
     fontWeight: '600',
+  },
+  fallbackNotice: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
   },
   buttonsRow: {
     flexDirection: 'row',
