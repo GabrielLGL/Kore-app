@@ -57,4 +57,7 @@ Un clean build n'y changera rien : c'est architectural, pas un oubli de compilat
 Aucune dépendance (groupe indépendant)
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1800
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1800-chore-jsi-bridgeless.md

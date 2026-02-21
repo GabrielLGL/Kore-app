@@ -13,9 +13,11 @@ import PerformanceLog from './models/PerformanceLog'
 
 const adapter = new SQLiteAdapter({
   schema: mySchema,
-  // JSI requis pour la performance (New Architecture / Bridgeless mode).
-  // Warning "[🍉] JSI SQLiteAdapter not available" attendu en dev sans rebuild natif (`npm run android`).
-  jsi: true,
+  // JSI désactivé : incompatible avec Bridgeless (New Architecture Expo 52).
+  // WatermelonDB 0.28.x utilise l'ancienne bridge registration (non-TurboModule) —
+  // elle ne fonctionne pas en mode Bridgeless (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED).
+  // L'adapteur async est utilisé à la place — performance correcte pour ce projet.
+  jsi: false,
   onSetUpError: error => {
     if (__DEV__) console.error("Erreur chargement DB:", error)
   }
