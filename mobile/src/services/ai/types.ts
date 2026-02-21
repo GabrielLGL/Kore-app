@@ -26,6 +26,8 @@ export interface GeneratedExercise {
   setsTarget: number
   repsTarget: string
   weightTarget: number
+  restSeconds?: number
+  rpe?: number
 }
 
 export interface GeneratedSession {
@@ -36,6 +38,7 @@ export interface GeneratedSession {
 export interface GeneratedPlan {
   name: string
   sessions: GeneratedSession[]
+  includeDeload?: boolean
 }
 
 export interface ExerciseInfo {

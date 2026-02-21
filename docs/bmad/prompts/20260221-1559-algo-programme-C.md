@@ -150,4 +150,7 @@ Dépend de :
 Exécuter APRÈS que les Groupes A et B soient terminés.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1625
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1625-feat-offline-engine-group-c.md

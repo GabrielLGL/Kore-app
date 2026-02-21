@@ -2,7 +2,7 @@ import type {
   AIProvider, AIFormData, DBContext, GeneratedPlan, GeneratedExercise,
   GeneratedSession, ExerciseInfo, AISplit, AIGoal, AILevel, ExerciseType, ExerciseMetadata,
 } from './types'
-import { getExerciseMetadata } from './exerciseMetadata'
+import { getExerciseMetadata, EXERCISE_METADATA } from './exerciseMetadata'
 
 function shuffleArray<T>(arr: T[]): T[] {
   const result = [...arr]
@@ -131,6 +131,14 @@ const REPS_BY_TYPE_GOAL: Record<ExerciseType, Record<AIGoal, string>> = {
   isolation:      { bodybuilding: '12-15', power: '10-12', renfo: '15-20', cardio: '20-25' },
 }
 
+const SETS_MIN: Record<ExerciseType, number> = {
+  compound_heavy: 3, compound: 2, accessory: 2, isolation: 2,
+}
+
+const SETS_MAX: Record<ExerciseType, number> = {
+  compound_heavy: 6, compound: 5, accessory: 5, isolation: 4,
+}
+
 const TYPE_ORDER: Record<ExerciseType, number> = {
   compound_heavy: 0, compound: 1, accessory: 2, isolation: 3,
 }
@@ -138,6 +146,8 @@ const TYPE_ORDER: Record<ExerciseType, number> = {
 const LEVEL_ORDER: Record<AILevel, number> = {
   'débutant': 0, 'intermédiaire': 1, 'avancé': 2,
 }
+
+const SFR_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2 }
 
 type CandidateExercise = ExerciseInfo & { meta: ExerciseMetadata | undefined }
 
@@ -151,7 +161,82 @@ function toCandidate(ex: ExerciseInfo, userLevel: AILevel): CandidateExercise | 
   return { ...ex, meta }
 }
 
-// Allocation d'exercices par muscle : 1 minimum par muscle, bonus focus, round-robin pour le reste
+// ─── Volume & Phase helpers ────────────────────────────────────────────────────
+
+function getVolumeMultiplier(form: AIFormData): number {
+  let multiplier = 1.0
+  if (form.recovery === 'rapide') multiplier += 0.15
+  if (form.recovery === 'lente') multiplier -= 0.15
+  if (form.ageGroup === '36-45') multiplier -= 0.10
+  if (form.ageGroup === '45+') multiplier -= 0.20
+  if (form.ageGroup === '18-25') multiplier += 0.05
+  return Math.max(0.6, Math.min(1.4, multiplier))
+}
+
+function getPhaseAdjustment(phase: AIFormData['phase'], baseReps: string): { reps: string } {
+  if (!phase || phase === 'recomposition' || phase === 'maintien') {
+    return { reps: baseReps }
+  }
+  const parts = baseReps.split('-')
+  if (parts.length !== 2) return { reps: baseReps }
+  const low = parseInt(parts[0], 10)
+  const high = parseInt(parts[1], 10)
+  if (isNaN(low) || isNaN(high)) return { reps: baseReps }
+  switch (phase) {
+    case 'seche':      return { reps: `${low + 2}-${high + 4}` }
+    case 'prise_masse': return { reps: `${low + 1}-${high + 1}` }
+    default: return { reps: baseReps }
+  }
+}
+
+function getRestAndRPE(
+  type: ExerciseType,
+  goal: AIGoal,
+  phase?: AIFormData['phase'],
+): { restSeconds: number; rpe: number } {
+  let restSeconds: number
+  let rpe: number
+
+  if (goal === 'cardio') {
+    restSeconds = 38; rpe = 7
+  } else if (type === 'compound_heavy') {
+    restSeconds = 210; rpe = 9
+  } else if (type === 'compound') {
+    restSeconds = goal === 'bodybuilding' ? 105 : 120
+    rpe = 8
+  } else {
+    // isolation or accessory
+    restSeconds = 75
+    rpe = goal === 'bodybuilding' ? 9 : 8
+  }
+
+  if (phase === 'seche') {
+    restSeconds = Math.round(restSeconds * 0.8)
+  } else if (phase === 'prise_masse') {
+    restSeconds = Math.round(restSeconds * 1.15)
+  }
+
+  return { restSeconds, rpe }
+}
+
+function computeSets(
+  type: ExerciseType,
+  goal: AIGoal,
+  isFocus: boolean,
+  form: AIFormData,
+): number {
+  const volumeMultiplier = getVolumeMultiplier(form)
+  const baseSets = SETS_BY_TYPE_GOAL[type][goal]
+  const isCompound = type === 'compound_heavy' || type === 'compound'
+  const phaseMassBonus = form.phase === 'prise_masse' && isCompound ? 1 : 0
+  const focusBonus = isFocus ? 1 : 0
+  const maintienFactor = form.phase === 'maintien' ? 0.8 : 1.0
+  const raw = Math.round((baseSets + focusBonus + phaseMassBonus) * volumeMultiplier * maintienFactor)
+  return Math.max(SETS_MIN[type], Math.min(raw, SETS_MAX[type]))
+}
+
+// ─── Allocation d'exercices par muscle ────────────────────────────────────────
+
 function allocateExercises(
   muscles: string[],
   total: number,
@@ -180,7 +265,7 @@ function allocateExercises(
   return alloc
 }
 
-// Sélection : non-utilisés en premier, muscles non-récents avant récents, puis par type (compound_heavy → isolation)
+// Sélection : non-utilisés en premier, muscles non-récents avant récents, puis par type
 function selectExercises(
   candidates: CandidateExercise[],
   count: number,
@@ -204,6 +289,61 @@ function selectExercises(
   return sorted.slice(0, count)
 }
 
+// ─── Stretch balance ──────────────────────────────────────────────────────────
+
+function ensureStretchBalance(
+  exercises: GeneratedExercise[],
+  allCandidates: CandidateExercise[],
+  usedNames: Set<string>,
+  form: AIFormData,
+  context: DBContext,
+): GeneratedExercise[] {
+  const { goal, level, musclesFocus = [] } = form
+  const stretchCount = exercises.filter(e => EXERCISE_METADATA[e.exerciseName]?.stretchFocus).length
+  const target = Math.ceil(exercises.length * 0.3)
+  if (stretchCount >= target) return exercises
+
+  const stretchCandidates = allCandidates.filter(c =>
+    !usedNames.has(c.name) && c.meta?.stretchFocus === true
+  )
+  if (stretchCandidates.length === 0) return exercises
+
+  const result = [...exercises]
+  const needed = target - stretchCount
+
+  // Non-stretchFocus exercices triés par SFR croissant (meilleur candidat à remplacer = le plus faible)
+  const replaceable = [...result]
+    .filter(e => !EXERCISE_METADATA[e.exerciseName]?.stretchFocus)
+    .sort((a, b) => {
+      const aSfr = SFR_ORDER[EXERCISE_METADATA[a.exerciseName]?.sfr ?? ''] ?? -1
+      const bSfr = SFR_ORDER[EXERCISE_METADATA[b.exerciseName]?.sfr ?? ''] ?? -1
+      return aSfr - bSfr
+    })
+
+  const replacements = Math.min(needed, replaceable.length, stretchCandidates.length)
+  for (let i = 0; i < replacements; i++) {
+    const idx = result.findIndex(e => e.exerciseName === replaceable[i].exerciseName)
+    if (idx === -1) continue
+    const candidate = stretchCandidates[i]
+    usedNames.delete(result[idx].exerciseName)
+    usedNames.add(candidate.name)
+
+    const type: ExerciseType = candidate.meta?.type ?? 'compound'
+    const isFocus = musclesFocus.includes(candidate.meta?.primaryMuscle ?? '')
+    const setsTarget = computeSets(type, goal, isFocus, form)
+    const baseReps = REPS_BY_TYPE_GOAL[type][goal]
+    const repsTarget = getPhaseAdjustment(form.phase, baseReps).reps
+    const weightTarget = getWeightTarget(candidate.name, context.prs, goal, level)
+    const { restSeconds, rpe } = getRestAndRPE(type, goal, form.phase)
+
+    result[idx] = { exerciseName: candidate.name, setsTarget, repsTarget, weightTarget, restSeconds, rpe }
+  }
+
+  return result
+}
+
+// ─── Construction de séance ───────────────────────────────────────────────────
+
 function buildSession(
   name: string,
   muscles: string[],
@@ -215,10 +355,23 @@ function buildSession(
   const total = exercisesCount(durationMin)
   const alloc = allocateExercises(muscles, total, musclesFocus)
 
-  // Pool complet niveau-filtré (fallback si aucun exercice ne correspond à un muscle)
-  const allCandidates: CandidateExercise[] = context.exercises
-    .map(ex => toCandidate(ex, level))
-    .filter((ex): ex is CandidateExercise => ex !== null)
+  // Filtrage blessures : exclure les exercices dont injuryRisk inclut une zone déclarée
+  const activeInjuries = form.injuries?.filter(z => z !== 'none') ?? []
+  function filterByInjuries(candidates: CandidateExercise[]): CandidateExercise[] {
+    if (activeInjuries.length === 0) return candidates
+    return candidates.filter(ex => {
+      const meta = EXERCISE_METADATA[ex.name]
+      if (!meta?.injuryRisk) return true
+      return !meta.injuryRisk.some(zone => activeInjuries.includes(zone))
+    })
+  }
+
+  // Pool complet niveau-filtré + injury-filtré (fallback si aucun exercice spécifique)
+  const allCandidates: CandidateExercise[] = filterByInjuries(
+    context.exercises
+      .map(ex => toCandidate(ex, level))
+      .filter((ex): ex is CandidateExercise => ex !== null)
+  )
 
   const allExercises: GeneratedExercise[] = []
 
@@ -226,12 +379,13 @@ function buildSession(
     const count = alloc[muscle] ?? 0
     if (count === 0) continue
 
-    // Candidats primaires : exercices dont muscles[] contient ce muscle
-    let candidates: CandidateExercise[] = context.exercises
-      .map(ex => toCandidate(ex, level))
-      .filter((ex): ex is CandidateExercise => ex !== null && ex.muscles.includes(muscle))
+    let candidates: CandidateExercise[] = filterByInjuries(
+      context.exercises
+        .map(ex => toCandidate(ex, level))
+        .filter((ex): ex is CandidateExercise => ex !== null && ex.muscles.includes(muscle))
+    )
 
-    // Fallback : aucun exercice spécifique → utiliser tous les exercices niveau-filtrés
+    // Fallback : aucun exercice spécifique → pool complet
     if (candidates.length === 0) {
       candidates = allCandidates
     }
@@ -242,17 +396,13 @@ function buildSession(
     for (const ex of chosen) {
       usedNames.add(ex.name)
       const type: ExerciseType = ex.meta?.type ?? 'compound'
-      const baseSets = SETS_BY_TYPE_GOAL[type][goal]
-      const sets = isFocus ? Math.min(baseSets + 1, 5) : baseSets
-      const reps = REPS_BY_TYPE_GOAL[type][goal]
-      const weight = getWeightTarget(ex.name, context.prs, goal, level)
+      const setsTarget = computeSets(type, goal, isFocus, form)
+      const baseReps = REPS_BY_TYPE_GOAL[type][goal]
+      const repsTarget = getPhaseAdjustment(form.phase, baseReps).reps
+      const weightTarget = getWeightTarget(ex.name, context.prs, goal, level)
+      const { restSeconds, rpe } = getRestAndRPE(type, goal, form.phase)
 
-      allExercises.push({
-        exerciseName: ex.name,
-        setsTarget: sets,
-        repsTarget: reps,
-        weightTarget: weight,
-      })
+      allExercises.push({ exerciseName: ex.name, setsTarget, repsTarget, weightTarget, restSeconds, rpe })
     }
   }
 
@@ -265,6 +415,9 @@ function buildSession(
     return aOrder - bOrder
   })
 
+  // Équilibrage stretchFocus : min 30% des exercices avec stretchFocus
+  const balancedExercises = ensureStretchBalance(allExercises, allCandidates, usedNames, form, context)
+
   // Goal cardio : ajouter un exercice cardio en dernière position si disponible
   if (form.goal === 'cardio') {
     const cardioEx = context.exercises.find(
@@ -272,16 +425,19 @@ function buildSession(
     )
     if (cardioEx) {
       usedNames.add(cardioEx.name)
-      allExercises.push({
+      const { restSeconds, rpe } = getRestAndRPE('compound', 'cardio', form.phase)
+      balancedExercises.push({
         exerciseName: cardioEx.name,
         setsTarget: 1,
         repsTarget: '20-30 min',
         weightTarget: 0,
+        restSeconds,
+        rpe,
       })
     }
   }
 
-  return { name, exercises: allExercises }
+  return { name, exercises: balancedExercises }
 }
 
 // ─── Génération programme ─────────────────────────────────────────────────────
@@ -324,9 +480,17 @@ function generateProgram(form: AIFormData, context: DBContext): GeneratedPlan {
     'avancé':        'Avancé',
   }
 
+  // Semaine de décharge si ≥4 jours, récupération non rapide, et groupe d'âge senior
+  const includeDeload = daysPerWeek >= 4
+    && (form.recovery ?? 'normale') !== 'rapide'
+    && (form.ageGroup === '36-45' || form.ageGroup === '45+')
+
+  const deloadSuffix = includeDeload ? ' (avec décharge)' : ''
+
   return {
-    name: `${goalLabels[form.goal]} ${levelLabels[form.level]} – ${SPLIT_LABELS[splitName] ?? splitName} ${daysPerWeek}j/sem`,
+    name: `${goalLabels[form.goal]} ${levelLabels[form.level]} – ${SPLIT_LABELS[splitName] ?? splitName} ${daysPerWeek}j/sem${deloadSuffix}`,
     sessions,
+    includeDeload,
   }
 }
 

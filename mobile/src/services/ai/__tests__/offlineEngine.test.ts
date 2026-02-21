@@ -273,4 +273,98 @@ describe('offlineEngine', () => {
       expect(squat?.weightTarget).toBe(72)
     })
   })
+
+  describe('Groupe C — moteur algorithmique avancé', () => {
+    // Exercices Dos sans risque bas_dos (injuryRisk: ['epaules'] seulement)
+    const dosExercises: ExerciseInfo[] = [
+      { name: 'Tirage Poitrine', muscles: ['Dos', 'Biceps'] },
+      { name: 'Tirage Horizontal', muscles: ['Dos', 'Trapèzes'] },
+      { name: 'Tractions', muscles: ['Dos', 'Biceps'] },
+      { name: 'Pull Over Poulie', muscles: ['Dos'] },
+      { name: 'Tirage Poitrine Prise Serrée', muscles: ['Dos', 'Biceps'] },
+    ]
+
+    it('injuries bas_dos exclut Soulevé de Terre et Good Morning', async () => {
+      const exercises: ExerciseInfo[] = [
+        { name: 'Soulevé de Terre', muscles: ['Dos', 'Quadriceps', 'Ischios'] },
+        { name: 'Good Morning', muscles: ['Dos', 'Ischios'] },
+        { name: 'Tirage Poitrine', muscles: ['Dos', 'Biceps'] },
+        { name: 'Tirage Horizontal', muscles: ['Dos', 'Trapèzes'] },
+        { name: 'Tractions', muscles: ['Dos', 'Biceps'] },
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({
+        mode: 'session',
+        muscleGroups: ['Dos'],
+        durationMin: 45,
+        injuries: ['bas_dos'],
+      })
+      const plan = await offlineEngine.generate(form, context)
+      const names = plan.sessions[0].exercises.map(e => e.exerciseName)
+      expect(names).not.toContain('Soulevé de Terre')
+      expect(names).not.toContain('Good Morning')
+    })
+
+    it('volume réduit avec recovery lente + ageGroup 45+', async () => {
+      const context: DBContext = { exercises: dosExercises, recentMuscles: [], prs: {} }
+      const formBase = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45 })
+      const formReduced = makeForm({
+        mode: 'session', muscleGroups: ['Dos'], durationMin: 45,
+        recovery: 'lente', ageGroup: '45+',
+      })
+      const planBase = await offlineEngine.generate(formBase, context)
+      const planReduced = await offlineEngine.generate(formReduced, context)
+      const totalBase = planBase.sessions[0].exercises.reduce((sum, e) => sum + e.setsTarget, 0)
+      const totalReduced = planReduced.sessions[0].exercises.reduce((sum, e) => sum + e.setsTarget, 0)
+      // Multiplicateur : 1.0 - 0.15 (lente) - 0.20 (45+) = 0.65 → moins de sets
+      expect(totalReduced).toBeLessThanOrEqual(totalBase)
+    })
+
+    it('phase seche: reps de Tirage Poitrine augmentées de +2/+4', async () => {
+      // 5 exercices Dos → durationMin 45 = 5 exercices → tous sélectionnés, résultat déterministe
+      const context: DBContext = { exercises: dosExercises, recentMuscles: [], prs: {} }
+      const formBase = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45 })
+      const formSeche = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45, phase: 'seche' })
+      const planBase = await offlineEngine.generate(formBase, context)
+      const planSeche = await offlineEngine.generate(formSeche, context)
+
+      const base = planBase.sessions[0].exercises.find(e => e.exerciseName === 'Tirage Poitrine')
+      const seche = planSeche.sessions[0].exercises.find(e => e.exerciseName === 'Tirage Poitrine')
+      expect(base).toBeDefined()
+      expect(seche).toBeDefined()
+      // compound + bodybuilding → base '8-10', seche +2/+4 → '10-14'
+      expect(base?.repsTarget).toBe('8-10')
+      expect(seche?.repsTarget).toBe('10-14')
+    })
+
+    it('deload flag activé quand ≥4 jours + recovery normale + ageGroup 45+', async () => {
+      const plan = await offlineEngine.generate(
+        makeForm({ daysPerWeek: 4, ageGroup: '45+' }),
+        makeContext()
+      )
+      expect(plan.includeDeload).toBe(true)
+      expect(plan.name).toContain('(avec décharge)')
+    })
+
+    it('deload flag absent si recovery rapide', async () => {
+      const plan = await offlineEngine.generate(
+        makeForm({ daysPerWeek: 4, ageGroup: '45+', recovery: 'rapide' }),
+        makeContext()
+      )
+      expect(plan.includeDeload).toBeFalsy()
+    })
+
+    it('restSeconds et rpe présents sur chaque exercice', async () => {
+      const context: DBContext = { exercises: dosExercises, recentMuscles: [], prs: {} }
+      const plan = await offlineEngine.generate(
+        makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45 }),
+        context
+      )
+      plan.sessions[0].exercises.forEach(ex => {
+        expect(ex.restSeconds).toBeGreaterThan(0)
+        expect(ex.rpe).toBeGreaterThanOrEqual(6)
+        expect(ex.rpe).toBeLessThanOrEqual(10)
+      })
+    })
+  })
 })
