@@ -53,7 +53,8 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
   const [isSearchVisible, setIsSearchVisible] = useState(false)
 
   // Synchronisation tab bar
-  useMultiModalSync([isAddModalVisible, isOptionsVisible, isEditModalVisible, isAlertVisible])
+  // isOptionsVisible (BottomSheet) exclu : Portal + zIndex:999 le rend déjà au-dessus de la tab bar.
+  useMultiModalSync([isAddModalVisible, isEditModalVisible, isAlertVisible])
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {

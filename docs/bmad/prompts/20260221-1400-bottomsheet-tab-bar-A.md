@@ -124,4 +124,7 @@ Après fix, la séquence devrait être :
 Aucune dépendance externe — groupe unique.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1415
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1415-fix-bottomsheet-tab-bar.md

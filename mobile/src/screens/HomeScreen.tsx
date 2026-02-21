@@ -83,14 +83,12 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   const renameSessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // --- SYNCHRONISATION TAB BAR ---
+  // BottomSheets (isOnboardingVisible, isOptionsVisible, isSessionOptionsVisible, isDetailVisible)
+  // sont exclues : Portal + zIndex:999 les rend déjà au-dessus de la tab bar.
   useMultiModalSync([
-    isOnboardingVisible,
     isProgramModalVisible,
     isSessionModalVisible,
-    isOptionsVisible,
-    isSessionOptionsVisible,
     isAlertVisible,
-    isDetailVisible,
   ])
 
   // --- GESTION BOUTON RETOUR ANDROID ---
