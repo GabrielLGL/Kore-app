@@ -64,13 +64,13 @@ export function useProgramManager(onSuccess?: () => void) {
     if (!isValidText(programNameInput)) return false
 
     try {
+      const position = isRenamingProgram ? 0 : await getNextPosition('programs')
       await database.write(async () => {
         if (isRenamingProgram && selectedProgram) {
           await selectedProgram.update((p) => {
             p.name = programNameInput.trim()
           })
         } else {
-          const position = await getNextPosition('programs')
           await database.get<Program>('programs').create((p) => {
             p.name = programNameInput.trim()
             p.position = position
@@ -134,16 +134,15 @@ export function useProgramManager(onSuccess?: () => void) {
     if (!isValidText(sessionNameInput)) return false
 
     try {
+      const position = (!isRenamingSession && targetProgram)
+        ? await getNextPosition('sessions', Q.where('program_id', targetProgram.id))
+        : 0
       await database.write(async () => {
         if (isRenamingSession && selectedSession) {
           await selectedSession.update((s) => {
             s.name = sessionNameInput.trim()
           })
         } else if (targetProgram) {
-          const position = await getNextPosition(
-            'sessions',
-            Q.where('program_id', targetProgram.id)
-          )
           await database.get<Session>('sessions').create((s) => {
             s.name = sessionNameInput.trim()
             s.program.set(targetProgram)
@@ -169,25 +168,27 @@ export function useProgramManager(onSuccess?: () => void) {
     if (!selectedSession) return false
 
     try {
+      const parent = await selectedSession.program.fetch()
+      const position = await getNextPosition(
+        'sessions',
+        Q.where('program_id', selectedSession.program.id)
+      )
+      const originalExos = await database
+        .get<SessionExercise>('session_exercises')
+        .query(Q.where('session_id', selectedSession.id))
+        .fetch()
+      const exoRecords = await Promise.all(originalExos.map((se) => se.exercise.fetch()))
+
       await database.write(async () => {
-        const parent = await selectedSession.program.fetch()
-        const position = await getNextPosition(
-          'sessions',
-          Q.where('program_id', selectedSession.program.id)
-        )
         const newS = await database.get<Session>('sessions').create((s) => {
           s.name = `${selectedSession.name} (Copie)`
           s.position = position
           if (parent) s.program.set(parent)
         })
 
-        const originalExos = await database
-          .get<SessionExercise>('session_exercises')
-          .query(Q.where('session_id', selectedSession.id))
-          .fetch()
-
-        for (const se of originalExos) {
-          const exoRecord = await se.exercise.fetch()
+        for (let i = 0; i < originalExos.length; i++) {
+          const se = originalExos[i]
+          const exoRecord = exoRecords[i]
           if (exoRecord) {
             await database.get<SessionExercise>('session_exercises').create((newSE) => {
               newSE.session.set(newS)
@@ -238,8 +239,8 @@ export function useProgramManager(onSuccess?: () => void) {
     if (!selectedSession) return false
 
     try {
+      const position = await getNextPosition('sessions', Q.where('program_id', targetProg.id))
       await database.write(async () => {
-        const position = await getNextPosition('sessions', Q.where('program_id', targetProg.id))
         await selectedSession.update((s) => {
           s.program.set(targetProg)
           s.position = position

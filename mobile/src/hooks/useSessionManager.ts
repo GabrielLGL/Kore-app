@@ -79,12 +79,11 @@ export function useSessionManager(
     if (!validation.valid) return false
 
     try {
+      const position = await getNextPosition(
+        'session_exercises',
+        Q.where('session_id', session.id)
+      )
       await database.write(async () => {
-        const position = await getNextPosition(
-          'session_exercises',
-          Q.where('session_id', session.id)
-        )
-
         await database.get<SessionExercise>('session_exercises').create((se) => {
           se.session.set(session)
           se.exercise.set(exercise)

@@ -64,4 +64,7 @@ const exoRecords = await Promise.all(originalExos.map(se => se.exercise.fetch())
 - `grep -n "getNextPosition" mobile/src/hooks/useSessionManager.ts` : aucun appel à l'intérieur d'un bloc `database.write(() => {`
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-0840
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-0840-fix-reads-in-write.md
