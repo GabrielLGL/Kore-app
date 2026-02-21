@@ -52,4 +52,4 @@ Aucune (pas de nouveau pattern ou pitfall)
 ✅ Résolu — 20260221-1225
 
 ## Commit
-[sera rempli après commit]
+f97c40b chore(settings): hide cloud AI providers, show offline + coming soon badge

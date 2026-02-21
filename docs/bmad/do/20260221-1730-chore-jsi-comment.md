@@ -30,4 +30,4 @@ aucune
 ✅ Résolu — 20260221-1730
 
 ## Commit
-[sera rempli à l'étape 8]
+b8abeed chore(model): document expected JSI SQLiteAdapter warning in dev

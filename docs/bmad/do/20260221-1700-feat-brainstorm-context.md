@@ -41,4 +41,4 @@ aucune (le fichier créé est lui-même la documentation)
 ✅ Résolu — 20260221-1702
 
 ## Commit
-[sera rempli]
+d3eb6c0 docs(brainstorm): add WEGOGYM project context file for BMAD brainstorming

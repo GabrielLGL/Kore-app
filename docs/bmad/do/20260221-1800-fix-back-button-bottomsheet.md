@@ -32,4 +32,4 @@ aucune (changement interne au composant, interface BottomSheetProps non modifié
 ✅ Résolu — 20260221-1800
 
 ## Commit
-[sera rempli après push]
+ea84e8a fix(BottomSheet): close sheet on Android back button press
