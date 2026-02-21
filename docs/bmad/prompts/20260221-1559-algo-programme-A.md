@@ -109,4 +109,7 @@ Insérer après l'étape `split` (sélection du style de programme), avant `days
 Aucune dépendance amont. Le Groupe C (algorithme) dépend de ce groupe.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1610
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1559-feat-wizard-programme-questions.md

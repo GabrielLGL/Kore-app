@@ -15,6 +15,10 @@ export interface AIFormData {
   targetProgramId?: string
   split?: AISplit          // choix du split programme
   musclesFocus?: string[]  // [] = équilibré, sinon muscles prioritaires
+  phase?: 'prise_masse' | 'seche' | 'recomposition' | 'maintien'
+  recovery?: 'rapide' | 'normale' | 'lente'
+  injuries?: string[]      // 'none' | 'epaules' | 'genoux' | 'bas_dos' | 'poignets' | 'nuque'
+  ageGroup?: '18-25' | '26-35' | '36-45' | '45+'
 }
 
 export interface GeneratedExercise {
@@ -50,6 +54,9 @@ export interface AIProvider {
 }
 
 export type ExerciseType = 'compound_heavy' | 'compound' | 'accessory' | 'isolation'
+export type SFRLevel = 'high' | 'medium' | 'low'
+export type InjuryZone = 'epaules' | 'genoux' | 'bas_dos' | 'poignets' | 'nuque' | 'none'
+export type ProgressionType = 'linear' | 'wave' | 'auto'
 
 export interface ExerciseMetadata {
   type: ExerciseType
@@ -57,6 +64,10 @@ export interface ExerciseMetadata {
   isUnilateral: boolean
   primaryMuscle: string
   secondaryMuscles: string[]
+  sfr?: SFRLevel
+  stretchFocus?: boolean
+  injuryRisk?: InjuryZone[]
+  progressionType?: ProgressionType
 }
 
 export type ExerciseMetadataMap = Record<string, ExerciseMetadata>

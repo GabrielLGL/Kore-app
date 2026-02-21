@@ -115,4 +115,7 @@ Aucune dépendance amont. Peut être exécuté en parallèle avec le Groupe A.
 Le Groupe C (algorithme) dépend de ce groupe.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1600
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1600-feat-exercise-metadata-enrichment.md
