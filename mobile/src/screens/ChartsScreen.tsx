@@ -29,6 +29,10 @@ import type { ExerciseSessionStat } from '../model/utils/databaseHelpers'
 
 const screenWidth = Dimensions.get('window').width
 
+// Constantes RGB pour les fonctions d'opacité du chart (colors.primary / colors.text)
+const PRIMARY_RGB = '0, 122, 255'
+const TEXT_RGB = '255, 255, 255'
+
 // --- Sous-composant : ExerciseStatsContent ---
 
 interface ExerciseStatsContentProps {
@@ -274,8 +278,8 @@ const chartConfig = {
   backgroundGradientFrom: colors.card,
   backgroundGradientTo: colors.card,
   decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  color: (opacity = 1) => `rgba(${PRIMARY_RGB}, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(${TEXT_RGB}, ${opacity})`,
   style: { borderRadius: 16 },
   propsForDots: { r: '4', strokeWidth: '2', stroke: colors.primary },
 }

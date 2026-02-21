@@ -61,4 +61,7 @@ const TEXT_RGB    = '255, 255, 255' // = colors.text
 - `grep "rgba(0, 122, 255\|rgba(255, 255, 255" mobile/src/screens/ChartsScreen.tsx` → aucun résultat
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-0831
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-0831-fix-quality-alertdialog-chartsscreen.md

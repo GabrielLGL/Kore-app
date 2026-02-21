@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Ani
 import { Portal } from '@gorhom/portal'
 import { colors, borderRadius, spacing, fontSize } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
-import { useModalState } from '../hooks/useModalState'
 
 interface AlertDialogProps {
   visible: boolean
