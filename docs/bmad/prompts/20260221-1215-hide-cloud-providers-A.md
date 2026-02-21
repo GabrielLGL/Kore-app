@@ -142,4 +142,7 @@ providerComingSoon: {
 Aucune dépendance externe.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1225
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1225-chore-hide-cloud-providers.md

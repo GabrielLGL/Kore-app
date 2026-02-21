@@ -1,6 +1,5 @@
 import React from 'react'
 import { render, act, fireEvent, waitFor } from '@testing-library/react-native'
-import { Alert } from 'react-native'
 import { SettingsContent } from '../SettingsScreen'
 
 jest.mock('expo-haptics', () => ({
@@ -17,15 +16,9 @@ jest.mock('../../model/index', () => ({
   },
 }))
 
-jest.mock('../../services/ai/aiService', () => ({
-  testProviderConnection: jest.fn(),
-}))
-
 import { database } from '../../model/index'
-import { testProviderConnection } from '../../services/ai/aiService'
 
 const mockWrite = database.write as jest.Mock
-const mockTestProviderConnection = testProviderConnection as jest.Mock
 
 const makeUser = (overrides = {}) => ({
   restDuration: 90,
@@ -180,184 +173,33 @@ describe('SettingsContent — section minuteur', () => {
 })
 
 describe('SettingsContent — section IA', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-    mockWrite.mockImplementation(async (fn: () => Promise<void>) => fn())
-  })
-
-  it('affiche les 4 providers disponibles', () => {
-    const user = makeUser({ aiProvider: 'offline' })
+  it('affiche le provider offline actif', () => {
+    const user = makeUser()
     const { getByText } = render(<SettingsContent user={user as never} />)
 
-    expect(getByText('Offline (défaut)')).toBeTruthy()
-    expect(getByText('Claude (Anthropic)')).toBeTruthy()
-    expect(getByText('OpenAI (GPT-4o)')).toBeTruthy()
-    expect(getByText('Gemini (Google)')).toBeTruthy()
+    expect(getByText('Offline — Génération locale')).toBeTruthy()
   })
 
-  it('n\'affiche pas le champ clé API quand le provider est offline', () => {
-    const user = makeUser({ aiProvider: 'offline' })
+  it('affiche le badge "Prochainement" pour l\'IA cloud', () => {
+    const user = makeUser()
+    const { getByText } = render(<SettingsContent user={user as never} />)
+
+    expect(getByText('IA cloud')).toBeTruthy()
+    expect(getByText('Prochainement')).toBeTruthy()
+  })
+
+  it('n\'affiche pas de champ clé API', () => {
+    const user = makeUser()
     const { queryByPlaceholderText } = render(<SettingsContent user={user as never} />)
 
     expect(queryByPlaceholderText('Colle ta clé API ici')).toBeNull()
   })
 
-  it('affiche le champ clé API quand le provider est claude', async () => {
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'offline', aiApiKey: null, update: mockUpdate })
+  it('n\'affiche pas de bouton "Tester la connexion"', () => {
+    const user = makeUser()
+    const { queryByText } = render(<SettingsContent user={user as never} />)
 
-    const { getByText, findByPlaceholderText } = render(<SettingsContent user={user as never} />)
-
-    // Sélectionner Claude
-    fireEvent.press(getByText('Claude (Anthropic)'))
-
-    const apiKeyInput = await findByPlaceholderText('Colle ta clé API ici')
-    expect(apiKeyInput).toBeTruthy()
-  })
-
-  it('affiche le bouton "Tester la connexion" pour les providers non-offline', async () => {
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'claude', aiApiKey: 'sk-test', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    expect(testButton).toBeTruthy()
-  })
-
-  it('affiche une alerte pour le mode offline lors du test de connexion', async () => {
-    jest.spyOn(Alert, 'alert')
-    const user = makeUser({ aiProvider: 'offline' })
-    const { getByText } = render(<SettingsContent user={user as never} />)
-
-    // Le bouton "Tester" n'existe pas en mode offline — testons via l'état initial
-    // avec provider claude puis on bascule
-    fireEvent.press(getByText('Claude (Anthropic)'))
-    // Revenir en offline
-    fireEvent.press(getByText('Offline (défaut)'))
-
-    // En mode offline, le bouton Tester n'est pas visible
-    expect(getByText('Offline (défaut)')).toBeTruthy()
-  })
-
-  it('affiche une alerte "Clé manquante" si la clé API est vide lors du test', async () => {
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'claude', aiApiKey: '', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Clé manquante', expect.any(String))
-    })
-  })
-
-  it('appelle testProviderConnection avec le provider et la clé lors du test', async () => {
-    mockTestProviderConnection.mockResolvedValue(undefined)
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'claude', aiApiKey: 'sk-valid-key', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(mockTestProviderConnection).toHaveBeenCalledWith('claude', 'sk-valid-key')
-    })
-  })
-
-  it('affiche une alerte de succès quand testProviderConnection réussit', async () => {
-    mockTestProviderConnection.mockResolvedValue(undefined)
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'openai', aiApiKey: 'sk-openai-key', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Connexion réussie ✅', expect.stringContaining('openai'))
-    })
-  })
-
-  it('affiche une alerte d\'erreur quand testProviderConnection échoue', async () => {
-    mockTestProviderConnection.mockRejectedValue(new Error('Connection failed'))
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'gemini', aiApiKey: 'gemini-key', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur de connexion ❌', expect.stringContaining('gemini'))
-    })
-  })
-
-  it('affiche un hint billing quand OpenAI retourne 429', async () => {
-    mockTestProviderConnection.mockRejectedValue(new Error('Error 429 Too Many Requests'))
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'openai', aiApiKey: 'sk-openai-key', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur de connexion ❌',
-        expect.stringContaining('platform.openai.com/settings/billing')
-      )
-    })
-  })
-
-  it('affiche un hint api-keys quand OpenAI retourne 401', async () => {
-    mockTestProviderConnection.mockRejectedValue(new Error('Error 401 Unauthorized'))
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'openai', aiApiKey: 'sk-invalid', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur de connexion ❌',
-        expect.stringContaining('platform.openai.com/api-keys')
-      )
-    })
-  })
-
-  it('affiche un hint console.anthropic.com quand Claude retourne 401', async () => {
-    mockTestProviderConnection.mockRejectedValue(new Error('Error 401 Unauthorized'))
-    jest.spyOn(Alert, 'alert')
-    const mockUpdate = jest.fn()
-    const user = makeUser({ aiProvider: 'claude', aiApiKey: 'sk-ant-invalid', update: mockUpdate })
-
-    const { findByText } = render(<SettingsContent user={user as never} />)
-
-    const testButton = await findByText('Tester la connexion')
-    fireEvent.press(testButton)
-
-    await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur de connexion ❌',
-        expect.stringContaining('console.anthropic.com')
-      )
-    })
+    expect(queryByText('Tester la connexion')).toBeNull()
   })
 })
 

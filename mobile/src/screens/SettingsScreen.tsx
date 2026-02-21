@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, ScrollView, Switch, Alert, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
 import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
-import { testProviderConnection } from '../services/ai/aiService'
-import type { AIProviderName } from '../services/ai/types'
-
-const PROVIDERS: { key: AIProviderName; label: string }[] = [
-  { key: 'offline', label: 'Offline (défaut)' },
-  { key: 'claude',  label: 'Claude (Anthropic)' },
-  { key: 'openai',  label: 'OpenAI (GPT-4o)' },
-  { key: 'gemini',  label: 'Gemini (Google)' },
-]
 
 interface Props {
   user: User | null
@@ -24,16 +15,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
-  const [aiProvider, setAiProvider] = useState<AIProviderName>((user?.aiProvider as AIProviderName) ?? 'offline')
-  const [aiApiKey, setAiApiKey] = useState(user?.aiApiKey ?? '')
-  const [isTesting, setIsTesting] = useState(false)
 
   useEffect(() => {
     if (!user) return
     setRestDuration(user.restDuration?.toString() ?? '90')
     setTimerEnabled(user.timerEnabled ?? true)
-    setAiProvider((user.aiProvider as AIProviderName) ?? 'offline')
-    setAiApiKey(user.aiApiKey ?? '')
   }, [user])
 
   const handleSaveRestDuration = async () => {
@@ -54,71 +40,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       haptics.onSuccess()
     } catch (error) {
       if (__DEV__) console.error('Failed to update rest duration:', error)
-    }
-  }
-
-  const handleSaveAI = async (provider: AIProviderName, key: string) => {
-    if (!user) return
-    try {
-      await database.write(async () => {
-        await user.update(u => {
-          u.aiProvider = provider
-          u.aiApiKey = key.trim() || null
-        })
-      })
-      haptics.onSuccess()
-    } catch (error) {
-      if (__DEV__) console.error('Failed to save AI settings:', error)
-    }
-  }
-
-  const handleSelectProvider = async (key: AIProviderName) => {
-    haptics.onSelect()
-    setAiProvider(key)
-    await handleSaveAI(key, aiApiKey)
-  }
-
-  const handleApiKeyBlur = async () => {
-    await handleSaveAI(aiProvider, aiApiKey)
-  }
-
-  const handleTestConnection = async () => {
-    if (aiProvider === 'offline') {
-      Alert.alert('Mode Offline', 'Aucune connexion à tester en mode offline.')
-      return
-    }
-    if (!aiApiKey.trim()) {
-      Alert.alert('Clé manquante', 'Entre une clé API avant de tester.')
-      return
-    }
-    haptics.onPress()
-    setIsTesting(true)
-    try {
-      await testProviderConnection(aiProvider, aiApiKey.trim())
-      haptics.onSuccess()
-      Alert.alert('Connexion réussie ✅', `Le provider ${aiProvider} répond correctement.`)
-    } catch (error) {
-      haptics.onDelete()
-      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-      const isGemini403 = aiProvider === 'gemini' && (errorMessage.includes('403') || errorMessage.includes('API_NOT_ENABLED'))
-      const isGemini429 = aiProvider === 'gemini' && errorMessage.includes('429')
-      const isOpenAI429 = aiProvider === 'openai' && errorMessage.includes('429')
-      const isOpenAI401 = aiProvider === 'openai' && errorMessage.includes('401')
-      const isClaude401 = aiProvider === 'claude' && errorMessage.includes('401')
-      const hint = isGemini403
-        ? '\n\nVérifiez que l\'API Generative Language est activée dans Google Cloud Console.'
-        : isGemini429
-          ? '\n\nFree tier Gemini non disponible en Europe (restriction Google depuis déc. 2025).\n\n• Activez la facturation sur console.cloud.google.com (coût très faible)\n• OU utilisez le provider Claude ou OpenAI'
-          : isOpenAI429
-            ? '\n\nQuota OpenAI insuffisant.\n\n• Ajoutez des crédits sur platform.openai.com/settings/billing (min. $5)\n• OU utilisez Claude ou Gemini'
-            : isOpenAI401
-              ? '\n\nClé API OpenAI invalide.\n\nGénérez une nouvelle clé sur platform.openai.com/api-keys'
-              : isClaude401
-                ? '\n\nClé API Claude invalide.\n\nGénérez une nouvelle clé sur console.anthropic.com'
-                : ''
-      Alert.alert('Erreur de connexion ❌', `Impossible de joindre ${aiProvider}.\n\n${errorMessage}${hint}`)
-    } finally {
-      setIsTesting(false)
     }
   }
 
@@ -190,48 +111,23 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
           <Text style={styles.aiSubLabel}>Provider</Text>
           <View style={styles.providerList}>
-            {PROVIDERS.map(p => (
-              <TouchableOpacity
-                key={p.key}
-                style={[styles.providerRow, aiProvider === p.key && styles.providerRowActive]}
-                onPress={() => handleSelectProvider(p.key)}
-              >
-                <View style={[styles.radioCircle, aiProvider === p.key && styles.radioCircleActive]} />
-                <Text style={[styles.providerLabel, aiProvider === p.key && styles.providerLabelActive]}>
-                  {p.label}
+            <View style={[styles.providerRow, styles.providerRowActive]}>
+              <View style={[styles.radioCircle, styles.radioCircleActive]} />
+              <Text style={[styles.providerLabel, styles.providerLabelActive]}>
+                Offline — Génération locale
+              </Text>
+            </View>
+
+            <View style={[styles.providerRow, styles.providerRowDisabled]}>
+              <View style={styles.radioCircle} />
+              <View style={styles.providerRowContent}>
+                <Text style={[styles.providerLabel, styles.providerLabelDisabled]}>
+                  IA cloud
                 </Text>
-              </TouchableOpacity>
-            ))}
+                <Text style={styles.providerComingSoon}>Prochainement</Text>
+              </View>
+            </View>
           </View>
-
-          {aiProvider !== 'offline' && (
-            <>
-              <Text style={[styles.aiSubLabel, { marginTop: spacing.md }]}>Clé API</Text>
-              <TextInput
-                style={styles.apiKeyInput}
-                value={aiApiKey}
-                onChangeText={setAiApiKey}
-                onBlur={handleApiKeyBlur}
-                placeholder="Colle ta clé API ici"
-                placeholderTextColor={colors.textSecondary}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-
-              <TouchableOpacity
-                style={[styles.testButton, isTesting && styles.testButtonDisabled]}
-                onPress={handleTestConnection}
-                disabled={isTesting}
-              >
-                {isTesting ? (
-                  <ActivityIndicator size="small" color={colors.text} />
-                ) : (
-                  <Text style={styles.testButtonText}>Tester la connexion</Text>
-                )}
-              </TouchableOpacity>
-            </>
-          )}
         </View>
 
         {/* Section À propos */}
@@ -407,27 +303,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '600',
   },
-  apiKeyInput: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: fontSize.md,
-    marginBottom: spacing.md,
+  providerRowDisabled: {
+    opacity: 0.4,
   },
-  testButton: {
-    backgroundColor: colors.secondaryButton,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
+  providerRowContent: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  testButtonDisabled: {
-    opacity: 0.6,
+  providerLabelDisabled: {
+    color: colors.textSecondary,
   },
-  testButtonText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
+  providerComingSoon: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
 })
 

@@ -118,9 +118,6 @@ const MUSCLES_FOCUS_OPTIONS = ['Équilibré', 'Pecs', 'Dos', 'Épaules', 'Bras',
 
 const PROVIDER_LABELS: Record<string, string> = {
   offline: 'Offline',
-  claude:  'Claude',
-  openai:  'GPT-4o',
-  gemini:  'Gemini',
 }
 
 // ─── buildSteps ───────────────────────────────────────────────────────────────
