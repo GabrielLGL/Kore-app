@@ -43,4 +43,4 @@ Aucune (pas de nouveau pattern ni pitfall)
 ✅ Résolu — 20260221-0831
 
 ## Commit
-[à remplir après push]
+140f480 fix(quality): remove unused useModalState import + extract RGB constants in ChartsScreen

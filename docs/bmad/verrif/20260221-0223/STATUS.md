@@ -15,3 +15,10 @@
 | FIX-N3 | SKIP | 03:03:07 |
 | CHECK FINAL | CLEAN | 03:05:59 |
 | SCORE | 83/100 | 03:29:42 |
+| PUSH - Git commit et push | OK | 04:23:48 |
+
+## RESULTAT : CLEAN ET PUSH
+## Score : 90 -> 83 / 100
+## Niveaux appliques : N1
+
+Corrections verifiees (build + tests) puis commitees et pushees.

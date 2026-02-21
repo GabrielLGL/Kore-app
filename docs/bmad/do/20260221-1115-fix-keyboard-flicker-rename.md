@@ -35,4 +35,4 @@ Aucune (pattern déjà documenté dans CLAUDE.md — pas de setTimeout sans clea
 ✅ Résolu — 20260221-1115
 
 ## Commit
-[sera rempli à l'étape 7]
+3493a72 fix(HomeScreen): use InteractionManager to prevent keyboard flicker on rename
