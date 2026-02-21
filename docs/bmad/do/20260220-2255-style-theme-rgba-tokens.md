@@ -44,4 +44,4 @@ Remplacement dans les composants :
 ✅ Résolu — 20260220-2255
 
 ## Commit
-[sera rempli]
+f767612 style(theme): replace hardcoded rgba with theme tokens + @field→@text
