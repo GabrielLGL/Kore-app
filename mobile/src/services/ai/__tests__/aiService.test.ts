@@ -36,6 +36,7 @@ jest.mock('../openaiProvider', () => ({
   createOpenAIProvider: jest.fn().mockReturnValue({
     generate: jest.fn().mockResolvedValue({ name: 'Plan OpenAI', sessions: [] }),
   }),
+  testOpenAIConnection: jest.fn().mockResolvedValue(undefined),
 }))
 
 jest.mock('../geminiProvider', () => ({
@@ -47,7 +48,7 @@ jest.mock('../geminiProvider', () => ({
 
 import { generatePlan, testProviderConnection } from '../aiService'
 import { createClaudeProvider } from '../claudeProvider'
-import { createOpenAIProvider } from '../openaiProvider'
+import { createOpenAIProvider, testOpenAIConnection } from '../openaiProvider'
 import { createGeminiProvider, testGeminiConnection } from '../geminiProvider'
 import { offlineEngine } from '../offlineEngine'
 import { database } from '../../../model'
@@ -160,10 +161,11 @@ describe('aiService', () => {
       expect(createClaudeProvider).not.toHaveBeenCalled()
     })
 
-    it("appelle openaiProvider si provider='openai'", async () => {
+    it("appelle testOpenAIConnection si provider='openai'", async () => {
       await testProviderConnection('openai', 'sk-openai-key')
 
-      expect(createOpenAIProvider).toHaveBeenCalledWith('sk-openai-key')
+      expect(testOpenAIConnection as jest.Mock).toHaveBeenCalledWith('sk-openai-key')
+      expect(createOpenAIProvider).not.toHaveBeenCalled()
     })
   })
 

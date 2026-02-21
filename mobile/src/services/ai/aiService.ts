@@ -7,7 +7,7 @@ import type WorkoutSet from '../../model/models/Set'
 import type User from '../../model/models/User'
 import { offlineEngine } from './offlineEngine'
 import { createClaudeProvider } from './claudeProvider'
-import { createOpenAIProvider } from './openaiProvider'
+import { createOpenAIProvider, testOpenAIConnection } from './openaiProvider'
 import { createGeminiProvider, testGeminiConnection } from './geminiProvider'
 import type { AIFormData, AIProvider, DBContext, GeneratedPlan } from './types'
 
@@ -130,6 +130,11 @@ export async function testProviderConnection(
 
   if (providerName === 'gemini') {
     await testGeminiConnection(apiKey)
+    return
+  }
+
+  if (providerName === 'openai') {
+    await testOpenAIConnection(apiKey)
     return
   }
 
