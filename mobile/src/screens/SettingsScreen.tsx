@@ -15,11 +15,13 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
+  const [userName, setUserName] = useState(user?.name ?? '')
 
   useEffect(() => {
     if (!user) return
     setRestDuration(user.restDuration?.toString() ?? '90')
     setTimerEnabled(user.timerEnabled ?? true)
+    setUserName(user.name ?? '')
   }, [user])
 
   const handleSaveRestDuration = async () => {
@@ -40,6 +42,20 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       haptics.onSuccess()
     } catch (error) {
       if (__DEV__) console.error('Failed to update rest duration:', error)
+    }
+  }
+
+  const handleSaveName = async () => {
+    if (!user) return
+    try {
+      await database.write(async () => {
+        await user.update(u => {
+          u.name = userName.trim() || null
+        })
+      })
+      haptics.onSuccess()
+    } catch (error) {
+      if (__DEV__) console.error('Failed to update name:', error)
     }
   }
 
@@ -64,6 +80,29 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Section Mon profil */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>👤 Mon profil</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Prénom</Text>
+              <Text style={styles.settingDescription}>
+                Affiché sur votre dashboard stats
+              </Text>
+            </View>
+            <TextInput
+              style={[styles.input, styles.nameInput]}
+              value={userName}
+              onChangeText={setUserName}
+              onBlur={handleSaveName}
+              onSubmitEditing={handleSaveName}
+              placeholder="Toi"
+              placeholderTextColor={colors.placeholder}
+              maxLength={30}
+            />
+          </View>
+        </View>
+
         {/* Section Minuteur */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⏱️ Minuteur de repos</Text>
@@ -234,6 +273,10 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.md,
     marginLeft: spacing.sm,
+  },
+  nameInput: {
+    width: 140,
+    textAlign: 'right',
   },
   infoRow: {
     flexDirection: 'row',

@@ -20,6 +20,13 @@ import ChartsScreen from '../screens/ChartsScreen'
 import SettingsScreen from '../screens/SettingsScreen'
 import WorkoutScreen from '../screens/WorkoutScreen'
 import AssistantScreen from '../screens/AssistantScreen'
+import StatsScreen from '../screens/StatsScreen'
+import StatsDurationScreen from '../screens/StatsDurationScreen'
+import StatsVolumeScreen from '../screens/StatsVolumeScreen'
+import StatsCalendarScreen from '../screens/StatsCalendarScreen'
+import StatsRepartitionScreen from '../screens/StatsRepartitionScreen'
+import StatsExercisesScreen from '../screens/StatsExercisesScreen'
+import StatsMeasurementsScreen from '../screens/StatsMeasurementsScreen'
 // Importation de l'ErrorBoundary
 import { ErrorBoundary } from '../components/ErrorBoundary'
 
@@ -29,6 +36,13 @@ export type RootStackParamList = {
   SessionDetail: { sessionId: string };
   Settings: undefined;
   Workout: { sessionId: string };
+  StatsDuration: undefined;
+  StatsVolume: undefined;
+  StatsCalendar: undefined;
+  StatsRepartition: undefined;
+  StatsExercises: undefined;
+  StatsMeasurements: undefined;
+  StatsHistory: undefined;
 };
 
 export type MainTabParamList = {
@@ -192,7 +206,7 @@ function TabNavigator(_props: NativeStackScreenProps<RootStackParamList, 'MainTa
         {/* Onglet Statistiques */}
         <Tab.Screen
           name="Stats"
-          component={ChartsScreen}
+          component={StatsScreen}
           options={{ headerTitle: "Statistiques", tabBarLabel: 'Stats', tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📈</Text> }}
         />
       </Tab.Navigator>
@@ -221,6 +235,13 @@ export default function AppNavigator() {
             <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: 'Gestion de la séance' }} />
             <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Paramètres' }} />
             <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
+            <Stack.Screen name="StatsDuration" component={StatsDurationScreen} options={{ title: 'Durée des séances' }} />
+            <Stack.Screen name="StatsVolume" component={StatsVolumeScreen} options={{ title: "Volume d'entraînement" }} />
+            <Stack.Screen name="StatsCalendar" component={StatsCalendarScreen} options={{ title: "Calendrier d'activité" }} />
+            <Stack.Screen name="StatsRepartition" component={StatsRepartitionScreen} options={{ title: 'Répartition musculaire' }} />
+            <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: 'Exercices & Records' }} />
+            <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: 'Mesures corporelles' }} />
+            <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: 'Historique' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </PortalProvider>

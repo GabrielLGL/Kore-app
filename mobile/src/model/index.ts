@@ -10,6 +10,7 @@ import Exercise from './models/Exercise'
 import User from './models/User'
 import SessionExercise from './models/SessionExercise'
 import PerformanceLog from './models/PerformanceLog'
+import BodyMeasurement from './models/BodyMeasurement'
 
 const adapter = new SQLiteAdapter({
   schema: mySchema,
@@ -33,6 +34,7 @@ export const database = new Database({
     Exercise,
     User,
     SessionExercise,
-    PerformanceLog
+    PerformanceLog,
+    BodyMeasurement,
   ],
 })

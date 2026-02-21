@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 16, // <--- ON PASSE EN VERSION 16 (ajout ai_provider + ai_api_key)
+  version: 17, // <--- ON PASSE EN VERSION 17 (ajout name sur users + table body_measurements)
   tables: [
     tableSchema({
       name: 'programs',
@@ -61,6 +61,7 @@ export const mySchema = appSchema({
         name: 'users',
         columns: [
             {name: 'email', type: 'string'},
+            {name: 'name', type: 'string', isOptional: true},
             {name: 'timer_enabled', type: 'boolean'},
             {name: 'rest_duration', type: 'number'},
             {name: 'onboarding_completed', type: 'boolean'},
@@ -68,6 +69,19 @@ export const mySchema = appSchema({
             {name: 'ai_api_key', type: 'string', isOptional: true},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
+        ]
+    }),
+    tableSchema({
+        name: 'body_measurements',
+        columns: [
+            {name: 'date', type: 'number'},
+            {name: 'weight', type: 'number', isOptional: true},
+            {name: 'waist', type: 'number', isOptional: true},
+            {name: 'hips', type: 'number', isOptional: true},
+            {name: 'chest', type: 'number', isOptional: true},
+            {name: 'arms', type: 'number', isOptional: true},
+            {name: 'created_at', type: 'number'},
+            {name: 'updated_at', type: 'number'},
         ]
     }),
     tableSchema({

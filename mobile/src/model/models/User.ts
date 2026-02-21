@@ -15,6 +15,9 @@ export default class User extends Model {
   // Ajout du flag onboarding pour la version 15
   @field('onboarding_completed') onboardingCompleted!: boolean
 
+  // Ajout du prénom pour la version 17
+  @text('name') name!: string | null
+
   // Ajout des champs IA pour la version 16
   @text('ai_provider') aiProvider!: string | null
   @text('ai_api_key') aiApiKey!: string | null
