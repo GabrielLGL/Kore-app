@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Animated, ScrollView, BackHandler, Alert, InteractionManager } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Animated, ScrollView, BackHandler, Alert } from 'react-native'
 import { database } from '../model/index'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -79,6 +79,9 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   const [selectedProgramForDetail, setSelectedProgramForDetail] = useState<Program | null>(null)
   const [isDetailVisible, setIsDetailVisible] = useState(false)
 
+  const renameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const renameSessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // --- SYNCHRONISATION TAB BAR ---
   useMultiModalSync([
     isOnboardingVisible,
@@ -112,6 +115,14 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
     return () => backHandler.remove()
   }, [isDetailVisible, isOptionsVisible, isSessionOptionsVisible])
+
+  // --- CLEANUP TIMERS RENOMMAGE ---
+  useEffect(() => {
+    return () => {
+      if (renameTimerRef.current) clearTimeout(renameTimerRef.current)
+      if (renameSessionTimerRef.current) clearTimeout(renameSessionTimerRef.current)
+    }
+  }, [])
 
   // --- ONBOARDING ---
 
@@ -281,7 +292,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           onClose={() => setIsOptionsVisible(false)} 
           title={selectedProgram?.name}
         >
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedProgram) prepareRenameProgram(selectedProgram); setIsOptionsVisible(false); InteractionManager.runAfterInteractions(() => { setIsProgramModalVisible(true) }) }}>
+          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedProgram) prepareRenameProgram(selectedProgram); setIsOptionsVisible(false); renameTimerRef.current = setTimeout(() => { setIsProgramModalVisible(true); renameTimerRef.current = null }, 300) }}>
             <Text style={styles.sheetOptionIcon}>✏️</Text><Text style={styles.sheetOptionText}>Renommer le Programme</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateProgram}>
@@ -298,7 +309,7 @@ const HomeScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           onClose={() => setIsSessionOptionsVisible(false)}
           title={selectedSession?.name}
         >
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedSession) prepareRenameSession(selectedSession); setIsSessionOptionsVisible(false); InteractionManager.runAfterInteractions(() => { setIsSessionModalVisible(true) }) }}>
+          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedSession) prepareRenameSession(selectedSession); setIsSessionOptionsVisible(false); renameSessionTimerRef.current = setTimeout(() => { setIsSessionModalVisible(true); renameSessionTimerRef.current = null }, 300) }}>
             <Text style={styles.sheetOptionIcon}>✏️</Text><Text style={styles.sheetOptionText}>Renommer la Séance</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateSession}>

@@ -109,4 +109,7 @@ Trouver le TextInput du modal séance et supprimer `autoFocus`.
 Aucune dépendance inter-groupes. Seul groupe.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1135
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1135-fix-keyboard-flicker-real.md
