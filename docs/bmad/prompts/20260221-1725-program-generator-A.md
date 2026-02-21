@@ -257,4 +257,8 @@ export const DUMBBELL_ONLY_EQUIPMENT: Equipment[] = ['dumbbell']
 Aucune — ce groupe peut démarrer immédiatement.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1750
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1750-feat-programGenerator-A.md
+Note : créé dans le commit f7e9f29 (Groupe B) car prérequis manquant.
