@@ -129,4 +129,7 @@ Agent : cis-brainstorming-coach
 Dépend de **Groupe A** — le fichier `docs/bmad/wegogym-brainstorm-context.md` doit exister.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260221-1700
+
+## Résolution
+Rapport do : docs/bmad/do/20260221-1700-feat-idee-brainstorm-phase1.md
