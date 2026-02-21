@@ -13,6 +13,8 @@ import PerformanceLog from './models/PerformanceLog'
 
 const adapter = new SQLiteAdapter({
   schema: mySchema,
+  // JSI requis pour la performance (New Architecture / Bridgeless mode).
+  // Warning "[🍉] JSI SQLiteAdapter not available" attendu en dev sans rebuild natif (`npm run android`).
   jsi: true,
   onSetUpError: error => {
     if (__DEV__) console.error("Erreur chargement DB:", error)
