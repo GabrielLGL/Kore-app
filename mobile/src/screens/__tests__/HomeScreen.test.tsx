@@ -31,171 +31,157 @@ jest.mock('@nozbe/with-observables', () => (
     (Component: React.ComponentType<object>) => Component
 ))
 
-jest.mock('react-native-gesture-handler', () => {
-  const { View } = require('react-native')
-  return {
-    GestureHandlerRootView: View,
-    Swipeable: View,
-    DrawerLayout: View,
-    State: {},
-    ScrollView: View,
-    Slider: View,
-    Switch: View,
-    TextInput: View,
-    ToolbarAndroid: View,
-    ViewPagerAndroid: View,
-    WebView: View,
-    NativeViewGestureHandler: View,
-    TapGestureHandler: View,
-    FlingGestureHandler: View,
-    ForceTouchGestureHandler: View,
-    LongPressGestureHandler: View,
-    PanGestureHandler: View,
-    PinchGestureHandler: View,
-    RotationGestureHandler: View,
-    RawButton: View,
-    BaseButton: View,
-    RectButton: View,
-    BorderlessButton: View,
-    FlatList: View,
-    gestureHandlerRootHOC: jest.fn(c => c),
-    Directions: {},
-  }
-})
+const mockNavigate = jest.fn()
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => ({
+    navigate: mockNavigate,
+    goBack: jest.fn(),
+  }),
+}))
 
-jest.mock('react-native-draggable-flatlist', () => {
-  const React = require('react')
-  const { FlatList } = require('react-native')
-  return {
-    __esModule: true,
-    default: ({ data, renderItem, keyExtractor }: {
-      data: object[];
-      renderItem: (params: { item: object; drag: jest.Mock; isActive: boolean }) => React.ReactNode;
-      keyExtractor: (item: object) => string;
-    }) =>
-      React.createElement(FlatList, {
-        data,
-        renderItem: ({ item }: { item: object }) => renderItem({ item, drag: jest.fn(), isActive: false }),
-        keyExtractor,
-      }),
-    ScaleDecorator: ({ children }: { children: React.ReactNode }) => children,
-  }
-})
-
-jest.mock('../../model/utils/databaseHelpers', () => ({
-  importPresetProgram: jest.fn().mockResolvedValue(undefined),
-  markOnboardingCompleted: jest.fn().mockResolvedValue(undefined),
-  getNextPosition: jest.fn().mockResolvedValue(0),
+jest.mock('../../model/utils/statsHelpers', () => ({
+  computeGlobalKPIs: jest.fn().mockReturnValue({
+    totalSessions: 42,
+    totalVolumeKg: 12500,
+    totalPRs: 7,
+  }),
+  computeMotivationalPhrase: jest.fn().mockReturnValue('Continue comme ça !'),
+  formatVolume: jest.fn((v: number) => `${v} kg`),
 }))
 
 import React from 'react'
-import { render, fireEvent, act } from '@testing-library/react-native'
+import { render, fireEvent } from '@testing-library/react-native'
 import { HomeContent } from '../HomeScreen'
-import type Program from '../../model/models/Program'
+import type User from '../../model/models/User'
+import type History from '../../model/models/History'
+import type WorkoutSet from '../../model/models/Set'
 
-const makeNavigation = () => ({
-  navigate: jest.fn(),
-  goBack: jest.fn(),
-  addListener: jest.fn(() => jest.fn()),
-})
-
-const makeProgram = (overrides: Partial<Program> = {}): Program => ({
-  id: 'prog-1',
-  name: 'PPL',
-  position: 0,
+const makeUser = (overrides: Partial<User> = {}): User => ({
+  id: 'user-1',
+  name: 'Gabriel',
   observe: jest.fn(),
-  sessions: { observe: jest.fn() },
-  prepareUpdate: jest.fn(),
   ...overrides,
-} as unknown as Program)
+} as unknown as User)
 
-describe('HomeContent', () => {
-  it('affiche le bouton Créer un Programme', () => {
-    const { getByText } = render(
-      <HomeContent programs={[]} user={null} navigation={makeNavigation() as never} />
-    )
-    expect(getByText(/Créer un Programme/)).toBeTruthy()
+describe('HomeScreen Dashboard', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear()
   })
 
-  it('rend sans crasher avec une liste de programmes vide', () => {
+  it('rend sans crasher avec des listes vides', () => {
     expect(() =>
-      render(<HomeContent programs={[]} user={null} navigation={makeNavigation() as never} />)
+      render(
+        <HomeContent
+          users={[]}
+          histories={[] as unknown as History[]}
+          sets={[] as unknown as WorkoutSet[]}
+        />
+      )
     ).not.toThrow()
   })
 
-  it('rend avec plusieurs programmes', () => {
-    const programs = [
-      makeProgram({ id: 'p1', name: 'PPL' }),
-      makeProgram({ id: 'p2', name: 'Full Body' }),
-    ]
-    const { getAllByText } = render(
-      <HomeContent programs={programs} user={null} navigation={makeNavigation() as never} />
-    )
-    // ProgramSection affiche "PPL (0)" dans un Text imbriqué
-    expect(getAllByText(/PPL/).length).toBeGreaterThan(0)
-    expect(getAllByText(/Full Body/).length).toBeGreaterThan(0)
-  })
-
-  it('ouvre la modale de création programme au clic', () => {
+  it('affiche le greeting avec le prénom', () => {
     const { getByText } = render(
-      <HomeContent programs={[]} user={null} navigation={makeNavigation() as never} />
+      <HomeContent
+        users={[makeUser()]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
     )
-    act(() => {
-      fireEvent.press(getByText(/Créer un Programme/))
-    })
-    expect(getByText('Nouveau programme')).toBeTruthy()
+    expect(getByText('Salut, Gabriel !')).toBeTruthy()
   })
 
-  it('ferme la modale programme avec Annuler', () => {
-    const { getByText, queryByText } = render(
-      <HomeContent programs={[]} user={null} navigation={makeNavigation() as never} />
-    )
-    act(() => {
-      fireEvent.press(getByText(/Créer un Programme/))
-    })
-    act(() => {
-      fireEvent.press(getByText('Annuler'))
-    })
-    expect(queryByText('Nouveau programme')).toBeNull()
-  })
-
-  it('affiche la modale onboarding quand pas de programmes et user sans onboarding', () => {
-    jest.useFakeTimers()
-    const user = { onboardingCompleted: false, observe: jest.fn() }
+  it('affiche "Toi" quand pas d\'utilisateur', () => {
     const { getByText } = render(
-      <HomeContent programs={[]} user={user as never} navigation={makeNavigation() as never} />
+      <HomeContent
+        users={[]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
     )
-    // Le setTimeout de 400ms déclenche l'onboarding
-    act(() => { jest.advanceTimersByTime(500) })
-    // Flush les mises à jour d'état du BottomSheet (setShowContent)
-    act(() => {})
-    // L'onboarding est visible — titre du BottomSheet
-    expect(getByText('Choisissez votre programme')).toBeTruthy()
-    jest.useRealTimers()
+    expect(getByText('Salut, Toi !')).toBeTruthy()
   })
 
-  it('n\'affiche pas l\'onboarding si onboardingCompleted = true', () => {
-    jest.useFakeTimers()
-    const user = { onboardingCompleted: true, observe: jest.fn() }
-    const { queryByText } = render(
-      <HomeContent programs={[]} user={user as never} navigation={makeNavigation() as never} />
+  it('affiche les KPIs', () => {
+    const { getByText } = render(
+      <HomeContent
+        users={[makeUser()]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
     )
-    act(() => { jest.advanceTimersByTime(500) })
-    act(() => {})
-    expect(queryByText('Choisissez votre programme')).toBeNull()
-    jest.useRealTimers()
+    expect(getByText('42')).toBeTruthy()
+    expect(getByText('12500 kg')).toBeTruthy()
+    expect(getByText('7')).toBeTruthy()
   })
 
-  it('n\'affiche pas l\'onboarding si des programmes existent', () => {
-    jest.useFakeTimers()
-    const user = { onboardingCompleted: false, observe: jest.fn() }
-    const programs = [makeProgram()]
-    const { queryByText } = render(
-      <HomeContent programs={programs} user={user as never} navigation={makeNavigation() as never} />
+  it('affiche les 3 sections', () => {
+    const { getByText } = render(
+      <HomeContent
+        users={[]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
     )
-    act(() => { jest.advanceTimersByTime(500) })
-    act(() => {})
-    expect(queryByText('Choisissez votre programme')).toBeNull()
-    jest.useRealTimers()
+    expect(getByText('Entra\u00eenement')).toBeTruthy()
+    expect(getByText('Statistiques')).toBeTruthy()
+    expect(getByText('Outils')).toBeTruthy()
+  })
+
+  it('affiche toutes les tuiles', () => {
+    const { getByText, getAllByText } = render(
+      <HomeContent
+        users={[]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
+    )
+    expect(getByText('Programmes')).toBeTruthy()
+    expect(getByText('Exercices')).toBeTruthy()
+    expect(getByText('Dur\u00e9e')).toBeTruthy()
+    expect(getAllByText('Volume').length).toBeGreaterThanOrEqual(2)
+    expect(getByText('Agenda')).toBeTruthy()
+    expect(getByText('Muscles')).toBeTruthy()
+    expect(getByText('Exercices & Records')).toBeTruthy()
+    expect(getByText('Mesures')).toBeTruthy()
+    expect(getByText('Historique')).toBeTruthy()
+    expect(getByText('Assistant')).toBeTruthy()
+    expect(getByText('R\u00e9glages')).toBeTruthy()
+  })
+
+  it('navigue vers un écran stack au press', () => {
+    const { getByText } = render(
+      <HomeContent
+        users={[]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
+    )
+    fireEvent.press(getByText('Dur\u00e9e'))
+    expect(mockNavigate).toHaveBeenCalledWith('StatsDuration')
+  })
+
+  it('navigue vers un tab au press', () => {
+    const { getByText } = render(
+      <HomeContent
+        users={[]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
+    )
+    fireEvent.press(getByText('Assistant'))
+    expect(mockNavigate).toHaveBeenCalledWith('MainTabs', { screen: 'Assistant' })
+  })
+
+  it('affiche la phrase de motivation', () => {
+    const { getByText } = render(
+      <HomeContent
+        users={[makeUser()]}
+        histories={[] as unknown as History[]}
+        sets={[] as unknown as WorkoutSet[]}
+      />
+    )
+    expect(getByText('Continue comme ça !')).toBeTruthy()
   })
 })

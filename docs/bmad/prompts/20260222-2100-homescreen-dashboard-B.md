@@ -208,4 +208,7 @@ Tu peux t'inspirer du StatsScreen existant qui fait deja ces queries.
 Groupe A doit etre termine (ProgramsScreen.tsx doit exister pour que la navigation soit coherente), MAIS ce groupe peut techniquement etre execute en parallele car il ne modifie pas les memes fichiers.
 
 ## Statut
-En attente
+✅ Résolu — 20260222-2115
+
+## Résolution
+Rapport do : docs/bmad/do/20260222-2115-feat-homescreen-dashboard.md
