@@ -78,4 +78,7 @@ Le fichier `mobile/src/screens/HomeScreen.tsx` contient actuellement :
 Aucune dependance — ce groupe peut etre execute en premier.
 
 ## Statut
-En attente
+Resolu — 20260222-2110
+
+## Resolution
+Rapport do : docs/bmad/do/20260222-2110-feat-programs-screen.md
