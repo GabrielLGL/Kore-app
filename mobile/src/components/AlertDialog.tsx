@@ -13,6 +13,8 @@ interface AlertDialogProps {
   confirmText?: string
   cancelText?: string
   confirmColor?: string
+  /** Hide the cancel button (useful for simple error/info alerts with a single "OK" action) */
+  hideCancel?: boolean
 }
 
 /**
@@ -46,6 +48,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   confirmText = 'Confirmer',
   cancelText = 'Annuler',
   confirmColor = colors.danger,
+  hideCancel = false,
 }) => {
   const haptics = useHaptics()
   const fadeAnim = React.useRef(new Animated.Value(0)).current
@@ -102,13 +105,15 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
 
           {/* Boutons d'action */}
           <View style={styles.buttonsRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleCancel}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.buttonText}>{cancelText}</Text>
-            </TouchableOpacity>
+            {!hideCancel && (
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={handleCancel}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.buttonText}>{cancelText}</Text>
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: confirmColor }]}

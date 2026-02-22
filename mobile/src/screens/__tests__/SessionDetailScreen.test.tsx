@@ -178,6 +178,7 @@ describe('SessionDetailContent', () => {
           <SessionDetailContent
             session={makeSession()}
             sessionExercises={[]}
+            exercises={[]}
             user={null}
             navigation={makeNavigation() as never}
           />
@@ -190,6 +191,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -203,6 +205,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -216,6 +219,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -230,6 +234,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession({ name: 'Ma Super Séance' })}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={navigation as never}
         />
@@ -241,7 +246,7 @@ describe('SessionDetailContent', () => {
     })
 
     it('affiche les items de session exercise', () => {
-      const exercises = [
+      const sessionExos = [
         makeSessionExercise({ id: 'se-1' }),
         makeSessionExercise({ id: 'se-2' }),
       ]
@@ -249,7 +254,8 @@ describe('SessionDetailContent', () => {
       const { getByText } = render(
         <SessionDetailContent
           session={makeSession()}
-          sessionExercises={exercises}
+          sessionExercises={sessionExos}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -263,12 +269,13 @@ describe('SessionDetailContent', () => {
   describe('navigation vers l\'entrainement', () => {
     it('navigue vers Workout au clic sur Lancer (si exercices présents)', () => {
       const navigation = makeNavigation()
-      const exercises = [makeSessionExercise()]
+      const sessionExos = [makeSessionExercise()]
 
       const { getByText } = render(
         <SessionDetailContent
           session={makeSession({ id: 'sess-1' })}
-          sessionExercises={exercises}
+          sessionExercises={sessionExos}
+          exercises={[]}
           user={null}
           navigation={navigation as never}
         />
@@ -288,6 +295,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={navigation as never}
         />
@@ -307,6 +315,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -324,6 +333,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />
@@ -347,6 +357,7 @@ describe('SessionDetailContent', () => {
         <SessionDetailContent
           session={makeSession()}
           sessionExercises={[]}
+          exercises={[]}
           user={null}
           navigation={makeNavigation() as never}
         />

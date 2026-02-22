@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react'
+import React, { useState, useLayoutEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native'
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist'
 import withObservables from '@nozbe/with-observables'
@@ -24,11 +24,12 @@ import { colors } from '../theme'
 interface Props {
   session: Session
   sessionExercises: SessionExercise[]
+  exercises: Exercise[]
   user: User | null
   navigation: NativeStackNavigationProp<RootStackParamList>
 }
 
-export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, user, navigation }) => {
+export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, exercises, user, navigation }) => {
   // --- HOOKS ---
   const haptics = useHaptics()
   const {
@@ -54,7 +55,6 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
 
   // --- ÉTATS LOCAUX ---
   const [isAddModalVisible, setIsAddModalVisible] = useState(false)
-  const [exercisesList, setExercisesList] = useState<Exercise[]>([])
   const [isEditModalVisible, setIsEditModalVisible] = useState(false)
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [alertConfig, setAlertConfig] = useState<{
@@ -66,24 +66,9 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
 
   useLayoutEffect(() => { navigation.setOptions({ title: session.name, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }) }, [navigation, session.name])
 
-  useEffect(() => {
-    const loadExos = async () => {
-      try {
-        const list = await database.get<Exercise>('exercises')
-          .query(Q.sortBy('name', Q.asc))
-          .fetch()
-        setExercisesList(list)
-      } catch (error) {
-        if (__DEV__) console.error('Failed to load exercises:', error)
-        setExercisesList([]) // Fallback to empty list
-      }
-    }
-    if (isAddModalVisible) loadExos()
-  }, [isAddModalVisible])
-
   // --- HANDLERS ---
   const handleAddExercise = async (exerciseId: string, sets: string, reps: string, weight: string) => {
-    const exo = exercisesList.find(e => e.id === exerciseId)
+    const exo = exercises.find(e => e.id === exerciseId)
     if (!exo) return
 
     const success = await addExercise(exerciseId, sets, reps, weight, exo)
@@ -169,7 +154,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
       <ExercisePickerModal
         visible={isAddModalVisible}
         onClose={() => setIsAddModalVisible(false)}
-        exercises={exercisesList}
+        exercises={exercises}
         onAdd={handleAddExercise}
         onHapticSelect={haptics.onSelect}
       />
@@ -235,5 +220,6 @@ const styles = StyleSheet.create({
 export default withObservables(['route'], ({ route }) => ({
   session: database.get<Session>('sessions').findAndObserve(route.params.sessionId),
   sessionExercises: database.get<SessionExercise>('session_exercises').query(Q.where('session_id', route.params.sessionId), Q.sortBy('position', Q.asc)).observe(),
+  exercises: database.get<Exercise>('exercises').query(Q.sortBy('name', Q.asc)).observe(),
   user: database.get<User>('users').query().observe().pipe(map(list => list[0] || null))
 }))(SessionDetailContent)

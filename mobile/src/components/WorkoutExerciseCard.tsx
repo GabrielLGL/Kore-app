@@ -2,6 +2,7 @@ import React from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { from } from 'rxjs'
+import { switchMap } from 'rxjs/operators'
 import SessionExercise from '../model/models/SessionExercise'
 import Exercise from '../model/models/Exercise'
 import { validateSetInput } from '../model/utils/validationHelpers'
@@ -240,8 +241,10 @@ export const WorkoutExerciseCard = withObservables(
     historyId: string
   }) => ({
     exercise: sessionExercise.exercise.observe(),
-    lastPerformance: from(
-      getLastPerformanceForExercise(sessionExercise.exercise.id, historyId ?? '')
+    lastPerformance: sessionExercise.exercise.observe().pipe(
+      switchMap(exercise =>
+        from(getLastPerformanceForExercise(exercise.id, historyId ?? ''))
+      )
     ),
   })
 )(WorkoutExerciseCardContent)

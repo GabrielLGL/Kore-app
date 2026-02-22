@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, Animated,
-  Alert, ScrollView,
+  ScrollView,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
@@ -209,6 +209,8 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
   const [generatedPlan, setGeneratedPlan]       = useState<GeneratedPlan | null>(null)
   const [isResetAlertVisible, setIsResetAlertVisible] = useState(false)
   const [fallbackNotice, setFallbackNotice]           = useState<string | null>(null)
+  const [errorAlertVisible, setErrorAlertVisible]     = useState(false)
+  const [errorAlertMessage, setErrorAlertMessage]     = useState('')
 
   const progressAnim = useRef(new Animated.Value(0)).current
   const contentAnim  = useRef(new Animated.Value(1)).current
@@ -273,7 +275,8 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
       }
     } catch {
       previewModal.close()
-      Alert.alert('Erreur', 'Impossible de générer le plan. Réessaie.')
+      setErrorAlertMessage('Impossible de générer le plan. Réessaie.')
+      setErrorAlertVisible(true)
     } finally {
       setIsGenerating(false)
     }
@@ -427,7 +430,8 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
       }
     } catch {
       previewModal.close()
-      Alert.alert('Erreur', "Impossible d'enregistrer le plan. Réessaie.")
+      setErrorAlertMessage("Impossible d'enregistrer le plan. Réessaie.")
+      setErrorAlertVisible(true)
     }
   }, [formData.mode, formData.targetProgramId, navigation, previewModal])
 
@@ -692,6 +696,17 @@ function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInn
         onCancel={() => setIsResetAlertVisible(false)}
         confirmText="Recommencer"
         cancelText="Annuler"
+      />
+
+      <AlertDialog
+        visible={errorAlertVisible}
+        title="Erreur"
+        message={errorAlertMessage}
+        onConfirm={() => setErrorAlertVisible(false)}
+        onCancel={() => setErrorAlertVisible(false)}
+        confirmText="OK"
+        confirmColor={colors.primary}
+        hideCancel
       />
     </View>
   )

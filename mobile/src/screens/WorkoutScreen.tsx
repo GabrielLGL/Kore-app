@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   BackHandler,
   Animated,
-  Alert,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
@@ -62,6 +61,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const [confirmEndVisible, setConfirmEndVisible] = useState(false)
   const [summaryVisible, setSummaryVisible] = useState(false)
   const [abandonVisible, setAbandonVisible] = useState(false)
+  const [startErrorVisible, setStartErrorVisible] = useState(false)
   const [durationSeconds, setDurationSeconds] = useState(0)
 
   const haptics = useHaptics()
@@ -100,11 +100,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       })
       .catch(e => {
         if (__DEV__) console.error('[WorkoutScreen] createWorkoutHistory:', e)
-        Alert.alert(
-          'Erreur',
-          'Impossible de démarrer la séance. Veuillez réessayer.',
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
-        )
+        setStartErrorVisible(true)
       })
   }, [])
 
@@ -243,6 +239,18 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         confirmColor={colors.danger}
         onConfirm={handleConfirmAbandon}
         onCancel={() => setAbandonVisible(false)}
+      />
+
+      {/* AlertDialog — erreur démarrage séance */}
+      <AlertDialog
+        visible={startErrorVisible}
+        title="Erreur"
+        message="Impossible de démarrer la séance. Veuillez réessayer."
+        confirmText="OK"
+        confirmColor={colors.primary}
+        onConfirm={() => { setStartErrorVisible(false); navigation.goBack() }}
+        onCancel={() => { setStartErrorVisible(false); navigation.goBack() }}
+        hideCancel
       />
 
       {/* Resume de fin de seance */}
