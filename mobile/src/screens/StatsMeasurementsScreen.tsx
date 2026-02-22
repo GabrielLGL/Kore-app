@@ -7,8 +7,6 @@ import {
   TextInput,
   StyleSheet,
   useWindowDimensions,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -35,7 +33,7 @@ type MetricKey = 'weight' | 'waist' | 'hips' | 'arms' | 'chest'
 
 const METRICS: Array<{ key: MetricKey; label: string; unit: string }> = [
   { key: 'weight', label: 'Poids', unit: 'kg' },
-  { key: 'waist', label: 'Taille', unit: 'cm' },
+  { key: 'waist', label: 'Tour de taille', unit: 'cm' },
   { key: 'hips', label: 'Hanches', unit: 'cm' },
   { key: 'arms', label: 'Bras', unit: 'cm' },
   { key: 'chest', label: 'Poitrine', unit: 'cm' },
@@ -66,7 +64,7 @@ interface Props {
 }
 
 function StatsMeasurementsScreenBase({ measurements }: Props) {
-  const { width: screenWidth } = useWindowDimensions()
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const haptics = useHaptics()
   const addSheet = useModalState()
   const [deleteTarget, setDeleteTarget] = useState<BodyMeasurement | null>(null)
@@ -254,7 +252,11 @@ function StatsMeasurementsScreenBase({ measurements }: Props) {
         onClose={addSheet.close}
         title="Nouvelle mesure"
       >
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: screenHeight * 0.6 }}
+        >
           <View style={styles.formContent}>
             {METRICS.map(m => (
               <View key={m.key} style={styles.inputRow}>
@@ -278,7 +280,7 @@ function StatsMeasurementsScreenBase({ measurements }: Props) {
               </Button>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </ScrollView>
       </BottomSheet>
 
       {/* AlertDialog suppression */}
