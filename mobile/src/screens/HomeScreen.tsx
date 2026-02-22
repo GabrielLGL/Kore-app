@@ -57,13 +57,6 @@ const SECTIONS: Section[] = [
       { icon: '\uD83D\uDCCA', label: 'Historique', route: 'StatsHistory' },
     ],
   },
-  {
-    title: 'Outils',
-    tiles: [
-      { icon: '\u2728', label: 'Assistant', route: 'Assistant' },
-      { icon: '\u2699\uFE0F', label: 'R\u00e9glages', route: 'Settings' },
-    ],
-  },
 ]
 
 /** All navigable routes from the dashboard */

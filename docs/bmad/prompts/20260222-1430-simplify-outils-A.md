@@ -45,4 +45,7 @@ Supprimer la section "Outils" du HomeScreen dashboard. Les accès vers Réglages
 Aucune dépendance — peut être exécuté en parallèle avec Groupe B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260222-1435
+
+## Résolution
+Rapport do : docs/bmad/do/20260222-1435-chore-remove-outils.md
