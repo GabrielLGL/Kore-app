@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { NavigationContainer, DarkTheme, NavigationContainerRefWithCurrent } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Text, Platform, BackHandler, ToastAndroid, TouchableOpacity } from 'react-native'
+import { Text, Platform, BackHandler, ToastAndroid, Pressable } from 'react-native'
 import { useNavigationContainerRef } from '@react-navigation/native'
 import { PortalProvider } from '@gorhom/portal'
 import { colors } from '../theme'
@@ -130,16 +130,17 @@ export default function AppNavigator() {
               name="Home"
               component={HomeScreen}
               options={({ navigation: nav }) => ({
-                headerTitle: 'WEGOGYM',
+                headerTitle: '',
                 headerTitleAlign: 'left',
                 headerTitleStyle: { fontSize: 22, fontWeight: 'bold', color: colors.text },
                 headerRight: () => (
-                  <TouchableOpacity
-                    style={{ marginRight: 20, padding: 5 }}
+                  <Pressable
+                    style={{ marginRight: 20, padding: 10 }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     onPress={() => { nav.navigate('Settings'); }}
                   >
                     <Text style={{ fontSize: 24 }}>⚙️</Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 ),
               })}
             />

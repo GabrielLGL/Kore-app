@@ -50,4 +50,7 @@ Deux corrections sur le header du HomeScreen :
 Aucune dépendance
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260222-1410
+
+## Résolution
+Rapport do : docs/bmad/do/20260222-1410-fix-homescreen-header.md
