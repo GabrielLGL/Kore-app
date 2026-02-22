@@ -16,13 +16,14 @@ import {
   computeCurrentStreak,
   computeRecordStreak,
   toDateKey,
+  formatDuration,
 } from '../model/utils/statsHelpers'
 import { colors, spacing, borderRadius, fontSize, intensityColors } from '../theme'
 
 // ─── Constantes calendrier ────────────────────────────────────────────────────
 
-const DAY_SIZE = 12
-const DAY_GAP = 2
+const DAY_SIZE = 20
+const DAY_GAP = 3
 const DAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
 function getIntensityColor(count: number): string {
@@ -99,10 +100,16 @@ interface Props {
   histories: History[]
 }
 
+interface SessionDetail {
+  name: string
+  durationMin: number | null
+}
+
 interface TooltipInfo {
   dateKey: string
   label: string
   count: number
+  sessions: SessionDetail[]
 }
 
 function StatsCalendarScreenBase({ histories }: Props) {
@@ -113,18 +120,51 @@ function StatsCalendarScreenBase({ histories }: Props) {
   const recordStreak = useMemo(() => computeRecordStreak(histories), [histories])
   const weeks = useMemo(() => generateCalendarWeeks(calendarData), [calendarData])
 
-  const handleDayPress = (day: DayData) => {
+  const handleDayPress = async (day: DayData) => {
     if (day.isFuture) return
+
+    // Toggle off if same day
+    if (tooltip?.dateKey === day.dateKey) {
+      setTooltip(null)
+      return
+    }
+
     const label = day.date.toLocaleDateString('fr-FR', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
     })
-    setTooltip(prev =>
-      prev?.dateKey === day.dateKey
-        ? null
-        : { dateKey: day.dateKey, label, count: day.count }
+
+    if (day.count === 0) {
+      setTooltip({ dateKey: day.dateKey, label, count: 0, sessions: [] })
+      return
+    }
+
+    // Filter histories for this day
+    const dayHistories = histories.filter(
+      h => h.deletedAt === null && toDateKey(h.startTime) === day.dateKey
     )
+
+    // Fetch session details
+    const sessions: SessionDetail[] = await Promise.all(
+      dayHistories.map(async (h) => {
+        let name = 'Séance'
+        try {
+          const session = await h.session.fetch()
+          if (session?.name) name = session.name
+        } catch {
+          // session may have been deleted
+        }
+
+        const durationMin = h.endTime
+          ? Math.round((h.endTime.getTime() - h.startTime.getTime()) / 60000)
+          : null
+
+        return { name, durationMin }
+      })
+    )
+
+    setTooltip({ dateKey: day.dateKey, label, count: day.count, sessions })
   }
 
   return (
@@ -150,12 +190,23 @@ function StatsCalendarScreenBase({ histories }: Props) {
       {/* Tooltip */}
       {tooltip && (
         <View style={styles.tooltip}>
-          <Text style={styles.tooltipText}>
-            {tooltip.label} —{' '}
-            {tooltip.count === 0
-              ? 'Repos'
-              : `${tooltip.count} séance${tooltip.count > 1 ? 's' : ''}`}
-          </Text>
+          <Text style={styles.tooltipDate}>{tooltip.label}</Text>
+          {tooltip.count === 0 ? (
+            <Text style={styles.tooltipRest}>Repos</Text>
+          ) : (
+            tooltip.sessions.map((s, i) => (
+              <View key={i} style={styles.tooltipSession}>
+                <Text style={styles.tooltipSessionName} numberOfLines={1}>
+                  {s.name}
+                </Text>
+                {s.durationMin != null && s.durationMin > 0 && (
+                  <Text style={styles.tooltipSessionDuration}>
+                    {formatDuration(s.durationMin)}
+                  </Text>
+                )}
+              </View>
+            ))
+          )}
         </View>
       )}
 
@@ -260,11 +311,33 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.sm,
   },
-  tooltipText: {
+  tooltipDate: {
     fontSize: fontSize.sm,
-    color: colors.text,
+    color: colors.textSecondary,
     textAlign: 'center',
     textTransform: 'capitalize',
+    marginBottom: spacing.xs,
+  },
+  tooltipRest: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  tooltipSession: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  tooltipSessionName: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+    flex: 1,
+  },
+  tooltipSessionDuration: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    marginLeft: spacing.sm,
   },
   calendarScroll: {
     marginBottom: spacing.md,
@@ -282,12 +355,12 @@ const styles = StyleSheet.create({
     marginBottom: DAY_GAP,
   },
   dayLabel: {
-    fontSize: 9,
+    fontSize: 11,
     color: colors.textSecondary,
     height: DAY_SIZE,
     marginBottom: DAY_GAP,
     lineHeight: DAY_SIZE,
-    width: 10,
+    width: 14,
     textAlign: 'center',
   },
   weekColumn: {
@@ -304,7 +377,7 @@ const styles = StyleSheet.create({
   dayBox: {
     width: DAY_SIZE,
     height: DAY_SIZE,
-    borderRadius: 2,
+    borderRadius: 3,
     marginBottom: DAY_GAP,
   },
   legend: {
@@ -316,7 +389,7 @@ const styles = StyleSheet.create({
   legendBox: {
     width: DAY_SIZE,
     height: DAY_SIZE,
-    borderRadius: 2,
+    borderRadius: 3,
   },
   legendText: {
     fontSize: fontSize.xs,
