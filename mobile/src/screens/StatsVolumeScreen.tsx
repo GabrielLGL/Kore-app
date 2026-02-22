@@ -48,7 +48,7 @@ function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
   )
 
   const chartData = useMemo(() => ({
-    labels: stats.perWeek.map(w => w.weekLabel),
+    labels: stats.perWeek.map((w, i) => i % 3 === 0 ? w.weekLabel : ''),
     datasets: [{ data: stats.perWeek.map(w => Math.max(w.volume, 0)) }],
   }), [stats.perWeek])
 
