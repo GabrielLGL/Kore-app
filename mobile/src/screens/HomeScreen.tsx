@@ -101,7 +101,7 @@ function HomeScreenBase({ users, histories, sets }: Props) {
   const handleTilePress = (tile: Tile) => {
     haptics.onPress()
     try {
-      navigation.navigate(tile.route as never)
+      navigation.navigate(tile.route as keyof RootStackParamList as never)
     } catch {
       if (__DEV__) console.warn(`[HomeScreen] Route "${tile.route}" non disponible`)
     }
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.md,
-    paddingBottom: spacing.xl + 60,
+    paddingBottom: spacing.xl,
   },
   // Header Card
   headerCard: {

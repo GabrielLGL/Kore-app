@@ -98,4 +98,7 @@ Depend du **Groupe A** (navigation restructuree, MainTabParamList supprime).
 Si lance avant le Groupe A, les imports de MainTabParamList causeraient des erreurs TypeScript.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260222-2300
+
+## Résolution
+Rapport do : docs/bmad/do/20260222-2300-refactor-homescreen-tabbar.md
