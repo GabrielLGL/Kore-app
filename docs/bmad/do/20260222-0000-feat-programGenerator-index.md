@@ -30,4 +30,4 @@ aucune
 ✅ Résolu — 20260222-0000
 
 ## Commit
-[sera rempli après push]
+bbfea97 docs(programGenerator): close index report — all groups resolved
