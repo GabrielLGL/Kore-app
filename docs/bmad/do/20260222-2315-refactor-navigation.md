@@ -45,4 +45,4 @@ Fichiers modifiés :
 ✅ Résolu — 20260222-2315
 
 ## Commit
-[sera rempli après commit]
+bf9bd8e refactor(hooks): remove tab bar sync from useModalState and useMultiModalSync
