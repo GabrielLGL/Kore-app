@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   inputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.xs,
   },
   input: {
     backgroundColor: colors.cardSecondary,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   prChip: {
     backgroundColor: colors.primaryBg,
     borderRadius: borderRadius.sm,
-    paddingHorizontal: 6,
+    paddingHorizontal: spacing.xs,
     paddingVertical: 2,
   },
   prBadge: {

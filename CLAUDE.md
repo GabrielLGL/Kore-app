@@ -164,7 +164,7 @@ These are bugs that have been found and fixed before. **Never reintroduce them:*
 
 ### 4.4 Theme (in `theme/index.ts`)
 - **Colors**: `colors.background`, `colors.card`, `colors.primary`, `colors.danger`, etc.
-- **Spacing**: `spacing.xs`, `spacing.sm`, `spacing.md`, `spacing.lg`, `spacing.xl`
+- **Spacing**: `spacing.xs` (4), `spacing.sm` (8), `spacing.ms` (12), `spacing.md` (16), `spacing.lg` (24), `spacing.xl` (32), `spacing.xxl` (40)
 - **BorderRadius**: `borderRadius.sm`, `borderRadius.md`, `borderRadius.lg`
 - **Common Styles**: `commonStyles.modalContainer`, `commonStyles.overlay`, etc.
 

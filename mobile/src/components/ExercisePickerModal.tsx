@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   customModalContent: {
     width: '90%',
     backgroundColor: colors.card,
-    padding: 25,
+    padding: spacing.lg,
     borderRadius: borderRadius.lg,
     elevation: 20,
   },
@@ -193,23 +193,23 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: fontSize.lg,
     fontWeight: 'bold',
-    marginBottom: 15,
+    marginBottom: spacing.md,
     textAlign: 'center',
   },
   filterSection: {
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   filterRow: {
     flexDirection: 'row',
   },
   exerciseList: {
     height: 200,
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   exoChip: {
-    padding: 12,
+    padding: spacing.ms,
     backgroundColor: colors.cardSecondary,
-    marginBottom: 5,
+    marginBottom: spacing.xs,
     borderRadius: borderRadius.sm,
   },
   exoChipSelected: {
@@ -225,19 +225,19 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: spacing.sm,
   },
   cancelBtn: {
     flex: 0.48,
     backgroundColor: colors.secondaryButton,
-    padding: 12,
+    padding: spacing.ms,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
   },
   confirmBtn: {
     flex: 0.48,
     backgroundColor: colors.primary,
-    padding: 12,
+    padding: spacing.ms,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
   },

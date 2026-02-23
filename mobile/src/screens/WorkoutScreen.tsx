@@ -277,12 +277,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: 120,
+    paddingBottom: 120, // extra space for floating footer + timer
   },
   emptyText: {
     color: colors.placeholder,
     textAlign: 'center',
-    marginTop: 50,
+    marginTop: spacing.xxl,
     fontSize: fontSize.md,
     fontStyle: 'italic',
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   endButton: {
     backgroundColor: colors.success,
-    padding: 18,
+    padding: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
   },

@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSecondary,
   },
   settingsIcon: {
-    fontSize: 22,
+    fontSize: fontSize.xxl,
   },
   greeting: {
     fontSize: fontSize.xxl,
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   kpiSeparator: {
     width: 1,
-    height: 32,
+    height: spacing.xl,
     backgroundColor: colors.separator,
   },
   // Sections

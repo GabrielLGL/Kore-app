@@ -143,11 +143,11 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    marginBottom: 10,
-    marginTop: 5,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
     backgroundColor: colors.card,
-    borderRadius: 15,
+    borderRadius: borderRadius.md,
     elevation: 8,
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
@@ -164,20 +164,20 @@ const styles = StyleSheet.create({
     height: 3,
   },
   content: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: spacing.ms,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   left: { flexDirection: 'column' },
-  label: { color: colors.textSecondary, fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
-  timer: { fontSize: 22, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  label: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: 'bold', letterSpacing: 1 },
+  timer: { fontSize: fontSize.xxl, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
   hintChip: {
     backgroundColor: colors.surfaceOverlay,
     borderRadius: borderRadius.sm,
     paddingVertical: spacing.xs,
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.sm,
   },
   hint: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: '600' },
 })

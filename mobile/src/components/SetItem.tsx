@@ -7,7 +7,7 @@ import withObservables from '@nozbe/with-observables'
 // Importation des modèles de données
 import Set from '../model/models/Set'
 import Exercise from '../model/models/Exercise'
-import { colors, borderRadius, fontSize } from '../theme'
+import { colors, spacing, borderRadius, fontSize } from '../theme'
 
 // Définition des propriétés attendues
 interface Props {
@@ -47,9 +47,9 @@ const SetItem: React.FC<Props> = ({ set, exercise, onLongPress }) => {
 // Définition des styles CSS
 const styles = StyleSheet.create({
   container: {
-    padding: 15,
+    padding: spacing.md,
     backgroundColor: colors.card,
-    marginBottom: 10,
+    marginBottom: spacing.sm,
     borderRadius: borderRadius.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',

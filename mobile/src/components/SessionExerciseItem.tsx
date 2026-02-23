@@ -56,10 +56,10 @@ const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise,
 const styles = StyleSheet.create({
   itemContainer: {
     backgroundColor: colors.card,
-    marginHorizontal: 15,
-    marginTop: 10,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
     borderRadius: borderRadius.md,
-    padding: 15,
+    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   itemTags: {
     color: colors.textSecondary,
     fontSize: fontSize.xs,
-    marginBottom: 12,
+    marginBottom: spacing.ms,
   },
   targetRow: {
     flexDirection: 'row',
@@ -100,20 +100,20 @@ const styles = StyleSheet.create({
   },
   targetBox: {
     backgroundColor: colors.cardSecondary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
     minWidth: 55,
   },
   targetValue: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: fontSize.md,
     fontWeight: 'bold',
   },
   targetLabel: {
     color: colors.textSecondary,
-    fontSize: 9,
+    fontSize: fontSize.xs,
     textTransform: 'uppercase',
     marginTop: 2,
   },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.sm,
     fontWeight: '300',
   },
-  deleteBtn: { padding: 15 },
+  deleteBtn: { padding: spacing.md },
   deleteIcon: { fontSize: fontSize.xl, color: colors.placeholder },
 })
 

@@ -133,15 +133,15 @@ const styles = StyleSheet.create({
   },
   label: {
     color: colors.textSecondary,
-    marginBottom: 5,
+    marginBottom: spacing.xs,
     fontSize: fontSize.xs,
   },
   input: {
     backgroundColor: colors.cardSecondary,
     color: colors.text,
-    padding: 12,
+    padding: spacing.ms,
     borderRadius: borderRadius.sm,
     fontSize: fontSize.md,
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
 })
