@@ -116,8 +116,8 @@ describe('HomeScreen Dashboard', () => {
     expect(getByText('7')).toBeTruthy()
   })
 
-  it('affiche les 3 sections', () => {
-    const { getByText } = render(
+  it('affiche les 2 sections', () => {
+    const { getByText, queryByText } = render(
       <HomeContent
         users={[]}
         histories={[] as unknown as History[]}
@@ -126,7 +126,7 @@ describe('HomeScreen Dashboard', () => {
     )
     expect(getByText('Entra\u00eenement')).toBeTruthy()
     expect(getByText('Statistiques')).toBeTruthy()
-    expect(getByText('Outils')).toBeTruthy()
+    expect(queryByText('Outils')).toBeNull()
   })
 
   it('affiche toutes les tuiles', () => {
@@ -146,8 +146,6 @@ describe('HomeScreen Dashboard', () => {
     expect(getByText('Exercices & Records')).toBeTruthy()
     expect(getByText('Mesures')).toBeTruthy()
     expect(getByText('Historique')).toBeTruthy()
-    expect(getByText('Assistant')).toBeTruthy()
-    expect(getByText('R\u00e9glages')).toBeTruthy()
   })
 
   it('navigue vers un écran stack au press', () => {
@@ -162,7 +160,7 @@ describe('HomeScreen Dashboard', () => {
     expect(mockNavigate).toHaveBeenCalledWith('StatsDuration')
   })
 
-  it('navigue vers un tab au press', () => {
+  it('navigue vers Programmes au press', () => {
     const { getByText } = render(
       <HomeContent
         users={[]}
@@ -170,8 +168,8 @@ describe('HomeScreen Dashboard', () => {
         sets={[] as unknown as WorkoutSet[]}
       />
     )
-    fireEvent.press(getByText('Assistant'))
-    expect(mockNavigate).toHaveBeenCalledWith('Assistant')
+    fireEvent.press(getByText('Programmes'))
+    expect(mockNavigate).toHaveBeenCalledWith('Programs')
   })
 
   it('affiche la phrase de motivation', () => {

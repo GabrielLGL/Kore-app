@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  StatusBar,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -108,10 +109,24 @@ function HomeScreenBase({ users, histories, sets }: Props) {
     >
       {/* ── Header Card ── */}
       <View style={styles.headerCard}>
-        <Text style={styles.greeting}>
-          Salut, {user?.name || 'Toi'} !
-        </Text>
-        <Text style={styles.motivation}>{motivationalPhrase}</Text>
+        <View style={styles.headerTopRow}>
+          <View style={styles.headerTextBlock}>
+            <Text style={styles.greeting}>
+              Salut, {user?.name || 'Toi'} !
+            </Text>
+            <Text style={styles.motivation}>{motivationalPhrase}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            activeOpacity={0.6}
+            onPress={() => {
+              haptics.onPress()
+              navigation.navigate('Settings')
+            }}
+          >
+            <Text style={styles.settingsIcon}>{'\u2699\uFE0F'}</Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.separator} />
         <View style={styles.kpisRow}>
           <KpiItem label="S\u00e9ances" value={String(kpis.totalSessions)} />
@@ -154,6 +169,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.md,
+    paddingTop: (StatusBar.currentHeight ?? 44) + spacing.sm,
     paddingBottom: spacing.xl,
   },
   // Header Card
@@ -162,6 +178,23 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  headerTextBlock: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  settingsBtn: {
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.cardSecondary,
+  },
+  settingsIcon: {
+    fontSize: 22,
   },
   greeting: {
     fontSize: fontSize.xxl,

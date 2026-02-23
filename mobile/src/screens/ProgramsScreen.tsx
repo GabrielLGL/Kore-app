@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, StatusBar, Animated, ScrollView, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Animated, ScrollView, BackHandler } from 'react-native'
 import { database } from '../model/index'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -202,7 +202,6 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       <SafeAreaView style={styles.container}>
         <View style={styles.listWrapper}>
           <DraggableFlatList
@@ -320,7 +319,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           onClose={() => setIsOptionsVisible(false)}
           title={selectedProgram?.name}
         >
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedProgram) prepareRenameProgram(selectedProgram); setIsOptionsVisible(false); renameTimerRef.current = setTimeout(() => { setIsProgramModalVisible(true); renameTimerRef.current = null }, 300) }}>
+          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedProgram) prepareRenameProgram(selectedProgram); setIsOptionsVisible(false); if (renameTimerRef.current) clearTimeout(renameTimerRef.current); renameTimerRef.current = setTimeout(() => { setIsProgramModalVisible(true); renameTimerRef.current = null }, 300) }}>
             <Text style={styles.sheetOptionIcon}>✏️</Text><Text style={styles.sheetOptionText}>Renommer le Programme</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateProgram}>
@@ -337,7 +336,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           onClose={() => setIsSessionOptionsVisible(false)}
           title={selectedSession?.name}
         >
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedSession) prepareRenameSession(selectedSession); setIsSessionOptionsVisible(false); renameSessionTimerRef.current = setTimeout(() => { setIsSessionModalVisible(true); renameSessionTimerRef.current = null }, 300) }}>
+          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedSession) prepareRenameSession(selectedSession); setIsSessionOptionsVisible(false); if (renameSessionTimerRef.current) clearTimeout(renameSessionTimerRef.current); renameSessionTimerRef.current = setTimeout(() => { setIsSessionModalVisible(true); renameSessionTimerRef.current = null }, 300) }}>
             <Text style={styles.sheetOptionIcon}>✏️</Text><Text style={styles.sheetOptionText}>Renommer la Séance</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateSession}>

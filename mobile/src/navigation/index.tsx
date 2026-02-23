@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { NavigationContainer, DarkTheme, NavigationContainerRefWithCurrent } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Text, Platform, BackHandler, ToastAndroid, Pressable } from 'react-native'
+import { Platform, BackHandler, ToastAndroid } from 'react-native'
 import { useNavigationContainerRef } from '@react-navigation/native'
 import { PortalProvider } from '@gorhom/portal'
 import { colors } from '../theme'
@@ -122,27 +122,17 @@ export default function AppNavigator() {
             screenOptions={{
               headerStyle: { backgroundColor: colors.background },
               headerTintColor: colors.text,
+              headerShadowVisible: false,
               contentStyle: { backgroundColor: colors.background },
+              statusBarStyle: 'light',
+              statusBarBackgroundColor: colors.background,
             }}
           >
             {/* Dashboard principal */}
             <Stack.Screen
               name="Home"
               component={HomeScreen}
-              options={({ navigation: nav }) => ({
-                headerTitle: '',
-                headerTitleAlign: 'left',
-                headerTitleStyle: { fontSize: 22, fontWeight: 'bold', color: colors.text },
-                headerRight: () => (
-                  <Pressable
-                    style={{ marginRight: 20, padding: 10 }}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    onPress={() => { nav.navigate('Settings'); }}
-                  >
-                    <Text style={{ fontSize: 24 }}>⚙️</Text>
-                  </Pressable>
-                ),
-              })}
+              options={{ headerShown: false }}
             />
             {/* Écrans principaux (ex-onglets) */}
             <Stack.Screen name="Programs" component={ProgramsScreen} options={{ title: 'Programmes' }} />
