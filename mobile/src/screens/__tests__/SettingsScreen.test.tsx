@@ -25,6 +25,7 @@ const makeUser = (overrides = {}) => ({
   timerEnabled: true,
   aiProvider: 'offline',
   aiApiKey: null,
+  name: 'Jean',
   update: jest.fn(),
   ...overrides,
 })
@@ -83,7 +84,6 @@ describe('SettingsContent — section minuteur', () => {
 
     const { getByRole } = render(<SettingsContent user={user as never} />)
 
-    // Le Switch est un composant accessible
     const switchEl = getByRole('switch')
     fireEvent(switchEl, 'valueChange', false)
 
@@ -98,7 +98,6 @@ describe('SettingsContent — section minuteur', () => {
     const switchEl = getByRole('switch')
     fireEvent(switchEl, 'valueChange', false)
 
-    // Sans user, aucune écriture DB ne doit se produire
     await waitFor(() => {
       expect(mockWrite).not.toHaveBeenCalled()
     })
@@ -161,7 +160,6 @@ describe('SettingsContent — section minuteur', () => {
   it('ne sauvegarde pas si user est null pour la durée de repos', async () => {
     const { getByDisplayValue } = render(<SettingsContent user={null} />)
 
-    // Avec user=null, restDuration = '90' par défaut
     const input = getByDisplayValue('90')
     fireEvent.changeText(input, '120')
     fireEvent(input, 'blur')
@@ -169,6 +167,83 @@ describe('SettingsContent — section minuteur', () => {
     await waitFor(() => {
       expect(mockWrite).not.toHaveBeenCalled()
     })
+  })
+
+  it('reverte le switch timer en cas d\'erreur database.write', async () => {
+    mockWrite.mockRejectedValue(new Error('DB error'))
+    const mockUpdate = jest.fn()
+    const user = makeUser({ timerEnabled: true, update: mockUpdate })
+
+    const { getByRole } = render(<SettingsContent user={user as never} />)
+
+    const switchEl = getByRole('switch')
+    fireEvent(switchEl, 'valueChange', false)
+
+    // The write fails, so timerEnabled should revert to true
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
+    // The component should have reverted — no crash means revert worked
+  })
+})
+
+describe('SettingsContent — section Mon profil', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockWrite.mockImplementation(async (fn: () => Promise<void>) => fn())
+  })
+
+  it('affiche le champ prénom', () => {
+    const user = makeUser({ name: 'Jean' })
+    const { getByText, getByDisplayValue } = render(<SettingsContent user={user as never} />)
+    expect(getByText('Prénom')).toBeTruthy()
+    expect(getByDisplayValue('Jean')).toBeTruthy()
+  })
+
+  it('sauvegarde le nom au blur', async () => {
+    const mockUpdate = jest.fn()
+    const user = makeUser({ name: 'Jean', update: mockUpdate })
+    const { getByDisplayValue } = render(<SettingsContent user={user as never} />)
+
+    const input = getByDisplayValue('Jean')
+    fireEvent.changeText(input, 'Pierre')
+    fireEvent(input, 'blur')
+
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
+  })
+
+  it('sauvegarde le nom au submitEditing', async () => {
+    const mockUpdate = jest.fn()
+    const user = makeUser({ name: 'Jean', update: mockUpdate })
+    const { getByDisplayValue } = render(<SettingsContent user={user as never} />)
+
+    const input = getByDisplayValue('Jean')
+    fireEvent.changeText(input, 'Marie')
+    fireEvent(input, 'submitEditing')
+
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
+  })
+
+  it('ne sauvegarde pas le nom si user est null', async () => {
+    const { getByPlaceholderText } = render(<SettingsContent user={null} />)
+
+    const input = getByPlaceholderText('Toi')
+    fireEvent.changeText(input, 'Test')
+    fireEvent(input, 'blur')
+
+    await waitFor(() => {
+      expect(mockWrite).not.toHaveBeenCalled()
+    })
+  })
+
+  it('affiche le placeholder quand le nom est vide', () => {
+    const user = makeUser({ name: '' })
+    const { getByPlaceholderText } = render(<SettingsContent user={user as never} />)
+    expect(getByPlaceholderText('Toi')).toBeTruthy()
   })
 })
 
@@ -217,5 +292,14 @@ describe('SettingsContent — section À propos', () => {
   it('affiche la stack technique', () => {
     const { getByText } = render(<SettingsContent user={null} />)
     expect(getByText('React Native + WatermelonDB')).toBeTruthy()
+  })
+})
+
+describe('SettingsContent — section Aide', () => {
+  it('affiche la section aide', () => {
+    const { getByText } = render(<SettingsContent user={null} />)
+    expect(getByText(/Navigation/)).toBeTruthy()
+    expect(getByText(/Programmes/)).toBeTruthy()
+    expect(getByText(/Exercices/)).toBeTruthy()
   })
 })

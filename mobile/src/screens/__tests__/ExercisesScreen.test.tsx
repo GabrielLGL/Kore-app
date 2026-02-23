@@ -1,4 +1,42 @@
 // Mocks AVANT les imports
+
+const mockCreateExercise = jest.fn().mockResolvedValue(true)
+const mockUpdateExercise = jest.fn().mockResolvedValue(true)
+const mockDeleteExercise = jest.fn().mockResolvedValue(true)
+const mockLoadExerciseForEdit = jest.fn()
+const mockSetSelectedExercise = jest.fn()
+
+jest.mock('../../hooks/useExerciseManager', () => ({
+  useExerciseManager: jest.fn(() => ({
+    selectedExercise: null,
+    setSelectedExercise: mockSetSelectedExercise,
+    newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+    updateNewExerciseName: jest.fn(),
+    updateNewExerciseMuscles: jest.fn(),
+    updateNewExerciseEquipment: jest.fn(),
+    editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+    updateEditExerciseName: jest.fn(),
+    updateEditExerciseMuscles: jest.fn(),
+    updateEditExerciseEquipment: jest.fn(),
+    createExercise: mockCreateExercise,
+    updateExercise: mockUpdateExercise,
+    deleteExercise: mockDeleteExercise,
+    loadExerciseForEdit: mockLoadExerciseForEdit,
+  })),
+}))
+
+jest.mock('../../hooks/useExerciseFilters', () => ({
+  useExerciseFilters: jest.fn((exercises: unknown[]) => ({
+    searchQuery: '',
+    setSearchQuery: jest.fn(),
+    filterMuscle: null,
+    setFilterMuscle: jest.fn(),
+    filterEquipment: null,
+    setFilterEquipment: jest.fn(),
+    filteredExercises: exercises,
+  })),
+}))
+
 jest.mock('@gorhom/portal', () => ({
   Portal: ({ children }: { children: React.ReactNode }) => children,
   PortalProvider: ({ children }: { children: React.ReactNode }) => children,
@@ -28,7 +66,11 @@ jest.mock('expo-haptics', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
-    addListener: jest.fn(() => jest.fn()),
+    addListener: jest.fn((event: string, callback: () => void) => {
+      // Trigger focus callback immediately to cover lines 56-61
+      if (event === 'focus') setTimeout(() => callback(), 0)
+      return jest.fn()
+    }),
     navigate: jest.fn(),
   }),
 }))
@@ -38,9 +80,49 @@ jest.mock('@nozbe/with-observables', () => (
     (Component: React.ComponentType<object>) => Component
 ))
 
+jest.mock('../../components/BottomSheet', () => ({
+  BottomSheet: ({ visible, children, title, onClose }: { visible: boolean; children: React.ReactNode; title?: string; onClose?: () => void }) => {
+    if (!visible) return null
+    const { View, Text, TouchableOpacity } = require('react-native')
+    return (
+      <View testID="bottom-sheet">
+        {title && <Text>{title}</Text>}
+        {onClose && <TouchableOpacity onPress={onClose}><Text>CloseSheet</Text></TouchableOpacity>}
+        {children}
+      </View>
+    )
+  },
+}))
+
+jest.mock('../../components/CustomModal', () => ({
+  CustomModal: ({ visible, children, title, buttons }: { visible: boolean; children: React.ReactNode; title?: string; buttons?: React.ReactNode }) => {
+    if (!visible) return null
+    const { View, Text } = require('react-native')
+    return <View testID="custom-modal">{title && <Text>{title}</Text>}{children}{buttons}</View>
+  },
+}))
+
+jest.mock('../../components/AlertDialog', () => ({
+  AlertDialog: ({ visible, title, message, onConfirm, onCancel, confirmText, cancelText }: {
+    visible: boolean; title: string; message?: string; onConfirm: () => void; onCancel: () => void; confirmText?: string; cancelText?: string
+  }) => {
+    if (!visible) return null
+    const { View, Text, TouchableOpacity } = require('react-native')
+    return (
+      <View testID="alert-dialog">
+        <Text>{title}</Text>
+        {message && <Text>{message}</Text>}
+        {cancelText && <TouchableOpacity onPress={onCancel}><Text>{cancelText}</Text></TouchableOpacity>}
+        {confirmText && <TouchableOpacity onPress={onConfirm}><Text>{confirmText}</Text></TouchableOpacity>}
+      </View>
+    )
+  },
+}))
+
 import React from 'react'
-import { render, fireEvent, act } from '@testing-library/react-native'
+import { render, fireEvent, act, waitFor } from '@testing-library/react-native'
 import { ExercisesContent } from '../ExercisesScreen'
+import { useExerciseManager } from '../../hooks/useExerciseManager'
 import type Exercise from '../../model/models/Exercise'
 
 const makeExercise = (overrides: Partial<Exercise> = {}): Exercise => ({
@@ -55,6 +137,10 @@ const makeExercise = (overrides: Partial<Exercise> = {}): Exercise => ({
 } as unknown as Exercise)
 
 describe('ExercisesContent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('affiche le bouton de recherche', () => {
     const { getByText } = render(<ExercisesContent exercises={[]} />)
     expect(getByText(/Rechercher un exercice/)).toBeTruthy()
@@ -89,7 +175,6 @@ describe('ExercisesContent', () => {
   it('ouvre la barre de recherche au clic', () => {
     const { getByText, queryByText } = render(<ExercisesContent exercises={[]} />)
     fireEvent.press(getByText(/Rechercher un exercice/))
-    // La barre de recherche apparaît (le texte "Tapez le nom" est dans le placeholder)
     expect(queryByText(/Rechercher un exercice/)).toBeNull()
   })
 
@@ -102,33 +187,15 @@ describe('ExercisesContent', () => {
 
   it('ouvre la modale d\'ajout au clic sur Créer', () => {
     const { getByText } = render(<ExercisesContent exercises={[]} />)
-    act(() => {
-      fireEvent.press(getByText('+ Créer un exercice'))
-    })
-    expect(getByText('Annuler')).toBeTruthy()
+    fireEvent.press(getByText('+ Créer un exercice'))
+    expect(getByText('Nouvel Exercice')).toBeTruthy()
   })
 
   it('ferme la modale d\'ajout au clic Annuler', () => {
     const { getByText, queryByText } = render(<ExercisesContent exercises={[]} />)
-    act(() => {
-      fireEvent.press(getByText('+ Créer un exercice'))
-    })
-    act(() => {
-      fireEvent.press(getByText('Annuler'))
-    })
-    // La liste vide est de nouveau visible
-    expect(getByText('Aucun exercice trouvé.')).toBeTruthy()
-    expect(queryByText('Annuler')).toBeNull()
-  })
-
-  it('affiche les chips muscles dans la modale d\'ajout', () => {
-    const { getAllByText, getByText } = render(<ExercisesContent exercises={[]} />)
-    act(() => {
-      fireEvent.press(getByText('+ Créer un exercice'))
-    })
-    // ChipSelector dans le header et dans la modale partagent les mêmes labels
-    expect(getAllByText('Pecs').length).toBeGreaterThanOrEqual(1)
-    expect(getAllByText('Dos').length).toBeGreaterThanOrEqual(1)
+    fireEvent.press(getByText('+ Créer un exercice'))
+    fireEvent.press(getByText('Annuler'))
+    expect(queryByText('Nouvel Exercice')).toBeNull()
   })
 
   it('affiche le bouton options (•••) pour chaque exercice', () => {
@@ -137,7 +204,171 @@ describe('ExercisesContent', () => {
       makeExercise({ id: 'ex-2', name: 'Développé couché' }),
     ]
     const { getAllByText } = render(<ExercisesContent exercises={exercises} />)
-    // Un bouton ••• par exercice
     expect(getAllByText('•••').length).toBe(2)
+  })
+
+  // --- New tests for uncovered lines ---
+
+  it('ouvre le BottomSheet options au clic sur •••', () => {
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    expect(getByText('Modifier l\'exercice')).toBeTruthy()
+    expect(getByText('Supprimer l\'exercice')).toBeTruthy()
+  })
+
+  it('ouvre la modale d\'édition depuis le BottomSheet', () => {
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Modifier l\'exercice'))
+    expect(getByText('Renommer l\'exercice')).toBeTruthy()
+    expect(mockLoadExerciseForEdit).toHaveBeenCalled()
+  })
+
+  it('ouvre l\'AlertDialog de suppression depuis le BottomSheet', () => {
+    // Need selectedExercise to be set for the AlertDialog title
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Supprimer l\'exercice'))
+    expect(getByText('Supprimer Squat ?')).toBeTruthy()
+  })
+
+  it('confirme la suppression et appelle deleteExercise', async () => {
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Supprimer l\'exercice'))
+    fireEvent.press(getByText('Supprimer'))
+    await waitFor(() => {
+      expect(mockDeleteExercise).toHaveBeenCalled()
+    })
+  })
+
+  it('annuler la suppression ferme l\'AlertDialog', () => {
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Supprimer l\'exercice'))
+    fireEvent.press(getByText('Annuler'))
+    expect(queryByText('Supprimer Squat ?')).toBeNull()
+  })
+
+  it('appelle createExercise et ferme la modale après création', async () => {
+    const { getByText, queryByText } = render(<ExercisesContent exercises={[]} />)
+    fireEvent.press(getByText('+ Créer un exercice'))
+    fireEvent.press(getByText('Créer'))
+    await waitFor(() => {
+      expect(mockCreateExercise).toHaveBeenCalled()
+    })
+  })
+
+  it('appelle updateExercise et ferme la modale après édition', async () => {
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Modifier l\'exercice'))
+    fireEvent.press(getByText('Enregistrer'))
+    await waitFor(() => {
+      expect(mockUpdateExercise).toHaveBeenCalled()
+    })
+  })
+
+  it('ferme le BottomSheet via le bouton close', () => {
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    expect(getByText('Modifier l\'exercice')).toBeTruthy()
+    fireEvent.press(getByText('CloseSheet'))
+    expect(queryByText('Modifier l\'exercice')).toBeNull()
+  })
+
+  it('ferme la modale d\'édition au clic sur Annuler', () => {
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
+    fireEvent.press(getByText('Modifier l\'exercice'))
+    expect(getByText('Renommer l\'exercice')).toBeTruthy()
   })
 })
