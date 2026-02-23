@@ -100,3 +100,33 @@
 **95/100** (2026-02-22) — Build 20, Tests 20, Bugs 20, Qualité 20, Coverage 15 (847 tests, cov 64.42%)
 
 ### Espace libéré : ~20 Ko
+
+---
+
+## Run 20260223-2000
+
+### Supprimés
+- morning/     : 0 fichiers (7 dans la limite de 7)
+- do/          : 20 fichiers résolus (de 50 → 30)
+- reviews/     : 0 fichiers (5 dans la limite de 10)
+- git-history/ : 0 fichiers (20 dans la limite de 30)
+- prompts/     : 22 fichiers (de 42 → 20)
+- ui/          : 0 fichiers (dossier vide)
+- verrif/      : 2 runs + 13 scan reports associés (de 7 → 5)
+
+### En attente (non supprimés)
+- morning/     : 1 rapport ⏳ — 20260223-0900-briefing.md
+- do/          : 0 rapports ⏳
+
+### Conservés
+- morning/     : 7 fichiers (dont 1 ⏳ en attente)
+- do/          : 30 fichiers (tous ✅ Résolu)
+- reviews/     : 5 fichiers
+- git-history/ : 20 fichiers
+- prompts/     : 20 fichiers
+- verrif/      : 5 runs (20260221-0223, 20260221-0921, 20260222-1519, 20260222-2241, 20260223-0943)
+
+### Score santé
+**95/100** (2026-02-23) — Build 20, Tests 20, Bugs 20, Qualité 20, Coverage 15 (935 tests)
+
+### Espace libéré : ~335 Ko
