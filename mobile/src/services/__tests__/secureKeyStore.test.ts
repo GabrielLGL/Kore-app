@@ -93,5 +93,100 @@ describe('secureKeyStore', () => {
       const { deleteApiKey } = require('../secureKeyStore')
       await expect(deleteApiKey()).resolves.toBeUndefined()
     })
+
+    it('disables store after native failure (subsequent calls return early)', async () => {
+      mockDeleteItemAsync.mockRejectedValueOnce(new Error('crash'))
+      const { deleteApiKey, getApiKey } = require('../secureKeyStore')
+
+      // First call: native fails, store disabled
+      await deleteApiKey()
+
+      // Second call: store disabled, native not called
+      mockGetItemAsync.mockResolvedValue('should-not-reach')
+      const result = await getApiKey()
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('migrateKeyFromDB', () => {
+    it('migrates key from DB to secure store when no existing key', async () => {
+      mockGetItemAsync.mockResolvedValue(null)
+      mockSetItemAsync.mockResolvedValue(undefined)
+
+      const { database } = require('../../model')
+      const mockUpdate = jest.fn()
+      database.get.mockReturnValue({
+        query: () => ({
+          fetch: jest.fn().mockResolvedValue([{ aiApiKey: 'db-key-123', update: mockUpdate }]),
+        }),
+      })
+      database.write.mockImplementation(async (fn: () => Promise<void>) => fn())
+
+      const { migrateKeyFromDB } = require('../secureKeyStore')
+      await migrateKeyFromDB()
+
+      expect(mockSetItemAsync).toHaveBeenCalledWith('wegogym_ai_api_key', 'db-key-123')
+      expect(database.write).toHaveBeenCalled()
+    })
+
+    it('skips setApiKey if key already exists in secure store', async () => {
+      mockGetItemAsync.mockResolvedValue('existing-key')
+      mockSetItemAsync.mockResolvedValue(undefined)
+
+      const { database } = require('../../model')
+      const mockUpdate = jest.fn()
+      database.get.mockReturnValue({
+        query: () => ({
+          fetch: jest.fn().mockResolvedValue([{ aiApiKey: 'old-key', update: mockUpdate }]),
+        }),
+      })
+      database.write.mockImplementation(async (fn: () => Promise<void>) => fn())
+
+      const { migrateKeyFromDB } = require('../secureKeyStore')
+      await migrateKeyFromDB()
+
+      expect(mockSetItemAsync).not.toHaveBeenCalled()
+      expect(database.write).toHaveBeenCalled()
+    })
+
+    it('returns early if no user exists', async () => {
+      const { database } = require('../../model')
+      database.get.mockReturnValue({
+        query: () => ({
+          fetch: jest.fn().mockResolvedValue([]),
+        }),
+      })
+
+      const { migrateKeyFromDB } = require('../secureKeyStore')
+      await migrateKeyFromDB()
+
+      expect(mockSetItemAsync).not.toHaveBeenCalled()
+    })
+
+    it('returns early if user has no aiApiKey', async () => {
+      const { database } = require('../../model')
+      database.get.mockReturnValue({
+        query: () => ({
+          fetch: jest.fn().mockResolvedValue([{ aiApiKey: null }]),
+        }),
+      })
+
+      const { migrateKeyFromDB } = require('../secureKeyStore')
+      await migrateKeyFromDB()
+
+      expect(mockSetItemAsync).not.toHaveBeenCalled()
+    })
+
+    it('does not throw on migration failure', async () => {
+      const { database } = require('../../model')
+      database.get.mockReturnValue({
+        query: () => ({
+          fetch: jest.fn().mockRejectedValue(new Error('DB error')),
+        }),
+      })
+
+      const { migrateKeyFromDB } = require('../secureKeyStore')
+      await expect(migrateKeyFromDB()).resolves.toBeUndefined()
+    })
   })
 })

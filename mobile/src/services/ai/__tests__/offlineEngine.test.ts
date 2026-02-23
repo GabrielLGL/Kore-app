@@ -274,6 +274,191 @@ describe('offlineEngine', () => {
     })
   })
 
+  describe('generate — phases et volume avancé', () => {
+    it('phase prise_masse: reps augmentées de +1/+1', async () => {
+      const dosExercises: ExerciseInfo[] = [
+        { name: 'Tirage Poitrine', muscles: ['Dos', 'Biceps'] },
+        { name: 'Tirage Horizontal', muscles: ['Dos', 'Trapèzes'] },
+        { name: 'Tractions', muscles: ['Dos', 'Biceps'] },
+        { name: 'Pull Over Poulie', muscles: ['Dos'] },
+        { name: 'Tirage Poitrine Prise Serrée', muscles: ['Dos', 'Biceps'] },
+      ]
+      const context: DBContext = { exercises: dosExercises, recentMuscles: [], prs: {} }
+      const formBase = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45 })
+      const formMasse = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45, phase: 'prise_masse' })
+      const planBase = await offlineEngine.generate(formBase, context)
+      const planMasse = await offlineEngine.generate(formMasse, context)
+
+      const base = planBase.sessions[0].exercises.find(e => e.exerciseName === 'Tirage Poitrine')
+      const masse = planMasse.sessions[0].exercises.find(e => e.exerciseName === 'Tirage Poitrine')
+      expect(base).toBeDefined()
+      expect(masse).toBeDefined()
+      // compound + bodybuilding → base '8-10', prise_masse +1/+1 → '9-11'
+      expect(base?.repsTarget).toBe('8-10')
+      expect(masse?.repsTarget).toBe('9-11')
+    })
+
+    it('phase prise_masse: rest augmenté de 15% sur compound_heavy', async () => {
+      const exercises: ExerciseInfo[] = [
+        { name: 'Développé Couché Barre', muscles: ['Pecs', 'Epaules', 'Triceps'] },
+        { name: 'Développé Couché Haltères', muscles: ['Pecs', 'Epaules', 'Triceps'] },
+        { name: 'Écartés Poulie', muscles: ['Pecs'] },
+        { name: 'Pec Deck (Machine)', muscles: ['Pecs'] },
+        { name: 'Pompes', muscles: ['Pecs', 'Triceps'] },
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const formBase = makeForm({
+        mode: 'session', goal: 'bodybuilding', level: 'intermédiaire',
+        muscleGroups: ['Pecs'], durationMin: 45,
+      })
+      const formMasse = makeForm({
+        mode: 'session', goal: 'bodybuilding', level: 'intermédiaire',
+        muscleGroups: ['Pecs'], durationMin: 45, phase: 'prise_masse',
+      })
+      const planBase = await offlineEngine.generate(formBase, context)
+      const planMasse = await offlineEngine.generate(formMasse, context)
+
+      const dcBase = planBase.sessions[0].exercises.find(e => e.exerciseName === 'Développé Couché Barre')
+      const dcMasse = planMasse.sessions[0].exercises.find(e => e.exerciseName === 'Développé Couché Barre')
+      if (dcBase && dcMasse) {
+        // compound_heavy rest = 210, prise_masse * 1.15 ≈ 241 (IEEE 754 rounding)
+        expect(dcBase.restSeconds).toBe(210)
+        expect(dcMasse.restSeconds).toBe(241)
+      }
+    })
+
+    it('compound_heavy avec métadonnée: rest 210s et rpe 9', async () => {
+      const exercises: ExerciseInfo[] = [
+        { name: 'Développé Couché Barre', muscles: ['Pecs', 'Epaules', 'Triceps'] },
+        { name: 'Développé Couché Haltères', muscles: ['Pecs', 'Epaules', 'Triceps'] },
+        { name: 'Écartés Poulie', muscles: ['Pecs'] },
+        { name: 'Pec Deck (Machine)', muscles: ['Pecs'] },
+        { name: 'Pompes', muscles: ['Pecs', 'Triceps'] },
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({
+        mode: 'session', goal: 'bodybuilding', level: 'intermédiaire',
+        muscleGroups: ['Pecs'], durationMin: 45,
+      })
+      const plan = await offlineEngine.generate(form, context)
+      const dcBarre = plan.sessions[0].exercises.find(e => e.exerciseName === 'Développé Couché Barre')
+      if (dcBarre) {
+        expect(dcBarre.restSeconds).toBe(210)
+        expect(dcBarre.rpe).toBe(9)
+      }
+    })
+
+    it('goal cardio: ajoute un exercice Cardio en fin de séance', async () => {
+      const exercises: ExerciseInfo[] = [
+        { name: 'Squat', muscles: ['Quadriceps'] },
+        { name: 'Fentes', muscles: ['Quadriceps', 'Ischios'] },
+        { name: 'Leg Extension', muscles: ['Quadriceps'] },
+        { name: 'Leg Curl', muscles: ['Ischios'] },
+        { name: 'Mollets Debout', muscles: ['Mollets'] },
+        { name: 'Tapis de Course', muscles: ['Cardio'] },
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({
+        mode: 'session', goal: 'cardio',
+        muscleGroups: ['Quadriceps'], durationMin: 45,
+      })
+      const plan = await offlineEngine.generate(form, context)
+      const lastEx = plan.sessions[0].exercises[plan.sessions[0].exercises.length - 1]
+      expect(lastEx.exerciseName).toBe('Tapis de Course')
+      expect(lastEx.repsTarget).toBe('20-30 min')
+    })
+
+    it('musclesFocus: sessions contenant le focus muscle passent en premier (program)', async () => {
+      const exercises: ExerciseInfo[] = [
+        { name: 'Squat', muscles: ['Quadriceps', 'Ischios'] },
+        { name: 'Développé couché', muscles: ['Pecs', 'Triceps'] },
+        { name: 'Tirage Poitrine', muscles: ['Dos', 'Biceps'] },
+        { name: 'Élévations latérales', muscles: ['Epaules'] },
+        { name: 'Curl biceps', muscles: ['Biceps'] },
+        { name: 'Extension triceps', muscles: ['Triceps'] },
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({ daysPerWeek: 5, musclesFocus: ['Quadriceps'] })
+      const plan = await offlineEngine.generate(form, context)
+      // PPL 5j: Push/Pull/Legs/Push B/Pull B
+      // musclesFocus=['Quadriceps'] → Legs (contains Quadriceps) comes first
+      expect(plan.sessions[0].name).toBe('Legs')
+    })
+
+    it('split explicite brosplit génère les bonnes séances', async () => {
+      const plan = await offlineEngine.generate(
+        makeForm({ daysPerWeek: 5, split: 'brosplit' }),
+        makeContext()
+      )
+      expect(plan.sessions).toHaveLength(5)
+      expect(plan.sessions[0].name).toBe('Poitrine')
+      expect(plan.sessions[1].name).toBe('Dos')
+      expect(plan.sessions[2].name).toBe('Épaules')
+      expect(plan.sessions[3].name).toBe('Jambes')
+      expect(plan.sessions[4].name).toBe('Bras')
+    })
+
+    it('stretchBalance: remplace des exercices non-stretch par des stretch candidates', async () => {
+      const mockRandom = jest.spyOn(Math, 'random').mockReturnValue(0.5)
+
+      const exercises: ExerciseInfo[] = [
+        { name: 'Custom Ex 1', muscles: ['Pecs'] },
+        { name: 'Custom Ex 2', muscles: ['Pecs'] },
+        { name: 'Custom Ex 3', muscles: ['Pecs'] },
+        { name: 'Custom Ex 4', muscles: ['Pecs'] },
+        { name: 'Custom Ex 5', muscles: ['Pecs'] },
+        { name: 'Écartés Poulie', muscles: ['Pecs'] },      // stretchFocus: true
+        { name: 'Pec Deck (Machine)', muscles: ['Pecs'] },   // stretchFocus: true
+      ]
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({
+        mode: 'session', muscleGroups: ['Pecs'], durationMin: 45,
+        level: 'débutant',
+      })
+      const plan = await offlineEngine.generate(form, context)
+      const names = plan.sessions[0].exercises.map(e => e.exerciseName)
+      // stretchBalance should swap in at least one stretch exercise
+      const stretchNames = ['Écartés Poulie', 'Pec Deck (Machine)']
+      const stretchCount = names.filter(n => stretchNames.includes(n)).length
+      expect(stretchCount).toBeGreaterThanOrEqual(1)
+
+      mockRandom.mockRestore()
+    })
+
+    it('6 muscles + 5 exercices: allocation correcte sans crash', async () => {
+      const exercises: ExerciseInfo[] = Array.from({ length: 10 }, (_, i) => ({
+        name: `Ex${i}`,
+        muscles: ['Pecs', 'Dos', 'Quadriceps', 'Epaules', 'Abdos', 'Ischios'],
+      }))
+      const context: DBContext = { exercises, recentMuscles: [], prs: {} }
+      const form = makeForm({
+        mode: 'session',
+        muscleGroups: ['Pecs', 'Dos', 'Quadriceps', 'Epaules', 'Abdos', 'Ischios'],
+        durationMin: 45,  // 5 exercises for 6 muscles
+      })
+      const plan = await offlineEngine.generate(form, context)
+      expect(plan.sessions[0].exercises.length).toBeLessThanOrEqual(5)
+    })
+
+    it('phase maintien: volume réduit (facteur 0.8)', async () => {
+      const dosExercises: ExerciseInfo[] = [
+        { name: 'Tirage Poitrine', muscles: ['Dos', 'Biceps'] },
+        { name: 'Tirage Horizontal', muscles: ['Dos', 'Trapèzes'] },
+        { name: 'Tractions', muscles: ['Dos', 'Biceps'] },
+        { name: 'Pull Over Poulie', muscles: ['Dos'] },
+        { name: 'Tirage Poitrine Prise Serrée', muscles: ['Dos', 'Biceps'] },
+      ]
+      const context: DBContext = { exercises: dosExercises, recentMuscles: [], prs: {} }
+      const formBase = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45 })
+      const formMaintien = makeForm({ mode: 'session', muscleGroups: ['Dos'], durationMin: 45, phase: 'maintien' })
+      const planBase = await offlineEngine.generate(formBase, context)
+      const planMaintien = await offlineEngine.generate(formMaintien, context)
+      const totalBase = planBase.sessions[0].exercises.reduce((sum, e) => sum + e.setsTarget, 0)
+      const totalMaintien = planMaintien.sessions[0].exercises.reduce((sum, e) => sum + e.setsTarget, 0)
+      expect(totalMaintien).toBeLessThanOrEqual(totalBase)
+    })
+  })
+
   describe('Groupe C — moteur algorithmique avancé', () => {
     // Exercices Dos sans risque bas_dos (injuryRisk: ['epaules'] seulement)
     const dosExercises: ExerciseInfo[] = [

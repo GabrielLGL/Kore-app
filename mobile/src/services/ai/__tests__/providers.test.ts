@@ -1,5 +1,5 @@
 import { createClaudeProvider } from '../claudeProvider'
-import { createOpenAIProvider } from '../openaiProvider'
+import { createOpenAIProvider, testOpenAIConnection } from '../openaiProvider'
 import { createGeminiProvider, testGeminiConnection } from '../geminiProvider'
 import type { AIFormData, DBContext, ExerciseInfo } from '../types'
 
@@ -115,6 +115,72 @@ describe('createOpenAIProvider', () => {
 
     const provider = createOpenAIProvider('test-key')
     await expect(provider.generate(testForm, testContext)).rejects.toThrow()
+  })
+
+  it('retry après HTTP 429 puis succès au 2e essai', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: VALID_PLAN_JSON } }] }),
+      })
+
+    const provider = createOpenAIProvider('test-key')
+    const plan = await provider.generate(testForm, testContext)
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+    expect(plan.name).toBe('Test')
+  }, 5000)
+
+  it('throw après retry 429 si le 2e appel échoue aussi', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({ ok: false, status: 500 })
+
+    const provider = createOpenAIProvider('test-key')
+    await expect(provider.generate(testForm, testContext)).rejects.toThrow(
+      'OpenAI API erreur 500',
+    )
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  }, 5000)
+
+  it('retry 429 puis seconde 429 → throw erreur 429', async () => {
+    mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+
+    const provider = createOpenAIProvider('test-key')
+    await expect(provider.generate(testForm, testContext)).rejects.toThrow(
+      'OpenAI API erreur 429',
+    )
+  }, 5000)
+})
+
+// ---------------------------------------------------------------------------
+// testOpenAIConnection
+// ---------------------------------------------------------------------------
+describe('testOpenAIConnection', () => {
+  it('résout sans erreur si la connexion réussit', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true })
+
+    await expect(testOpenAIConnection('test-key')).resolves.toBeUndefined()
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('throw une erreur si la connexion échoue (401)', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 401 })
+
+    await expect(testOpenAIConnection('test-key')).rejects.toThrow(
+      'OpenAI API erreur 401',
+    )
+  })
+
+  it('throw une erreur si la connexion échoue (500)', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
+
+    await expect(testOpenAIConnection('test-key')).rejects.toThrow(
+      'OpenAI API erreur 500',
+    )
   })
 })
 
