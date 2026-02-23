@@ -65,15 +65,16 @@ jest.mock('../../hooks/useModalState', () => ({
   }),
 }))
 
+// Use inline mock functions — accessed later via the mock module reference
 jest.mock('../../hooks/useSessionManager', () => ({
   useSessionManager: jest.fn().mockReturnValue({
-    targetSets: '',
+    targetSets: '3',
     setTargetSets: jest.fn(),
-    targetReps: '',
+    targetReps: '10',
     setTargetReps: jest.fn(),
-    targetWeight: '',
+    targetWeight: '60',
     setTargetWeight: jest.fn(),
-    isFormValid: false,
+    isFormValid: true,
     selectedSessionExercise: null,
     setSelectedSessionExercise: jest.fn(),
     addExercise: jest.fn().mockResolvedValue(true),
@@ -81,16 +82,23 @@ jest.mock('../../hooks/useSessionManager', () => ({
     removeExercise: jest.fn().mockResolvedValue(true),
     prepareEditTargets: jest.fn(),
     resetTargets: jest.fn(),
+    reorderExercises: jest.fn(),
   }),
 }))
 
 jest.mock('../../components/SessionExerciseItem', () => {
   const React = require('react')
-  const { View, Text } = require('react-native')
+  const { View, Text, TouchableOpacity } = require('react-native')
   return {
-    SessionExerciseItem: ({ item }: { item: { id: string } }) =>
+    SessionExerciseItem: ({ item, onEditTargets, onRemove }: { item: { id: string }; onEditTargets: (se: { id: string }) => void; onRemove: (se: { id: string }, name: string) => void }) =>
       React.createElement(View, null,
-        React.createElement(Text, null, `Item-${item.id}`)
+        React.createElement(Text, null, `Item-${item.id}`),
+        React.createElement(TouchableOpacity, { onPress: () => onEditTargets(item) },
+          React.createElement(Text, null, `Edit-${item.id}`)
+        ),
+        React.createElement(TouchableOpacity, { onPress: () => onRemove(item, `Exercice-${item.id}`) },
+          React.createElement(Text, null, `Remove-${item.id}`)
+        ),
       ),
   }
 })
@@ -99,13 +107,16 @@ jest.mock('../../components/ExercisePickerModal', () => {
   const React = require('react')
   const { View, Text, TouchableOpacity } = require('react-native')
   return {
-    ExercisePickerModal: ({ visible, onClose }: { visible: boolean; onClose: () => void }) =>
+    ExercisePickerModal: ({ visible, onClose, onAdd }: { visible: boolean; onClose: () => void; onAdd: (exoId: string, sets: string, reps: string, weight: string) => void }) =>
       visible
         ? React.createElement(View, null,
             React.createElement(Text, null, 'Choisir un exercice'),
             React.createElement(TouchableOpacity, { onPress: onClose },
               React.createElement(Text, null, 'Fermer picker')
-            )
+            ),
+            React.createElement(TouchableOpacity, { onPress: () => onAdd('ex-1', '3', '10', '60') },
+              React.createElement(Text, null, 'Ajouter Squat')
+            ),
           )
         : null,
   }
@@ -121,11 +132,15 @@ jest.mock('../../components/RestTimer', () => {
 })
 
 import React from 'react'
-import { render, fireEvent, act } from '@testing-library/react-native'
+import { render, fireEvent, act, waitFor } from '@testing-library/react-native'
 import { SessionDetailContent } from '../SessionDetailScreen'
+import { useSessionManager } from '../../hooks/useSessionManager'
 import type Session from '../../model/models/Session'
 import type SessionExercise from '../../model/models/SessionExercise'
 import type User from '../../model/models/User'
+
+// Get mock function references from the mocked module
+const getSessionManagerMocks = () => (useSessionManager as jest.Mock).mock.results[0]?.value
 
 const makeNavigation = () => ({
   navigate: jest.fn(),
@@ -165,6 +180,9 @@ const makeUser = (overrides: Partial<User> = {}): User => ({
   observe: jest.fn(),
   ...overrides,
 } as unknown as User)
+
+const makeExercise = (id: string, name: string) =>
+  ({ id, name, primaryMuscle: 'Pecs', equipment: 'Barre' }) as never
 
 describe('SessionDetailContent', () => {
   beforeEach(() => {
@@ -349,6 +367,157 @@ describe('SessionDetailContent', () => {
 
       expect(queryByText('Choisir un exercice')).toBeNull()
     })
+
+    it('ajouter un exercice appelle addExercise et ferme le picker', async () => {
+      const exercises = [makeExercise('ex-1', 'Squat')]
+      const { getByText, queryByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={[]}
+          exercises={exercises}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('+ AJOUTER UN EXERCICE'))
+      })
+
+      await act(async () => {
+        fireEvent.press(getByText('Ajouter Squat'))
+      })
+
+      const mocks = getSessionManagerMocks()
+      await waitFor(() => {
+        expect(mocks.addExercise).toHaveBeenCalledWith('ex-1', '3', '10', '60', exercises[0])
+      })
+
+      expect(queryByText('Choisir un exercice')).toBeNull()
+    })
+  })
+
+  describe('édition des targets', () => {
+    it('cliquer sur Edit ouvre la modale édition', () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Edit-se-1'))
+      })
+
+      const mocks = getSessionManagerMocks()
+      expect(mocks.prepareEditTargets).toHaveBeenCalled()
+      expect(getByText("Modifier l'objectif")).toBeTruthy()
+    })
+
+    it('enregistrer les targets appelle updateTargets', async () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Edit-se-1'))
+      })
+
+      await act(async () => {
+        fireEvent.press(getByText('Enregistrer'))
+      })
+
+      const mocks = getSessionManagerMocks()
+      await waitFor(() => {
+        expect(mocks.updateTargets).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('suppression d\'exercice', () => {
+    it('cliquer sur Remove ouvre l\'AlertDialog', () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Remove-se-1'))
+      })
+
+      expect(getByText(/Supprimer Exercice-se-1/)).toBeTruthy()
+    })
+
+    it('confirmer la suppression appelle removeExercise', async () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Remove-se-1'))
+      })
+
+      await act(async () => {
+        fireEvent.press(getByText('Supprimer'))
+      })
+
+      const mocks = getSessionManagerMocks()
+      await waitFor(() => {
+        expect(mocks.removeExercise).toHaveBeenCalled()
+      })
+    })
+
+    it('annuler la suppression ne supprime pas', () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={null}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Remove-se-1'))
+      })
+
+      fireEvent.press(getByText('Annuler'))
+
+      const mocks = getSessionManagerMocks()
+      expect(mocks.removeExercise).not.toHaveBeenCalled()
+    })
   })
 
   describe('RestTimer', () => {
@@ -364,6 +533,57 @@ describe('SessionDetailContent', () => {
       )
 
       expect(queryByText('RestTimer')).toBeNull()
+    })
+
+    it('affiche le RestTimer après ajout si timerEnabled', async () => {
+      const exercises = [makeExercise('ex-1', 'Squat')]
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={[]}
+          exercises={exercises}
+          user={makeUser({ timerEnabled: true })}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('+ AJOUTER UN EXERCICE'))
+      })
+
+      await act(async () => {
+        fireEvent.press(getByText('Ajouter Squat'))
+      })
+
+      await waitFor(() => {
+        expect(getByText('RestTimer')).toBeTruthy()
+      })
+    })
+
+    it('affiche le RestTimer après update targets si timerEnabled', async () => {
+      const sessionExos = [makeSessionExercise({ id: 'se-1' })]
+
+      const { getByText } = render(
+        <SessionDetailContent
+          session={makeSession()}
+          sessionExercises={sessionExos}
+          exercises={[]}
+          user={makeUser({ timerEnabled: true })}
+          navigation={makeNavigation() as never}
+        />
+      )
+
+      act(() => {
+        fireEvent.press(getByText('Edit-se-1'))
+      })
+
+      await act(async () => {
+        fireEvent.press(getByText('Enregistrer'))
+      })
+
+      await waitFor(() => {
+        expect(getByText('RestTimer')).toBeTruthy()
+      })
     })
   })
 })
