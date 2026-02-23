@@ -207,7 +207,7 @@ interface Props {
   exercises: Exercise[]
 }
 
-const ChartsContent: React.FC<Props> = ({ exercises }) => {
+export const ChartsContent: React.FC<Props> = ({ exercises }) => {
   const haptics = useHaptics()
   const { filterMuscle, setFilterMuscle, filterEquipment, setFilterEquipment, filteredExercises } =
     useExerciseFilters(exercises)

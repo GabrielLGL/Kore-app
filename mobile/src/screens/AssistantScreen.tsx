@@ -198,7 +198,7 @@ interface AssistantScreenInnerProps {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Assistant'>
 }
 
-function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInnerProps) {
+export function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInnerProps) {
   const haptics      = useHaptics()
   const previewModal = useModalState()
 
