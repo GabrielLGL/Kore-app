@@ -75,6 +75,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const [durationSeconds, setDurationSeconds] = useState(0)
   const [milestones, setMilestones] = useState<MilestoneEvent[]>([])
   const [milestoneVisible, setMilestoneVisible] = useState(false)
+  const [sessionXPGained, setSessionXPGained] = useState(0)
+  const [newLevelResult, setNewLevelResult] = useState(1)
+  const [newStreakResult, setNewStreakResult] = useState(0)
 
   const haptics = useHaptics()
   const footerSlide = useKeyboardAnimation(120)
@@ -208,6 +211,10 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
           totalTonnage: user.totalTonnage || 0,
           level: user.level || 1,
         }
+
+        setSessionXPGained(sessionXP)
+        setNewLevelResult(newLevel)
+        setNewStreakResult(streakResult.currentStreak)
 
         await database.write(async () => {
           await user.update(u => {
@@ -386,6 +393,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         totalSets={completedSets}
         totalPrs={totalPrs}
         historyId={historyId}
+        xpGained={sessionXPGained}
+        level={newLevelResult}
+        currentStreak={newStreakResult}
       />
 
       {/* Celebration milestone */}

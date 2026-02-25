@@ -13,6 +13,9 @@ interface WorkoutSummarySheetProps {
   totalSets: number
   totalPrs: number
   historyId: string
+  xpGained: number
+  level: number
+  currentStreak: number
 }
 
 function formatDuration(seconds: number): string {
@@ -42,6 +45,9 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   totalSets,
   totalPrs,
   historyId,
+  xpGained,
+  level,
+  currentStreak,
 }) => {
   const [note, setNote] = useState('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -87,6 +93,20 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
         <StatBlock label="Volume" value={`${totalVolume.toFixed(1)} kg`} emoji="🏋️" />
         <StatBlock label="Séries" value={`${totalSets} validées`} emoji="✅" />
         <StatBlock label="Records" value={`${totalPrs} PR`} emoji="🏆" />
+      </View>
+
+      <View style={styles.gamificationSection}>
+        <View style={styles.gamRow}>
+          <Text style={styles.gamItem}>
+            {'\u2B50'} +{xpGained} XP
+          </Text>
+          <Text style={styles.gamItem}>
+            {'\uD83C\uDFAF'} Niveau {level}
+          </Text>
+        </View>
+        <Text style={[styles.gamItem, styles.gamCenter]}>
+          {'\uD83D\uDD25'} Streak {currentStreak}
+        </Text>
       </View>
 
       <View style={styles.separator} />
@@ -147,6 +167,25 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  gamificationSection: {
+    backgroundColor: colors.cardSecondary,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  gamRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  gamItem: {
+    color: colors.text,
+    fontSize: fontSize.md,
+    fontWeight: '600',
+  },
+  gamCenter: {
+    textAlign: 'center',
   },
   separator: {
     height: 1,

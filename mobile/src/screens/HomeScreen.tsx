@@ -16,13 +16,14 @@ import { database } from '../model'
 import History from '../model/models/History'
 import WorkoutSet from '../model/models/Set'
 import User from '../model/models/User'
-import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume } from '../model/utils/statsHelpers'
+import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume, buildHeatmapData } from '../model/utils/statsHelpers'
 import { xpToNextLevel, formatTonnage } from '../model/utils/gamificationHelpers'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 import { LevelBadge } from '../components/LevelBadge'
 import { XPProgressBar } from '../components/XPProgressBar'
 import { StreakIndicator } from '../components/StreakIndicator'
+import { HeatmapCalendar } from '../components/HeatmapCalendar'
 import type { RootStackParamList } from '../navigation'
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ function HomeScreenBase({ users, histories, sets }: Props) {
     () => computeMotivationalPhrase(histories, sets),
     [histories, sets],
   )
+  const heatmapData = useMemo(() => buildHeatmapData(histories), [histories])
 
   const handleTilePress = (tile: Tile) => {
     haptics.onPress()
@@ -159,6 +161,12 @@ function HomeScreenBase({ users, histories, sets }: Props) {
           currentStreak={user?.currentStreak ?? 0}
           streakTarget={user?.streakTarget ?? 3}
         />
+      </View>
+
+      {/* ── Card Heatmap ── */}
+      <View style={styles.heatmapCard}>
+        <Text style={styles.sectionTitle}>Activit{'\u00e9'}</Text>
+        <HeatmapCalendar data={heatmapData} />
       </View>
 
       {/* ── Sections de tuiles ── */}
@@ -266,6 +274,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     gap: spacing.sm,
+  },
+  // Heatmap Card
+  heatmapCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   // Sections
   section: {

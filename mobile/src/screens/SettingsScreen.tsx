@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch, TouchableOpacity } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
+import * as Sharing from 'expo-sharing'
 import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
 import { OnboardingCard } from '../components/OnboardingCard'
+import { AlertDialog } from '../components/AlertDialog'
+import { exportAllData } from '../model/utils/exportHelpers'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
 import {
   USER_LEVELS,
@@ -29,6 +32,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const [userName, setUserName] = useState(user?.name ?? '')
   const [editingLevel, setEditingLevel] = useState(false)
   const [editingGoal, setEditingGoal] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const [exportError, setExportError] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -95,6 +100,23 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       setEditingGoal(false)
     } catch (error) {
       if (__DEV__) console.error('Failed to update goal:', error)
+    }
+  }
+
+  const handleExport = async () => {
+    haptics.onPress()
+    setExporting(true)
+    try {
+      const filePath = await exportAllData()
+      await Sharing.shareAsync(filePath, {
+        mimeType: 'application/json',
+        dialogTitle: 'Exporter mes donn\u00e9es WEGOGYM',
+      })
+    } catch (error) {
+      if (__DEV__) console.error('Export failed:', error)
+      setExportError(true)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -313,6 +335,33 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             </View>
           </View>
         </View>
+
+        {/* Section Données */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{'\uD83D\uDCBE'} Donn{'\u00e9'}es</Text>
+          <TouchableOpacity
+            style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
+            onPress={handleExport}
+            disabled={exporting}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.exportButtonText}>
+              {exporting ? 'Export en cours...' : 'Exporter mes donn\u00e9es'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.exportHint}>Vos donn{'\u00e9'}es vous appartiennent</Text>
+        </View>
+
+        <AlertDialog
+          visible={exportError}
+          title="Erreur d'export"
+          message="Impossible d'exporter les donn\u00e9es. Veuillez r\u00e9essayer."
+          confirmText="OK"
+          confirmColor={colors.primary}
+          onConfirm={() => setExportError(false)}
+          onCancel={() => setExportError(false)}
+          hideCancel
+        />
 
         {/* Section À propos */}
         <View style={styles.section}>
@@ -541,6 +590,26 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     marginLeft: spacing.xs,
+  },
+  exportButton: {
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    alignItems: 'center' as const,
+  },
+  exportButtonDisabled: {
+    opacity: 0.6,
+  },
+  exportButtonText: {
+    color: colors.text,
+    fontSize: fontSize.md,
+    fontWeight: '600' as const,
+  },
+  exportHint: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+    textAlign: 'center' as const,
+    marginTop: spacing.sm,
   },
 })
 

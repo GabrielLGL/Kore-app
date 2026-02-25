@@ -31,6 +31,9 @@ const defaultProps = {
   totalSets: 12,
   totalPrs: 3,
   historyId: 'hist-test-1',
+  xpGained: 85,
+  level: 12,
+  currentStreak: 3,
 }
 
 describe('WorkoutSummarySheet', () => {
@@ -193,6 +196,68 @@ describe('WorkoutSummarySheet', () => {
         expect(mockUpdateHistoryNote).toHaveBeenCalledWith('hist-test-1', 'Note à sauvegarder')
       })
 
+      expect(onClose).toHaveBeenCalled()
+
+      jest.useRealTimers()
+    })
+  })
+
+  describe('texte de célébration', () => {
+    it('affiche "Nouveau record" quand totalPrs > 0', () => {
+      const { getByText } = render(
+        <WorkoutSummarySheet {...defaultProps} totalPrs={2} totalSets={10} />
+      )
+      expect(getByText(/Nouveau record personnel/)).toBeTruthy()
+    })
+
+    it('affiche "Beau travail" quand totalPrs = 0 et totalSets > 0', () => {
+      const { getByText } = render(
+        <WorkoutSummarySheet {...defaultProps} totalPrs={0} totalSets={5} />
+      )
+      expect(getByText(/Beau travail/)).toBeTruthy()
+    })
+
+    it('n\'affiche pas de texte de célébration quand totalPrs = 0 et totalSets = 0', () => {
+      const { queryByText } = render(
+        <WorkoutSummarySheet {...defaultProps} totalPrs={0} totalSets={0} />
+      )
+      expect(queryByText(/Nouveau record/)).toBeNull()
+      expect(queryByText(/Beau travail/)).toBeNull()
+    })
+  })
+
+  describe('gestion des erreurs', () => {
+    it('ne crash pas si updateHistoryNote rejette (debounce)', async () => {
+      jest.useFakeTimers()
+      mockUpdateHistoryNote.mockRejectedValueOnce(new Error('DB error'))
+
+      const { getByPlaceholderText } = render(
+        <WorkoutSummarySheet {...defaultProps} />
+      )
+
+      fireEvent.changeText(getByPlaceholderText('Ressenti, conditions, progrès...'), 'Test')
+      act(() => { jest.advanceTimersByTime(500) })
+
+      await waitFor(() => {
+        expect(mockUpdateHistoryNote).toHaveBeenCalled()
+      })
+
+      jest.useRealTimers()
+    })
+
+    it('flush la note à la fermeture même si updateHistoryNote rejette', async () => {
+      jest.useFakeTimers()
+      mockUpdateHistoryNote.mockRejectedValue(new Error('DB error'))
+
+      const onClose = jest.fn()
+      const { getByPlaceholderText, getByText } = render(
+        <WorkoutSummarySheet {...defaultProps} onClose={onClose} />
+      )
+
+      fireEvent.changeText(getByPlaceholderText('Ressenti, conditions, progrès...'), 'Note')
+      fireEvent.press(getByText('Terminer'))
+
+      expect(mockUpdateHistoryNote).toHaveBeenCalledWith('hist-test-1', 'Note')
       expect(onClose).toHaveBeenCalled()
 
       jest.useRealTimers()

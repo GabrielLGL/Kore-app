@@ -463,6 +463,36 @@ export function computeTopExercisesByFrequency(
     }))
 }
 
+// ─── Heatmap ─────────────────────────────────────────────────────────────────
+
+export interface HeatmapDay {
+  date: string       // 'YYYY-MM-DD'
+  count: number      // 0 = repos, 1+ = nombre de seances
+  dayOfWeek: number  // 0=lundi ... 6=dimanche (ISO)
+}
+
+export function buildHeatmapData(histories: History[]): HeatmapDay[] {
+  const calendarMap = computeCalendarData(histories)
+  const days: HeatmapDay[] = []
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  for (let i = 364; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(today.getDate() - i)
+    const key = toDateKey(d)
+    const jsDay = d.getDay() // 0=dimanche ... 6=samedi
+    const isoDay = (jsDay + 6) % 7 // 0=lundi ... 6=dimanche
+    days.push({
+      date: key,
+      count: calendarMap.get(key) ?? 0,
+      dayOfWeek: isoDay,
+    })
+  }
+
+  return days
+}
+
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
 export function formatDuration(minutes: number): string {

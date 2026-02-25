@@ -48,6 +48,7 @@ jest.mock('../../model/utils/statsHelpers', () => ({
   }),
   computeMotivationalPhrase: jest.fn().mockReturnValue('Continue comme ça !'),
   formatVolume: jest.fn((v: number) => `${v} kg`),
+  buildHeatmapData: jest.fn().mockReturnValue([]),
 }))
 
 import React from 'react'

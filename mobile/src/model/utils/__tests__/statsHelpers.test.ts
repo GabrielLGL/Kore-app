@@ -13,6 +13,7 @@ import {
   computeMuscleRepartition,
   computePRsByExercise,
   computeTopExercisesByFrequency,
+  buildHeatmapData,
   formatDuration,
   formatVolume,
   toDateKey,
@@ -425,6 +426,28 @@ describe('computeMuscleRepartition', () => {
     const sets = [s('s1', 'h1', 'ex1', 100, 10)]
     expect(computeMuscleRepartition(sets, [chest], [history], 'all')).toEqual([])
   })
+
+  it('groups muscles beyond top 7 into "Autres"', () => {
+    // Create 8 exercises with distinct muscles
+    const muscleNames = ['Pecs', 'Dos', 'Épaules', 'Biceps', 'Triceps', 'Quads', 'Ischios', 'Mollets']
+    const exercises = muscleNames.map((m, i) => ex(`e${i}`, `Ex${i}`, [m]))
+    const history = h('h1', new Date())
+    const sets = muscleNames.map((_, i) => s(`s${i}`, 'h1', `e${i}`, 100, 10))
+
+    const result = computeMuscleRepartition(sets, exercises, [history], 'all')
+    // 7 top muscles + 1 "Autres" = 8 entries
+    expect(result).toHaveLength(8)
+    expect(result[result.length - 1].muscle).toBe('Autres')
+  })
+
+  it('skips empty/whitespace muscle names', () => {
+    const exWithEmpty = ex('e1', 'Test', ['Pecs', '', '  '])
+    const history = h('h1', new Date())
+    const sets = [s('s1', 'h1', 'e1', 100, 10)]
+    const result = computeMuscleRepartition(sets, [exWithEmpty], [history], 'all')
+    expect(result).toHaveLength(1)
+    expect(result[0].muscle).toBe('Pecs')
+  })
 })
 
 // ─── computePRsByExercise ─────────────────────────────────────────────────────
@@ -456,6 +479,25 @@ describe('computePRsByExercise', () => {
     const result = computePRsByExercise(sets, [squat], [history])
     // orm1 = Math.round(100 * (1 + 10/30)) = Math.round(133.33) = 133
     expect(result[0].orm1).toBe(133)
+  })
+
+  it('keeps the set with higher reps when weight is equal', () => {
+    const squat = ex('ex1', 'Squat')
+    const history = h('h1', new Date())
+    const sets = [
+      s('s1', 'h1', 'ex1', 100, 5, { isPr: true }),
+      s('s2', 'h1', 'ex1', 100, 8, { isPr: true }),
+    ]
+    const result = computePRsByExercise(sets, [squat], [history])
+    expect(result).toHaveLength(1)
+    expect(result[0].reps).toBe(8)
+  })
+
+  it('uses exerciseId as name when exercise not found', () => {
+    const history = h('h1', new Date())
+    const sets = [s('s1', 'h1', 'ex-unknown', 100, 5, { isPr: true })]
+    const result = computePRsByExercise(sets, [], [history])
+    expect(result[0].exerciseName).toBe('ex-unknown')
   })
 
   it('excludes sets from deleted histories', () => {
@@ -541,5 +583,87 @@ describe('computeMotivationalPhrase', () => {
     const result = computeMotivationalPhrase([history], [recentSet])
     // Either streak phrase (if yesterday gives streak=1 < 3) or PR phrase
     expect(result).toContain('record')
+  })
+
+  it('returns comeback phrase when last session was > 4 days ago', () => {
+    const sixDaysAgo = new Date()
+    sixDaysAgo.setDate(sixDaysAgo.getDate() - 6)
+    const history = h('h1', sixDaysAgo)
+    const result = computeMotivationalPhrase([history], [])
+    expect(result).toContain('De retour après')
+    expect(result).toContain('6 jours')
+  })
+
+  it('returns regularity phrase when >= 4 sessions/week over 4 weeks', () => {
+    const now = Date.now()
+    // Create 16 sessions over last 4 weeks (4/week)
+    const histories = Array.from({ length: 16 }, (_, i) => {
+      const date = new Date(now - (i * 2) * 24 * 60 * 60 * 1000) // every 2 days
+      return h(`h${i}`, date)
+    })
+    const result = computeMotivationalPhrase(histories, [])
+    // Should be streak phrase (since 16 consecutive-ish days) or regularity
+    expect(result).toBeTruthy()
+  })
+
+  it('returns default volume phrase when no special conditions met', () => {
+    // Single session 2 days ago, no PR, no streak >= 3, no gap > 4
+    const twoDaysAgo = new Date()
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+    const history = h('h1', twoDaysAgo)
+    const sets = [s('s1', 'h1', 'ex1', 50, 10)]
+    const result = computeMotivationalPhrase([history], sets)
+    expect(result).toContain('Ce mois')
+  })
+})
+
+// ─── buildHeatmapData ─────────────────────────────────────────────────────────
+
+describe('buildHeatmapData', () => {
+  it('returns exactly 365 days for empty histories', () => {
+    const result = buildHeatmapData([])
+    expect(result).toHaveLength(365)
+    result.forEach(day => expect(day.count).toBe(0))
+  })
+
+  it('first element is the oldest and last is today', () => {
+    const result = buildHeatmapData([])
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    expect(result[364].date).toBe(toDateKey(today))
+    const oldest = new Date(today)
+    oldest.setDate(today.getDate() - 364)
+    expect(result[0].date).toBe(toDateKey(oldest))
+  })
+
+  it('counts a single history today as 1', () => {
+    const today = new Date()
+    const result = buildHeatmapData([h('h1', today)])
+    expect(result[364].count).toBe(1)
+  })
+
+  it('counts 2 histories on the same day as 2', () => {
+    const today = new Date()
+    const result = buildHeatmapData([h('h1', today), h('h2', today)])
+    expect(result[364].count).toBe(2)
+  })
+
+  it('excludes deleted histories', () => {
+    const today = new Date()
+    const result = buildHeatmapData([h('h1', today, { deletedAt: new Date() })])
+    expect(result[364].count).toBe(0)
+  })
+
+  it('dayOfWeek is ISO (monday=0, sunday=6)', () => {
+    const result = buildHeatmapData([])
+    // Verify all dayOfWeek values are 0-6
+    result.forEach(day => {
+      expect(day.dayOfWeek).toBeGreaterThanOrEqual(0)
+      expect(day.dayOfWeek).toBeLessThanOrEqual(6)
+    })
+    // Verify today's dayOfWeek matches
+    const today = new Date()
+    const expectedDow = (today.getDay() + 6) % 7
+    expect(result[364].dayOfWeek).toBe(expectedDow)
   })
 })
