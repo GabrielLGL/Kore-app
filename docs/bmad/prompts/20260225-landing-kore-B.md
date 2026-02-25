@@ -83,4 +83,4 @@ Aucune dépendance — ce groupe peut être lancé en parallèle avec le Groupe 
 NOTE : Si le Groupe A modifie le design system (nouvelles variables CSS), il faudra aligner manuellement après.
 
 ## Statut
-En attente
+Done

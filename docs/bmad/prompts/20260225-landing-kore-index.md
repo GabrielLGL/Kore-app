@@ -14,8 +14,8 @@ Le travail consiste à corriger les bugs, enrichir le contenu, et ajouter l'infr
 ## Groupes générés
 | Groupe | Rapport | Fichiers | Vague | Statut |
 |--------|---------|----------|-------|--------|
-| A | `docs/bmad/prompts/20260225-landing-kore-A.md` | `site/index.html` | 1 | En attente |
-| B | `docs/bmad/prompts/20260225-landing-kore-B.md` | `site/merci.html`, `site/404.html`, `site/_redirects`, `site/netlify.toml` | 1 | En attente |
+| A | `docs/bmad/prompts/20260225-landing-kore-A.md` | `site/index.html` | 1 | Done |
+| B | `docs/bmad/prompts/20260225-landing-kore-B.md` | `site/merci.html`, `site/404.html`, `site/netlify.toml` | 1 | Done |
 
 ## Ordre d'exécution
 **Vague 1** : Groupes A et B en parallèle (fichiers différents, aucune dépendance).

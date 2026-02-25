@@ -83,4 +83,4 @@ Corriger les bugs, restructurer et enrichir `site/index.html` pour en faire une 
 Aucune dépendance — ce groupe peut être lancé indépendamment.
 
 ## Statut
-En attente
+Done
