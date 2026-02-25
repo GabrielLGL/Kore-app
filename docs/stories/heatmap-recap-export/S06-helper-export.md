@@ -48,7 +48,7 @@ Implementation :
 4. Construire l'objet `ExportData` avec metadata
 5. `JSON.stringify(data, null, 2)`
 6. `FileSystem.writeAsStringAsync(path, jsonString)`
-   - `path = FileSystem.documentDirectory + 'wegogym-export-YYYY-MM-DD.json'`
+   - `path = FileSystem.documentDirectory + 'kore-export-YYYY-MM-DD.json'`
 7. Retourner le path
 
 ### 3. Securite
@@ -68,7 +68,7 @@ Implementation :
 - [ ] 9 tables exportees (programs, sessions, session_exercises, exercises, performance_logs, histories, sets, body_measurements, users)
 - [ ] Metadata complete (date, version, schema, counts)
 - [ ] `ai_api_key` exclu
-- [ ] Fichier nomme `wegogym-export-YYYY-MM-DD.json`
+- [ ] Fichier nomme `kore-export-YYYY-MM-DD.json`
 - [ ] Tests unitaires passent
 - [ ] `npx tsc --noEmit` → 0 erreur
 

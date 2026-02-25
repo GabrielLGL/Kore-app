@@ -181,4 +181,4 @@ Chaque story a ses propres tests. Executer `npm test -- --watchAll=false` apres 
 - [ ] WEGO-007 : stats visibles apres une seance complete, `performance_logs` non affiches
 - [ ] `npx tsc --noEmit` passe sans erreur sur la branche de merge
 - [ ] `npm test -- --watchAll=false` passe (toutes les suites)
-- [ ] Toutes les revues architecturales effectuees et approuvees par `wegogym-architect`
+- [ ] Toutes les revues architecturales effectuees et approuvees par `kore-architect`

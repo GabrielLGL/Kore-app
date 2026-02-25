@@ -23,7 +23,7 @@
 3. Menu Facturation → lier un compte de facturation
 4. APIs & Services → Bibliothèque → activer "Generative Language API"
 5. APIs & Services → Identifiants → Créer une clé API
-6. Dans WEGOGYM Settings → sélectionner Gemini → coller la clé → Tester
+6. Dans Kore Settings → sélectionner Gemini → coller la clé → Tester
 
 ### Problèmes fréquents
 
@@ -47,7 +47,7 @@
 
 1. Créer un compte sur https://console.anthropic.com
 2. API Keys → Create Key
-3. Dans WEGOGYM Settings → sélectionner Claude → coller la clé → Tester
+3. Dans Kore Settings → sélectionner Claude → coller la clé → Tester
 
 ---
 
@@ -55,4 +55,4 @@
 
 1. Créer un compte sur https://platform.openai.com
 2. API Keys → Create new secret key
-3. Dans WEGOGYM Settings → sélectionner OpenAI → coller la clé → Tester
+3. Dans Kore Settings → sélectionner OpenAI → coller la clé → Tester

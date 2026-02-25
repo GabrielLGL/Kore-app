@@ -51,7 +51,7 @@ Phase 1 Fondations — Groupe D : Composants visuels
 
 ### Export donnees (S05-S07)
 - `exportAllData()` : query 9 tables via `record._raw`, exclut `ai_api_key` des users via destructuring, genere JSON avec metadata (date, version, schema, counts)
-- Ecrit dans `FileSystem.documentDirectory` avec nom `wegogym-export-YYYY-MM-DD.json`
+- Ecrit dans `FileSystem.documentDirectory` avec nom `kore-export-YYYY-MM-DD.json`
 - Section "Donnees" dans Settings avec bouton, loading state, erreur AlertDialog, hint
 - Partage via `Sharing.shareAsync()` avec mimeType JSON
 

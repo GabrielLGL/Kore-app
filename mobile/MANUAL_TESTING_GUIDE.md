@@ -1,4 +1,4 @@
-# 📋 Guide de Tests Manuels - WEGOGYM
+# 📋 Guide de Tests Manuels - Kore
 
 Ce guide vous permet de tester **toutes les fonctionnalités** de l'application et de valider les **18 corrections** effectuées.
 
@@ -130,7 +130,7 @@ abc → Rejeté ✓
 
 **Résultats attendus:**
 - ✅ Section "À propos" affiche :
-  - Application : WEGOGYM
+  - Application : Kore
   - Version : 1.0.0
   - Développé avec : React Native + WatermelonDB
 - ✅ Section "Aide" affiche le guide complet

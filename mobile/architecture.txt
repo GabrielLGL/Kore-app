@@ -1,4 +1,4 @@
-WEGOGYM/mobile/
+Kore/mobile/
 ├── 📁 .expo/                 # Cache et config temporaire d'Expo
 ├── 📁 assets/                # Images (icônes, splash screen)
 ├── 📁 node_modules/          # Dépendances installées (npm)

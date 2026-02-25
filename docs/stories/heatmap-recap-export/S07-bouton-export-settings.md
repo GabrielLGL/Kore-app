@@ -33,7 +33,7 @@ const handleExport = async () => {
     const filePath = await exportAllData()
     await Sharing.shareAsync(filePath, {
       mimeType: 'application/json',
-      dialogTitle: 'Exporter mes donnees WEGOGYM',
+      dialogTitle: 'Exporter mes donnees Kore',
     })
   } catch (error) {
     if (__DEV__) console.error('Export failed:', error)

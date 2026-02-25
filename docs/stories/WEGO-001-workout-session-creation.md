@@ -77,7 +77,7 @@ Actuellement, `SessionDetailScreen` sert uniquement a planifier une seance (obje
 - [ ] Tester `useWorkoutTimer` : verifier que `elapsedSeconds` s'incremente, que `formattedTime` est bien formate, et que le cleanup fonctionne.
 - [ ] Tester `createWorkoutHistory` : verifier qu'elle cree bien un enregistrement avec les bons champs (mock WatermelonDB).
 
-## Contraintes WEGOGYM
+## Contraintes Kore
 
 - **Modals :** non applicable dans cette story.
 - **Donnees :** `withObservables` uniquement, pas de state local pour les donnees DB.
@@ -109,4 +109,4 @@ Actuellement, `SessionDetailScreen` sert uniquement a planifier une seance (obje
 - [ ] `npx tsc --noEmit` passe sans erreur.
 - [ ] `npm test -- --watchAll=false` passe.
 - [ ] Le chronometre ne se remet pas a zero lors d'un changement de route.
-- [ ] Revue par `wegogym-architect` pour la creation de la route et du schema History.
+- [ ] Revue par `kore-architect` pour la creation de la route et du schema History.

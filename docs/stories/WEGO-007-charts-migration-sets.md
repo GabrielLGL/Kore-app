@@ -192,7 +192,7 @@ Le probleme architectural : les `Set` observes via `withObservables` n'embarquen
 
 ---
 
-## Contraintes WEGOGYM (rappel pour wegogym-dev)
+## Contraintes Kore (rappel pour kore-dev)
 
 - **Modals :** `<AlertDialog>` ou `<BottomSheet>` via `<Portal>` — jamais `<Modal>` natif
 - **Donnees :** `withObservables` uniquement — pas de Redux/Context
@@ -240,4 +240,4 @@ Le probleme architectural : les `Set` observes via `withObservables` n'embarquen
 - [ ] La suppression d'une seance dans les stats supprime les `sets` correspondants, pas la `History`
 - [ ] `npx tsc --noEmit` passe sans erreur
 - [ ] `npm test -- --watchAll=false` passe
-- [ ] Revue par `wegogym-architect` pour valider le pattern `ObservableExerciseStats` (sous-composant `withObservables` imbrique)
+- [ ] Revue par `kore-architect` pour valider le pattern `ObservableExerciseStats` (sous-composant `withObservables` imbrique)

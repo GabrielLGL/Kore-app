@@ -98,7 +98,7 @@ C'est le coeur fonctionnel du Sprint 1. L'utilisateur est dans `WorkoutScreen` e
 - [ ] Tester `validateSetInput` : cas valides, poids negatif, reps a zero, valeurs non numeriques.
 - [ ] Tester `useWorkoutState` : pre-remplissage, mise a jour des inputs, accumulation du volume, detection PR.
 
-## Contraintes WEGOGYM
+## Contraintes Kore
 
 - **Modals :** non applicable dans cette story.
 - **Donnees :** `withObservables` pour lier `exercise` aux cards. L'etat de saisie (inputs, validated sets) est du state local UI — c'est correct car ce ne sont pas des donnees persistees avant validation.

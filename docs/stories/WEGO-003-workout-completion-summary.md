@@ -98,7 +98,7 @@ Quand l'utilisateur a fini de saisir ses series, il doit pouvoir clore la seance
 - [ ] Tester `WorkoutSummarySheet` : verifie l'affichage des stats, le debounce de la note, le bouton Fermer.
 - [ ] Tester le back handler : comportement si summary ouvert vs seance en cours.
 
-## Contraintes WEGOGYM
+## Contraintes Kore
 
 - **Modals :** `<AlertDialog>` pour les confirmations, `<BottomSheet>` pour le resume — jamais `<Modal>` natif.
 - **Donnees :** `completeWorkoutHistory` et `updateHistoryNote` dans `databaseHelpers.ts`.

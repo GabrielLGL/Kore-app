@@ -1,4 +1,4 @@
-# Guide des commandes — WEGOGYM
+# Guide des commandes — Kore
 
 ## Aide rapide
 

@@ -191,7 +191,7 @@ Statut global : PASSED
 | 9 tables exportees | OK |
 | Metadata complete (exportDate, appVersion, schemaVersion, tables counts) | OK |
 | `ai_api_key` exclu via destructuring (`sanitizeUserRecord`) | OK |
-| Fichier nomme `wegogym-export-YYYY-MM-DD.json` | OK |
+| Fichier nomme `kore-export-YYYY-MM-DD.json` | OK |
 | `npx tsc --noEmit` → 0 erreur | OK |
 
 **Note :** Tests unitaires pour exportHelpers non crees (prevu dans la story). Impact faible — helper simple, type-safe, teste indirectement via integration Settings.

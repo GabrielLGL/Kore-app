@@ -20,7 +20,7 @@ Ce guide explique comment configurer Sentry pour le monitoring des erreurs en pr
 
 1. Dans le dashboard Sentry, clique sur **"Create Project"**
 2. Choisis la plateforme : **React Native**
-3. Nom du projet : `WEGOGYM`
+3. Nom du projet : `Kore`
 4. Team : Laisse par défaut ou crée un nouveau team
 5. Clique sur **"Create Project"**
 

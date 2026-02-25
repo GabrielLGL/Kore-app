@@ -81,7 +81,7 @@ Remplacer le contenu du Stack.Navigator par :
     name="Home"
     component={HomeScreen}
     options={({ navigation: nav }) => ({
-      headerTitle: 'WEGOGYM',
+      headerTitle: 'Kore',
       headerTitleAlign: 'left',
       headerTitleStyle: { fontSize: 22, fontWeight: 'bold', color: colors.text },
       headerRight: () => (

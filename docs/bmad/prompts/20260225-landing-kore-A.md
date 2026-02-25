@@ -12,7 +12,7 @@ Corriger les bugs, restructurer et enrichir `site/index.html` pour en faire une 
 - Design : Neumorphisme (ombres outset/inset), light/dark theme
 - Hébergement : Netlify (formulaire `data-netlify="true"`)
 - Font : Outfit (Google Fonts)
-- App name : **KORE** (anciennement WEGOGYM en interne)
+- App name : **KORE** (anciennement Kore en interne)
 - Branding : gradient violet `#6c5ce7` → cyan `#00cec9`
 - Le fichier est un single-page monolithique (CSS + JS inline)
 

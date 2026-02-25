@@ -102,7 +102,7 @@ Pendant une seance, l'utilisateur a besoin d'une reference pour savoir ce qu'il 
 - [ ] Tester `formatRelativeDate` : "aujourd'hui", "hier", "il y a N jours".
 - [ ] Tester `LastPerformanceBadge` : affichage null vs donnees.
 
-## Contraintes WEGOGYM
+## Contraintes Kore
 
 - **Donnees :** `getLastPerformanceForExercise` dans `databaseHelpers.ts`, pas de logique DB dans le composant.
 - **Reactive :** utiliser `from(Promise)` dans `withObservables` pour convertir la Promise en Observable — c'est le pattern correct pour une query one-shot dans ce contexte.

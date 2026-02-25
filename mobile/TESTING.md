@@ -1,4 +1,4 @@
-# Guide de Tests - WEGOGYM Mobile
+# Guide de Tests - Kore Mobile
 
 ## Installation des dépendances de test
 

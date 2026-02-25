@@ -1,4 +1,4 @@
-# CONTEXTE PROJET : WEGOGYM (WatermelonDB + React Native)
+# CONTEXTE PROJET : Kore (WatermelonDB + React Native)
 
 ## ⚡ DIRECTIVES IA (A LIRE EN PRIORITÉ)
 - **STABILITÉ ANDROID** : Architecture Fabric activée. **NE JAMAIS** utiliser `<Modal>` natif. Utiliser des Overlays (Vues absolues) avec `isAlertVisible`.

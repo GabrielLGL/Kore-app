@@ -19,7 +19,7 @@ Fichiers modifiés :
 - `CLAUDE.md`
 
 ## Ce qui a été fait
-1. **navigation/index.tsx** : Supprimé `createBottomTabNavigator`, `MainTabParamList`, `TabNavigator` function, imports inutiles (`Keyboard`, `Animated`, `DeviceEventEmitter`, `View`, `NativeStackScreenProps`). Mis à jour `RootStackParamList` avec tous les écrans (Home, Programs, Exercices, Assistant, Stats, etc.). Ajouté import `ProgramsScreen`. Remplacé le Stack.Navigator pour avoir Home comme `initialRouteName` avec header "WEGOGYM" et bouton settings. Tous les ex-onglets sont maintenant des Stack Screens. `GlobalBackHandler` : supprimé `DeviceEventEmitter.emit('SHOW_TAB_BAR')`, `nav.navigate('MainTabs', { screen: 'Home' })` → `nav.navigate('Home')`.
+1. **navigation/index.tsx** : Supprimé `createBottomTabNavigator`, `MainTabParamList`, `TabNavigator` function, imports inutiles (`Keyboard`, `Animated`, `DeviceEventEmitter`, `View`, `NativeStackScreenProps`). Mis à jour `RootStackParamList` avec tous les écrans (Home, Programs, Exercices, Assistant, Stats, etc.). Ajouté import `ProgramsScreen`. Remplacé le Stack.Navigator pour avoir Home comme `initialRouteName` avec header "Kore" et bouton settings. Tous les ex-onglets sont maintenant des Stack Screens. `GlobalBackHandler` : supprimé `DeviceEventEmitter.emit('SHOW_TAB_BAR')`, `nav.navigate('MainTabs', { screen: 'Home' })` → `nav.navigate('Home')`.
 
 2. **HomeScreen.tsx** : Simplifié le type de navigation (`NativeStackNavigationProp` au lieu de `CompositeNavigationProp`). Supprimé `TAB_ROUTES` set et la distinction tab/stack dans `handleTilePress` — toutes les routes sont désormais dans le même stack. Retiré imports `BottomTabNavigationProp`, `CompositeNavigationProp`, `MainTabParamList`.
 

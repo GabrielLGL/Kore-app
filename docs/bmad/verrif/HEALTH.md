@@ -1,4 +1,4 @@
-# HEALTH.md — Score de santé WEGOGYM
+# HEALTH.md — Score de santé Kore
 
 ## Système de notation (0-100)
 

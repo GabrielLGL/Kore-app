@@ -251,7 +251,7 @@ export const PRESET_PROGRAMS: PresetProgram[] = [
 
 ---
 
-## Contraintes WEGOGYM (rappel pour wegogym-dev)
+## Contraintes Kore (rappel pour kore-dev)
 
 - **Modals :** `<AlertDialog>` ou `<BottomSheet>` via `<Portal>` — jamais `<Modal>` natif
 - **Donnees :** `withObservables` uniquement — pas de Redux/Context
@@ -302,4 +302,4 @@ export const PRESET_PROGRAMS: PresetProgram[] = [
 - [ ] Relancer l'app : la BottomSheet ne s'affiche plus
 - [ ] `npx tsc --noEmit` passe sans erreur
 - [ ] `npm test -- --watchAll=false` passe
-- [ ] Revue par `wegogym-architect` : changement de schema (migration v15) et modification de `HomeScreen`
+- [ ] Revue par `kore-architect` : changement de schema (migration v15) et modification de `HomeScreen`

@@ -1,4 +1,4 @@
-# Limitations connues - WEGOGYM
+# Limitations connues - Kore
 
 Ce document répertorie les limitations connues de l'application qui ne sont **pas des bugs** mais des choix de design ou des contraintes techniques acceptées.
 

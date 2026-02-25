@@ -1,7 +1,7 @@
 ---
 stepsCompleted: [1, 2, 3, 4]
 inputDocuments: []
-session_topic: 'Strategie freemium + features wow pour WEGOGYM'
+session_topic: 'Strategie freemium + features wow pour Kore'
 session_goals: 'Definir frontiere gratuit/payant + features differenciantes vs Strong/Hevy/FitNotes/JEFIT'
 selected_approach: 'ai-recommended'
 techniques_used: ['cross-pollination', 'reverse-brainstorming', 'scamper']
@@ -18,7 +18,7 @@ context_file: ''
 
 ## Session Overview
 
-**Topic:** Strategie freemium + features wow pour WEGOGYM
+**Topic:** Strategie freemium + features wow pour Kore
 **Goals:** Definir la frontiere gratuit/payant de facon juste et rentable + trouver des features que Strong/Hevy/FitNotes/JEFIT n'ont pas
 
 ### Session Setup
@@ -93,7 +93,7 @@ context_file: ''
 ### RESEAUX SOCIAUX (2 ideas)
 
 - **#17 Feed d'activite personnel** — Journal visuel scrollable de seances en cartes (PRs, badges, resume). VALIDATED PRO.
-- **#18 Export story** — Image stylisee d'une seance/PR pour stories Instagram. Template dark mode + logo WEGOGYM. Combine avec #97. VALIDATED PRO.
+- **#18 Export story** — Image stylisee d'une seance/PR pour stories Instagram. Template dark mode + logo Kore. Combine avec #97. VALIDATED PRO.
 
 ### E-COMMERCE (2 ideas)
 

@@ -92,4 +92,4 @@ Pour ce sprint, les stats "derniere fois" lisent depuis la table `sets` (liee a 
 Chaque story inclut ses propres tests unitaires. Executer `npm test -- --watchAll=false` apres chaque story avant de passer a la suivante.
 
 ### Revue architecturale
-La route `Workout` ajoutee dans `navigation/index.tsx` (WEGO-001) doit etre revue par `wegogym-architect` avant merge, car elle modifie `RootStackParamList` qui impacte toute la navigation.
+La route `Workout` ajoutee dans `navigation/index.tsx` (WEGO-001) doit etre revue par `kore-architect` avant merge, car elle modifie `RootStackParamList` qui impacte toute la navigation.

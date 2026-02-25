@@ -84,7 +84,7 @@ Les tuiles du nouveau HomeScreen navigueront vers :
    Placer cette route apres les tabs et avant SessionDetail.
 
 5. **Verifier le header du HomeScreen** dans le TabNavigator :
-   - Le titre doit etre "WEGOGYM" ou "Accueil" (pas "Programmes" qui est maintenant un ecran separe)
+   - Le titre doit etre "Kore" ou "Accueil" (pas "Programmes" qui est maintenant un ecran separe)
    - Garder le bouton Settings dans le header du Home tab
 
 6. **Tester la compilation** : `npx tsc --noEmit`

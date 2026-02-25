@@ -1,11 +1,11 @@
-# WEGOGYM — Contexte projet pour brainstorming
+# Kore — Contexte projet pour brainstorming
 
 > Fichier à passer comme `context_file` au workflow BMAD brainstorming.
 > Mis à jour : 2026-02-21
 
 ---
 
-## Qu'est-ce que WEGOGYM ?
+## Qu'est-ce que Kore ?
 
 Application mobile de **suivi de musculation offline-first**. L'utilisateur crée des programmes d'entraînement, suit ses séances en temps réel, consulte son historique de performances et reçoit des recommandations générées par IA (locale ou API). L'app fonctionne sans connexion internet.
 
@@ -127,7 +127,7 @@ Tables principales :
 
 ---
 
-## Questions guide pour le brainstorming WEGOGYM
+## Questions guide pour le brainstorming Kore
 
 1. **Valeur utilisateur** : Comment cette idée améliore-t-elle concrètement l'expérience d'entraînement ?
 2. **Offline-first** : L'utilisateur peut-il s'en servir sans connexion internet ?

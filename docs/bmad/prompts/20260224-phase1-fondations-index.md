@@ -1,8 +1,8 @@
 <!-- v1.0 — 2026-02-24 -->
-# Prompt — Phase 1 Fondations WEGOGYM — 20260224
+# Prompt — Phase 1 Fondations Kore — 20260224
 
 ## Demande originale
-Implementer la Phase 1 (Fondations) de la vision WEGOGYM issue du brainstorming du 2026-02-23 (103 features, 5 phases). La Phase 1 cree le socle gratuit solide qui rend l'app excellente et prete pour la gamification Pro.
+Implementer la Phase 1 (Fondations) de la vision Kore issue du brainstorming du 2026-02-23 (103 features, 5 phases). La Phase 1 cree le socle gratuit solide qui rend l'app excellente et prete pour la gamification Pro.
 
 ## Source
 `docs/brainstorming/brainstorming-session-2026-02-23.md`

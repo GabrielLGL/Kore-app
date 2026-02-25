@@ -1,7 +1,7 @@
 # Changelog -- Gamification Base -- 2026-02-25
 
 ## Resume
-Systeme complet de gamification pour WEGOGYM : XP par seance (80 base + 20/PR + 15 completion), niveaux 1-100 (formule lineaire 80+7N), streak hebdomadaire configurable (2-5x/sem), tonnage lifetime avec formatage kg/t, celebrations milestones via BottomSheet.
+Systeme complet de gamification pour Kore : XP par seance (80 base + 20/PR + 15 completion), niveaux 1-100 (formule lineaire 80+7N), streak hebdomadaire configurable (2-5x/sem), tonnage lifetime avec formatage kg/t, celebrations milestones via BottomSheet.
 
 ## Decisions cles
 - Formule XP lineaire au lieu de power law pour une progression previsible (~500 seances pour niveau 100)

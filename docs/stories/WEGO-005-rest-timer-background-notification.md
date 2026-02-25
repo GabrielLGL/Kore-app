@@ -73,7 +73,7 @@ La solution consiste a programmer une notification locale via `expo-notification
 
 ---
 
-## Contraintes WEGOGYM (rappel pour wegogym-dev)
+## Contraintes Kore (rappel pour kore-dev)
 
 - **Modals :** `<AlertDialog>` ou `<BottomSheet>` via `<Portal>` — jamais `<Modal>` natif
 - **Donnees :** `withObservables` uniquement — pas de Redux/Context
@@ -121,4 +121,4 @@ La solution consiste a programmer une notification locale via `expo-notification
 - [ ] Sur Android physique : appuyer sur "Ignorer" avant la fin — aucune notification ne s'affiche ensuite
 - [ ] `npx tsc --noEmit` passe sans erreur
 - [ ] `npm test -- --watchAll=false` passe (tests `notificationService.test.ts`)
-- [ ] Revue par `wegogym-architect` si le plugin `expo-notifications` modifie `app.json`
+- [ ] Revue par `kore-architect` si le plugin `expo-notifications` modifie `app.json`

@@ -1,4 +1,4 @@
-# fix(navigation) — Supprimer titre WEGOGYM + corriger bouton Settings
+# fix(navigation) — Supprimer titre Kore + corriger bouton Settings
 Date : 2026-02-22 14:10
 
 ## Instruction
@@ -12,7 +12,7 @@ Type : fix
 Fichiers modifiés : mobile/src/navigation/index.tsx
 
 ## Ce qui a été fait
-1. **Supprimé le titre "WEGOGYM"** : `headerTitle: 'WEGOGYM'` → `headerTitle: ''`
+1. **Supprimé le titre "Kore"** : `headerTitle: 'Kore'` → `headerTitle: ''`
 2. **Corrigé le bouton Settings** :
    - Remplacé `TouchableOpacity` par `Pressable` (meilleure compatibilité native-stack + Fabric Android)
    - Ajouté `hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}` pour agrandir la zone tactile
@@ -31,4 +31,4 @@ aucune
 ✅ Résolu — 20260222-1410
 
 ## Commit
-cac7ca5 fix(navigation): remove WEGOGYM title and fix Settings button tap
+cac7ca5 fix(navigation): remove Kore title and fix Settings button tap

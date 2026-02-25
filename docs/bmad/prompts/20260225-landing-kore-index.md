@@ -2,7 +2,7 @@
 # Prompt — Landing Page Kore — 20260225
 
 ## Demande originale
-"idee je veux faire une landing page pour mon app qu'on nommera Kore c'est l'app du projet WEGOGYM, pour l'instant j'ai fais deux html dans /site"
+"idee je veux faire une landing page pour mon app qu'on nommera Kore c'est l'app du projet Kore, pour l'instant j'ai fais deux html dans /site"
 
 ## Analyse
 L'utilisateur a déjà créé une landing page fonctionnelle avec :
