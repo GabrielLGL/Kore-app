@@ -141,8 +141,13 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   }
 
   const handleSkipOnboarding = async () => {
-    await markOnboardingCompleted()
-    setIsOnboardingVisible(false)
+    try {
+      await markOnboardingCompleted()
+      setIsOnboardingVisible(false)
+    } catch (error) {
+      if (__DEV__) console.error('[ProgramsScreen] handleSkipOnboarding:', error)
+      setIsOnboardingVisible(false)
+    }
   }
 
   // --- LOGIQUE MÉTIER ---
