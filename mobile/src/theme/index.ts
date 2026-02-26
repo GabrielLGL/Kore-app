@@ -3,39 +3,44 @@
  */
 export const colors = {
   // Backgrounds
-  background: '#121212',
-  card: '#1C1C1E',
-  cardSecondary: '#2C2C2E',
+  background: '#21242b',
+  card: '#21242b',
+  cardSecondary: '#252830',
 
   // Actions
-  primary: '#007AFF',
-  danger: '#FF3B30',
-  success: '#34C759',
+  primary: '#00cec9',
+  danger: '#ff6b6b',
+  success: '#00cec9',
   warning: '#FF9500',
 
   // Neutrals
-  border: '#333',
-  separator: '#38383A',
+  border: '#2c3039',
+  separator: '#2c3039',
 
   // Text
-  text: '#FFFFFF',
-  textSecondary: '#8E8E93',
-  placeholder: '#444',
+  text: '#dfe6e9',
+  textSecondary: '#b2bec3',
+  placeholder: '#636e72',
 
   // UI Elements
-  overlay: 'rgba(0, 0, 0, 0.85)',
-  bottomSheetOverlay: 'rgba(0, 0, 0, 0.4)',
+  overlay: 'rgba(10, 12, 16, 0.9)',
+  bottomSheetOverlay: 'rgba(10, 12, 16, 0.5)',
 
   // Secondary buttons
-  secondaryButton: '#3A3A3C',
+  secondaryButton: '#252830',
 
-  // Shadow (iOS)
-  shadow: '#000',
+  // Shadow (iOS neumorphique)
+  shadow: '#16181d',
 
   // Transparent tints (pour les chips et fonds semi-transparents)
-  successBg: 'rgba(52, 199, 89, 0.12)',
-  primaryBg: 'rgba(0, 122, 255, 0.15)',
+  successBg: 'rgba(0, 206, 201, 0.12)',
+  primaryBg: 'rgba(0, 206, 201, 0.15)',
   surfaceOverlay: 'rgba(255, 255, 255, 0.08)',
+
+  // Neumorphism tokens
+  neuShadowDark: '#16181d',
+  neuShadowLight: '#2c3039',
+  secondaryAccent: '#6c5ce7',
 }
 
 /**
@@ -52,13 +57,13 @@ export const spacing = {
 }
 
 /**
- * Border radius standardisés
+ * Border radius standardisés (coins plus arrondis pour le neumorphisme)
  */
 export const borderRadius = {
-  sm: 8,
-  md: 12,
+  sm: 10,
+  md: 14,
   lg: 20,
-  xl: 24,
+  xl: 26,
 }
 
 /**
@@ -79,8 +84,57 @@ export const fontSize = {
 }
 
 /**
- * Couleurs d'intensité pour le calendrier heatmap
+ * Couleurs d'intensité pour le calendrier heatmap (cyan neumorphique)
  * Index 0 = repos, 1 = 1 séance, 2 = 2 séances, 3 = 3+ séances
  */
-export const intensityColors = ['#2C2C2E', '#1E4D2B', '#2D7A47', '#34C759'] as const
+export const intensityColors = ['#252830', '#004d4a', '#007875', '#00cec9'] as const
 
+import { Platform } from 'react-native'
+
+/**
+ * Ombres neumorphiques dark — Platform-aware
+ * iOS : shadowColor + shadowOffset + shadowOpacity + shadowRadius
+ * Android : elevation
+ * borderColor simule le reflet clair (second shadow CSS)
+ */
+export const neuShadow = {
+  elevated: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0a0c10',
+        shadowOffset: { width: 8, height: 8 },
+        shadowOpacity: 0.9,
+        shadowRadius: 16,
+      },
+      android: { elevation: 10 },
+    }),
+    borderWidth: 1,
+    borderColor: '#353b47',
+  },
+  elevatedSm: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0a0c10',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+      },
+      android: { elevation: 5 },
+    }),
+    borderWidth: 1,
+    borderColor: '#353b47',
+  },
+  pressed: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0a0c10',
+        shadowOffset: { width: 1, height: 1 },
+        shadowOpacity: 0.4,
+        shadowRadius: 3,
+      },
+      android: { elevation: 1 },
+    }),
+    borderWidth: 1,
+    borderColor: '#1a1d22',
+  },
+}
