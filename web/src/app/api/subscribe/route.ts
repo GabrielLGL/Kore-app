@@ -2,9 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { getResend } from "@/lib/resend";
 import { WelcomeEmail } from "@/emails/welcome";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 req/hour/IP
+    const ip = getClientIp(request);
+    const rateLimit = checkRateLimit(ip);
+    const rateLimitHeaders = {
+      "X-RateLimit-Limit": String(rateLimit.limit),
+      "X-RateLimit-Remaining": String(rateLimit.remaining),
+      "X-RateLimit-Reset": String(Math.ceil(rateLimit.resetAt / 1000)),
+    };
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: "Trop de tentatives. Réessayez dans une heure." },
+        {
+          status: 429,
+          headers: { ...rateLimitHeaders, "Retry-After": String(retryAfter) },
+        }
+      );
+    }
+
     const { email, name } = await request.json();
 
     if (!email || !email.includes("@")) {
@@ -42,7 +63,7 @@ export async function POST(request: NextRequest) {
       // Don't fail the request if email fails — user is still subscribed
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: rateLimitHeaders });
   } catch {
     return NextResponse.json(
       { error: "Erreur serveur" },
