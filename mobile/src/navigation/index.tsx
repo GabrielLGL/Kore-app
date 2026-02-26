@@ -202,11 +202,11 @@ export default function AppNavigator() {
 
   return (
     <ErrorBoundary>
-      <PortalProvider>
-        <ThemeProvider initialMode={initialMode}>
+      <ThemeProvider initialMode={initialMode}>
+        <PortalProvider>
           <AppContent />
-        </ThemeProvider>
-      </PortalProvider>
+        </PortalProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }
