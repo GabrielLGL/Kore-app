@@ -130,6 +130,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-[var(--accent)] focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">
+        Aller au contenu principal
+      </a>
       <BackgroundBlobs />
       <ThemeToggle />
       <ScrollReveal />
@@ -166,7 +169,7 @@ export default function Home() {
       </nav>
 
       {/* ===== HERO ===== */}
-      <header className="relative z-[2] min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
+      <header id="main-content" className="relative z-[2] min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
         {/* Logo pill */}
         <div className="hero-fade inline-flex items-center gap-4 mb-8 px-6 py-2.5 rounded-full bg-[var(--glass)] border border-[var(--glass-border)] backdrop-blur-[10px] shadow-neu-out hover:scale-105 hover:shadow-neu-in transition-all duration-300 cursor-default">
           <KoreLogo size={50} gradientId="heroGrad" />
@@ -235,7 +238,7 @@ export default function Home() {
                 style={{ perspective: "1000px" }}
               >
                 {/* Icon box inset */}
-                <div className="w-[70px] h-[70px] rounded-[20px] bg-[var(--bg)] shadow-neu-in flex items-center justify-center text-3xl mb-6">
+                <div className="w-[70px] h-[70px] rounded-[20px] bg-[var(--bg)] shadow-neu-in flex items-center justify-center text-3xl mb-6" role="img" aria-label={feature.title}>
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
@@ -311,10 +314,12 @@ export default function Home() {
             Inscris-toi pour etre informe du lancement et recevoir un acces anticipe.
           </p>
 
-          <form onSubmit={handleSubmit} className="reveal space-y-4 max-w-md mx-auto">
+          <form onSubmit={handleSubmit} className="reveal space-y-4 max-w-md mx-auto" aria-label="Formulaire d'inscription">
             {/* Name input */}
             <div className="bg-[var(--bg)] rounded-full shadow-neu-out p-2.5">
+              <label htmlFor="subscribe-name" className="sr-only">Prenom (optionnel)</label>
               <input
+                id="subscribe-name"
                 type="text"
                 placeholder="Ton prenom (optionnel)"
                 value={name}
@@ -327,12 +332,15 @@ export default function Home() {
 
             {/* Email input */}
             <div className="bg-[var(--bg)] rounded-full shadow-neu-out p-2.5">
+              <label htmlFor="subscribe-email" className="sr-only">Adresse email</label>
               <input
+                id="subscribe-email"
                 type="email"
                 placeholder="Ton email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-required="true"
                 className="w-full bg-transparent border-none py-3 px-6 rounded-full shadow-neu-in
                   text-[var(--text-main)] font-inherit text-base outline-none
                   placeholder:text-[var(--text-muted)] placeholder:opacity-60"
@@ -351,12 +359,12 @@ export default function Home() {
             </button>
 
             {status === "success" && (
-              <p className="text-[var(--success)] text-sm font-semibold">
+              <p role="alert" className="text-[var(--success)] text-sm font-semibold">
                 Inscription reussie ! Verifie ta boite mail.
               </p>
             )}
             {status === "error" && (
-              <p className="text-[var(--danger)] text-sm font-semibold">
+              <p role="alert" className="text-[var(--danger)] text-sm font-semibold">
                 Une erreur est survenue. Reessaie.
               </p>
             )}
