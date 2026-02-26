@@ -66,3 +66,5 @@ _bmad-output/
 
 # Landing page (deployed separately via Netlify)
 site/
+.vercel
+.env*.local
