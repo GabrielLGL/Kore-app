@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, TextInput, StyleSheet } from 'react-native'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface ExerciseTargetInputsProps {
   sets: string
@@ -51,6 +53,9 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
   showLabels = true,
   autoFocus = false,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
+
   const handleSetsChange = (value: string) => {
     if (value === '') { onSetsChange(value); return }
     const num = parseInt(value, 10)
@@ -119,29 +124,31 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  inputWrapper: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  inputWrapperLast: {
-    flex: 1,
-  },
-  label: {
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    fontSize: fontSize.xs,
-  },
-  input: {
-    backgroundColor: colors.cardSecondary,
-    color: colors.text,
-    padding: spacing.ms,
-    borderRadius: borderRadius.sm,
-    fontSize: fontSize.md,
-    marginBottom: spacing.md,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    inputWrapper: {
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    inputWrapperLast: {
+      flex: 1,
+    },
+    label: {
+      color: colors.textSecondary,
+      marginBottom: spacing.xs,
+      fontSize: fontSize.xs,
+    },
+    input: {
+      backgroundColor: colors.cardSecondary,
+      color: colors.text,
+      padding: spacing.ms,
+      borderRadius: borderRadius.sm,
+      fontSize: fontSize.md,
+      marginBottom: spacing.md,
+    },
+  })
+}

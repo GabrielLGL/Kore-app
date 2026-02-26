@@ -10,7 +10,9 @@ import { ExerciseInfoSheet } from './ExerciseInfoSheet'
 import { useHaptics } from '../hooks/useHaptics'
 import { filterExercises } from '../model/utils/databaseHelpers'
 import { validateWorkoutInput } from '../model/utils/validationHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface ExercisePickerModalProps {
   visible: boolean
@@ -60,6 +62,8 @@ export const ExercisePickerModal: React.FC<ExercisePickerModalProps> = ({
   initialReps = '',
   initialWeight = '',
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const [filterMuscle, setFilterMuscle] = useState<string | null>(null)
   const [filterEquipment, setFilterEquipment] = useState<string | null>(null)
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null)
@@ -197,89 +201,91 @@ export const ExercisePickerModal: React.FC<ExercisePickerModalProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  fullscreenPortal: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  absoluteOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlay,
-  },
-  customModalContent: {
-    width: '90%',
-    backgroundColor: colors.card,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    elevation: 20,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  filterSection: {
-    marginBottom: spacing.md,
-  },
-  filterRow: {
-    flexDirection: 'row',
-  },
-  exerciseList: {
-    height: 200,
-    marginBottom: spacing.md,
-  },
-  exoChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.ms,
-    paddingLeft: spacing.ms,
-    paddingRight: spacing.xs,
-    backgroundColor: colors.cardSecondary,
-    marginBottom: spacing.xs,
-    borderRadius: borderRadius.sm,
-  },
-  exoNameArea: {
-    flex: 1,
-  },
-  exoInfoBtn: {
-    padding: spacing.xs,
-    marginLeft: spacing.xs,
-  },
-  exoChipSelected: {
-    backgroundColor: colors.primary,
-  },
-  exoText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-  },
-  exoTextSelected: {
-    color: colors.text,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  cancelBtn: {
-    flex: 0.48,
-    backgroundColor: colors.secondaryButton,
-    padding: spacing.ms,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-  },
-  confirmBtn: {
-    flex: 0.48,
-    backgroundColor: colors.primary,
-    padding: spacing.ms,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-  },
-  btnText: {
-    color: colors.text,
-    fontWeight: 'bold',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    fullscreenPortal: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 9999,
+    },
+    absoluteOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlay,
+    },
+    customModalContent: {
+      width: '90%',
+      backgroundColor: colors.card,
+      padding: spacing.lg,
+      borderRadius: borderRadius.lg,
+      elevation: 20,
+    },
+    modalTitle: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: 'bold',
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    filterSection: {
+      marginBottom: spacing.md,
+    },
+    filterRow: {
+      flexDirection: 'row',
+    },
+    exerciseList: {
+      height: 200,
+      marginBottom: spacing.md,
+    },
+    exoChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.ms,
+      paddingLeft: spacing.ms,
+      paddingRight: spacing.xs,
+      backgroundColor: colors.cardSecondary,
+      marginBottom: spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    exoNameArea: {
+      flex: 1,
+    },
+    exoInfoBtn: {
+      padding: spacing.xs,
+      marginLeft: spacing.xs,
+    },
+    exoChipSelected: {
+      backgroundColor: colors.primary,
+    },
+    exoText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+    },
+    exoTextSelected: {
+      color: colors.text,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+    },
+    cancelBtn: {
+      flex: 0.48,
+      backgroundColor: colors.secondaryButton,
+      padding: spacing.ms,
+      borderRadius: borderRadius.sm,
+      alignItems: 'center',
+    },
+    confirmBtn: {
+      flex: 0.48,
+      backgroundColor: colors.primary,
+      padding: spacing.ms,
+      borderRadius: borderRadius.sm,
+      alignItems: 'center',
+    },
+    btnText: {
+      color: colors.text,
+      fontWeight: 'bold',
+    },
+  })
+}

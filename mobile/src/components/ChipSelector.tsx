@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StyleProp, ViewStyle } from 'react-native'
-import { colors, borderRadius, spacing, fontSize } from '../theme'
+import { borderRadius, spacing, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 
 interface ChipSelectorProps {
@@ -42,6 +44,8 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
   noneLabel = 'Tous',
   style,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
 
   const handleSelect = (value: string | null) => {
@@ -61,6 +65,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
         <TouchableOpacity
           style={[
             styles.chip,
+            selectedValue === null ? neuShadow.pressed : neuShadow.elevatedSm,
             selectedValue === null && styles.chipSelected,
           ]}
           onPress={() => handleSelect(null)}
@@ -83,6 +88,7 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
           key={item}
           style={[
             styles.chip,
+            selectedValue === item ? neuShadow.pressed : neuShadow.elevatedSm,
             selectedValue === item && styles.chipSelected,
           ]}
           onPress={() => handleSelect(item)}
@@ -102,33 +108,32 @@ export const ChipSelector: React.FC<ChipSelectorProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-  },
-  contentContainer: {
-    paddingRight: spacing.md, // Pour le dernier chip
-  },
-  chip: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.cardSecondary,
-    marginRight: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  chipTextSelected: {
-    color: colors.text,
-    fontWeight: 'bold',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+    },
+    contentContainer: {
+      paddingRight: spacing.md, // Pour le dernier chip
+    },
+    chip: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.card,
+      marginRight: spacing.sm,
+    },
+    chipSelected: {
+      backgroundColor: colors.primary,
+    },
+    chipText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    chipTextSelected: {
+      color: colors.text,
+      fontWeight: 'bold',
+    },
+  })
+}

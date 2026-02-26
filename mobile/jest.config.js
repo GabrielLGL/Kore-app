@@ -22,10 +22,12 @@ module.exports = {
     '!src/model/index.ts',
   ],
 
-  // Module name mapper for static assets
+  // Module name mapper for static assets and mocks
   moduleNameMapper: {
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
       '<rootDir>/__mocks__/fileMock.js',
+    // Mock ThemeContext pour éviter la dépendance transitoire → database → SQLiteAdapter
+    '.*\\/contexts\\/ThemeContext': '<rootDir>/__mocks__/ThemeContextMock.ts',
   },
 
   // Ignore patterns

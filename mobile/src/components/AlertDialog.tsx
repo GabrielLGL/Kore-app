@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Animated } from 'react-native'
 import { Portal } from '@gorhom/portal'
-import { colors, borderRadius, spacing, fontSize } from '../theme'
+import { borderRadius, spacing, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 
 interface AlertDialogProps {
@@ -36,7 +38,6 @@ interface AlertDialogProps {
  *   }}
  *   onCancel={() => setIsAlertVisible(false)}
  *   confirmText="Supprimer"
- *   confirmColor={colors.danger}
  * />
  */
 export const AlertDialog: React.FC<AlertDialogProps> = ({
@@ -47,9 +48,12 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   onCancel,
   confirmText = 'Confirmer',
   cancelText = 'Annuler',
-  confirmColor = colors.danger,
+  confirmColor,
   hideCancel = false,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
+  const effectiveConfirmColor = confirmColor ?? colors.danger
   const haptics = useHaptics()
   const fadeAnim = React.useRef(new Animated.Value(0)).current
   const scaleAnim = React.useRef(new Animated.Value(0.95)).current
@@ -96,6 +100,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
         <Animated.View
           style={[
             styles.content,
+            neuShadow.elevated,
             { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
           ]}
         >
@@ -116,7 +121,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
             )}
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: confirmColor }]}
+              style={[styles.button, { backgroundColor: effectiveConfirmColor }]}
               onPress={handleConfirm}
               activeOpacity={0.7}
             >
@@ -129,59 +134,61 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.overlay,
-  },
-  content: {
-    width: '85%',
-    maxWidth: 400,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    elevation: 10,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-  },
-  title: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  message: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: colors.secondaryButton,
-  },
-  buttonText: {
-    color: colors.text,
-    fontWeight: 'bold',
-    fontSize: fontSize.md,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 9999,
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlay,
+    },
+    content: {
+      width: '85%',
+      maxWidth: 400,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      elevation: 12,
+      shadowColor: colors.neuShadowDark,
+      shadowOffset: { width: 6, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 12,
+    },
+    title: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: 'bold',
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    message: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+      textAlign: 'center',
+      marginBottom: spacing.lg,
+      lineHeight: 20,
+    },
+    buttonsRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.sm,
+      alignItems: 'center',
+    },
+    cancelButton: {
+      backgroundColor: colors.secondaryButton,
+    },
+    buttonText: {
+      color: colors.text,
+      fontWeight: 'bold',
+      fontSize: fontSize.md,
+    },
+  })
+}

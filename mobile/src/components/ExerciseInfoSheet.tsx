@@ -3,7 +3,9 @@ import { View, Text, StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheet } from './BottomSheet'
 import Exercise from '../model/models/Exercise'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface ExerciseInfoSheetProps {
   exercise: Exercise
@@ -22,6 +24,8 @@ export const ExerciseInfoSheet: React.FC<ExerciseInfoSheetProps> = ({
   visible,
   onClose,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const muscles = exercise.muscles || []
   const description = exercise.description
   const notes = exercise.notes
@@ -73,68 +77,70 @@ export const ExerciseInfoSheet: React.FC<ExerciseInfoSheetProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  placeholderContainer: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  placeholderText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    fontStyle: 'italic',
-    marginTop: spacing.xs,
-  },
-  exerciseName: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    marginBottom: spacing.sm,
-  },
-  musclesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  muscleChip: {
-    backgroundColor: colors.primaryBg,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-  },
-  muscleChipText: {
-    color: colors.primary,
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: spacing.md,
-  },
-  sectionLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  descriptionText: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    lineHeight: 20,
-  },
-  notesText: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    fontStyle: 'italic',
-    lineHeight: 20,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontStyle: 'italic',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    placeholderContainer: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+    },
+    placeholderText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      fontStyle: 'italic',
+      marginTop: spacing.xs,
+    },
+    exerciseName: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: 'bold',
+      marginBottom: spacing.sm,
+    },
+    musclesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    muscleChip: {
+      backgroundColor: colors.primaryBg,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    muscleChipText: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: '600',
+    },
+    section: {
+      marginBottom: spacing.md,
+    },
+    sectionLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    descriptionText: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      lineHeight: 20,
+    },
+    notesText: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      fontStyle: 'italic',
+      lineHeight: 20,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontStyle: 'italic',
+    },
+  })
+}

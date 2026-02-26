@@ -23,7 +23,9 @@ import { useHaptics } from '../hooks/useHaptics'
 import { useProgramManager } from '../hooks/useProgramManager'
 import { importPresetProgram, markOnboardingCompleted } from '../model/utils/databaseHelpers'
 import type { PresetProgram } from '../model/onboardingPrograms'
-import { colors, fontSize, spacing, borderRadius } from '../theme'
+import { fontSize, spacing, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>
 
@@ -35,6 +37,8 @@ interface Props {
 
 const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   // --- HOOKS ---
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const slideAnim = useKeyboardAnimation(-150)
   const {
@@ -232,7 +236,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
                   const updates = data
                     .map((p, index) => p.position !== index ? p.prepareUpdate(u => { u.position = index }) : null)
                     .filter((x): x is Program => x !== null)
-                  if (updates.length) await database.batch(...updates)
+                  if (updates.length) await database.batch(updates)
                 })
               } catch (error) {
                 if (__DEV__) console.error('[ProgramsScreen] Drag-and-drop batch update failed:', error)
@@ -442,81 +446,83 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  listWrapper: { flex: 1 },
-  footerFloating: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    marginBottom: 85,
-    backgroundColor: colors.background,
-  },
-  bigButton: {
-    backgroundColor: colors.primary,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-  },
-  btnText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.md },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    listWrapper: { flex: 1 },
+    footerFloating: {
+      paddingHorizontal: 20,
+      paddingTop: 10,
+      marginBottom: 85,
+      backgroundColor: colors.background,
+    },
+    bigButton: {
+      backgroundColor: colors.primary,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+      elevation: 8,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.5,
+      shadowRadius: 5,
+    },
+    btnText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.md },
 
-  // Modal styles
-  input: {
-    backgroundColor: colors.cardSecondary,
-    color: colors.text,
-    padding: spacing.ms,
-    borderRadius: 10,
-    fontSize: fontSize.md,
-    textAlign: 'center',
-  },
-  modalButton: {
-    flex: 0.47,
-    padding: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  buttonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.bodyMd },
+    // Modal styles
+    input: {
+      backgroundColor: colors.cardSecondary,
+      color: colors.text,
+      padding: spacing.ms,
+      borderRadius: 10,
+      fontSize: fontSize.md,
+      textAlign: 'center',
+    },
+    modalButton: {
+      flex: 0.47,
+      padding: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    buttonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.bodyMd },
 
-  // BottomSheet content styles
-  sheetOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 0.5,
-    borderBottomColor: colors.cardSecondary,
-  },
-  sheetOptionIcon: {
-    fontSize: 22,
-    marginRight: 20,
-    width: 30,
-    textAlign: 'center',
-  },
-  sheetOptionText: { color: colors.text, fontSize: 17, fontWeight: '500' },
-  sectionLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginTop: 20,
-    marginBottom: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    marginLeft: 5,
-  },
-  moveRow: { flexDirection: 'row', marginBottom: 10 },
-  moveChip: {
-    backgroundColor: colors.cardSecondary,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  moveChipText: { color: colors.textSecondary, fontSize: fontSize.sm, fontWeight: '600' },
-})
+    // BottomSheet content styles
+    sheetOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 0.5,
+      borderBottomColor: colors.cardSecondary,
+    },
+    sheetOptionIcon: {
+      fontSize: 22,
+      marginRight: 20,
+      width: 30,
+      textAlign: 'center',
+    },
+    sheetOptionText: { color: colors.text, fontSize: 17, fontWeight: '500' },
+    sectionLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginTop: 20,
+      marginBottom: 10,
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      marginLeft: 5,
+    },
+    moveRow: { flexDirection: 'row', marginBottom: 10 },
+    moveChip: {
+      backgroundColor: colors.cardSecondary,
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      borderRadius: 10,
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    moveChipText: { color: colors.textSecondary, fontSize: fontSize.sm, fontWeight: '600' },
+  })
+}
 
 export { ProgramsScreen as ProgramsContent }
 

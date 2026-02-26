@@ -14,12 +14,15 @@ import { LineChart } from 'react-native-chart-kit'
 import { database } from '../model'
 import History from '../model/models/History'
 import { computeDurationStats, formatDuration } from '../model/utils/statsHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 
 const chartConfig = createChartConfig({ showDots: true })
 
-function KpiCard({ label, value }: { label: string; value: string }) {
+function KpiCard({ label, value, colors }: { label: string; value: string; colors: ThemeColors }) {
+  const styles = useStyles(colors)
   return (
     <View style={styles.kpiCard}>
       <Text style={styles.kpiValue}>{value}</Text>
@@ -39,6 +42,8 @@ interface SelectedPoint {
 }
 
 export function StatsDurationScreenBase({ histories }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const { width: screenWidth } = useWindowDimensions()
   const stats = useMemo(() => computeDurationStats(histories), [histories])
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
@@ -86,10 +91,10 @@ export function StatsDurationScreenBase({ histories }: Props) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.kpiGrid}>
-        <KpiCard label="Durée moyenne" value={formatDuration(stats.avgMin)} />
-        <KpiCard label="Total cumulé" value={`${stats.totalHours}h`} />
-        <KpiCard label="Plus courte" value={formatDuration(stats.minMin)} />
-        <KpiCard label="Plus longue" value={formatDuration(stats.maxMin)} />
+        <KpiCard label="Durée moyenne" value={formatDuration(stats.avgMin)} colors={colors} />
+        <KpiCard label="Total cumulé" value={`${stats.totalHours}h`} colors={colors} />
+        <KpiCard label="Plus courte" value={formatDuration(stats.minMin)} colors={colors} />
+        <KpiCard label="Plus longue" value={formatDuration(stats.maxMin)} colors={colors} />
       </View>
 
       <Text style={styles.sectionTitle}>
@@ -140,87 +145,89 @@ export function StatsDurationScreenBase({ histories }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  kpiCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    width: '48%',
-  },
-  kpiValue: {
-    fontSize: fontSize.xxl,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  kpiLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  chartWrapper: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  chart: {
-    borderRadius: borderRadius.md,
-  },
-  emptyState: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  tooltip: {
-    position: 'absolute',
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    minWidth: 160,
-    elevation: 4,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  tooltipDate: {
-    fontSize: fontSize.xs,
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  tooltipDuration: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    kpiGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    kpiCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+      width: '48%',
+    },
+    kpiValue: {
+      fontSize: fontSize.xxl,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    kpiLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    chartWrapper: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+    },
+    chart: {
+      borderRadius: borderRadius.md,
+    },
+    emptyState: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    tooltip: {
+      position: 'absolute',
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      minWidth: 160,
+      elevation: 4,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+    },
+    tooltipDate: {
+      fontSize: fontSize.xs,
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    tooltipDuration: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+  })
+}
 
 const enhance = withObservables([], () => ({
   histories: database

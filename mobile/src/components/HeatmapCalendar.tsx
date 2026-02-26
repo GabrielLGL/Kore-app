@@ -1,7 +1,9 @@
 import React, { useRef, useMemo, useCallback } from 'react'
 import { View, Text, ScrollView, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import type { HeatmapDay } from '../model/utils/statsHelpers'
-import { colors, spacing, borderRadius, fontSize, intensityColors } from '../theme'
+import { spacing, intensityColors } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 const CELL_SIZE = 12
 const CELL_GAP = 2
@@ -62,6 +64,8 @@ function getMonthLabels(data: HeatmapDay[]): Array<{ label: string; colIndex: nu
 }
 
 const HeatmapCalendarInner: React.FC<HeatmapCalendarProps> = ({ data }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const scrollRef = useRef<ScrollView>(null)
 
   const columns = useMemo(() => buildColumns(data), [data])
@@ -137,42 +141,44 @@ const HeatmapCalendarInner: React.FC<HeatmapCalendarProps> = ({ data }) => {
 
 export const HeatmapCalendar = React.memo(HeatmapCalendarInner)
 
-const styles = StyleSheet.create({
-  monthRow: {
-    flexDirection: 'row',
-    position: 'relative',
-    marginBottom: CELL_GAP,
-  },
-  monthLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-  grid: {
-    flexDirection: 'row',
-  },
-  column: {
-    marginRight: CELL_GAP,
-  },
-  cell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderRadius: 2,
-    marginBottom: CELL_GAP,
-  },
-  legend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: spacing.sm,
-    gap: CELL_GAP + 1,
-  },
-  legendCell: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 10,
-    color: colors.textSecondary,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    monthRow: {
+      flexDirection: 'row',
+      position: 'relative',
+      marginBottom: CELL_GAP,
+    },
+    monthLabel: {
+      fontSize: 10,
+      color: colors.textSecondary,
+    },
+    grid: {
+      flexDirection: 'row',
+    },
+    column: {
+      marginRight: CELL_GAP,
+    },
+    cell: {
+      width: CELL_SIZE,
+      height: CELL_SIZE,
+      borderRadius: 2,
+      marginBottom: CELL_GAP,
+    },
+    legend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginTop: spacing.sm,
+      gap: CELL_GAP + 1,
+    },
+    legendCell: {
+      width: CELL_SIZE,
+      height: CELL_SIZE,
+      borderRadius: 2,
+    },
+    legendText: {
+      fontSize: 10,
+      color: colors.textSecondary,
+    },
+  })
+}

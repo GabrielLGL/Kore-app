@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet, Platform } from 'react-native'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface WorkoutHeaderProps {
   formattedTime: string
@@ -15,10 +17,12 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   completedSets,
   totalSetsTarget,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const progressPercent = totalSetsTarget > 0 ? (completedSets / totalSetsTarget) * 100 : 0
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, neuShadow.elevated]}>
       <View style={styles.row}>
         <Text style={styles.timer}>{formattedTime}</Text>
         <View style={styles.volumeBlock}>
@@ -40,53 +44,55 @@ const WorkoutHeader: React.FC<WorkoutHeaderProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginHorizontal: spacing.md,
-    marginVertical: spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timer: {
-    color: colors.text,
-    fontSize: fontSize.xxxl,
-    fontWeight: 'bold',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  volumeBlock: {
-    alignItems: 'flex-end',
-  },
-  volumeValue: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: '700',
-  },
-  volumeUnit: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-  },
-  setsCounter: {
-    textAlign: 'center',
-    fontSize: fontSize.sm,
-    marginTop: spacing.xs,
-  },
-  progressTrack: {
-    backgroundColor: colors.cardSecondary,
-    height: 3,
-    borderRadius: 2,
-    marginTop: spacing.xs,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    backgroundColor: colors.success,
-    height: 3,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginHorizontal: spacing.md,
+      marginVertical: spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    timer: {
+      color: colors.text,
+      fontSize: fontSize.xxxl,
+      fontWeight: 'bold',
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    },
+    volumeBlock: {
+      alignItems: 'flex-end',
+    },
+    volumeValue: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: '700',
+    },
+    volumeUnit: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+    },
+    setsCounter: {
+      textAlign: 'center',
+      fontSize: fontSize.sm,
+      marginTop: spacing.xs,
+    },
+    progressTrack: {
+      backgroundColor: colors.cardSecondary,
+      height: 3,
+      borderRadius: 2,
+      marginTop: spacing.xs,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      backgroundColor: colors.success,
+      height: 3,
+    },
+  })
+}
 
 export { WorkoutHeader }

@@ -18,7 +18,9 @@ import {
   computeTopExercisesByFrequency,
 } from '../model/utils/statsHelpers'
 import { formatRelativeDate } from '../model/utils/databaseHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useExerciseFilters } from '../hooks/useExerciseFilters'
 import { ChipSelector } from '../components/ChipSelector'
 import { MUSCLES_LIST, EQUIPMENT_LIST } from '../model/constants'
@@ -30,6 +32,8 @@ interface Props {
 }
 
 export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const {
     searchQuery,
     setSearchQuery,
@@ -163,112 +167,114 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  searchInput: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    height: 45,
-    color: colors.text,
-    fontSize: fontSize.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-  },
-  chipRow: {
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  sectionTitleMargin: {
-    marginTop: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.separator,
-  },
-  prRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  prLeft: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  prName: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  prDate: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  prRight: {
-    alignItems: 'flex-end',
-  },
-  prValue: {
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  prOrm: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  freqRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  freqRank: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.primary,
-    width: 28,
-  },
-  freqName: {
-    flex: 1,
-    fontSize: fontSize.sm,
-    color: colors.text,
-    marginHorizontal: spacing.sm,
-  },
-  freqCount: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  emptyCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    searchInput: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      height: 45,
+      color: colors.text,
+      fontSize: fontSize.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: spacing.sm,
+    },
+    chipRow: {
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    sectionTitleMargin: {
+      marginTop: spacing.lg,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+    },
+    rowBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.separator,
+    },
+    prRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    prLeft: {
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    prName: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    prDate: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    prRight: {
+      alignItems: 'flex-end',
+    },
+    prValue: {
+      fontSize: fontSize.sm,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    prOrm: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    freqRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    freqRank: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.primary,
+      width: 28,
+    },
+    freqName: {
+      flex: 1,
+      fontSize: fontSize.sm,
+      color: colors.text,
+      marginHorizontal: spacing.sm,
+    },
+    freqCount: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    emptyCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  })
+}
 
 const enhance = withObservables([], () => ({
   sets: database.get<WorkoutSet>('sets').query().observe(),

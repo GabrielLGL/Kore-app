@@ -1,7 +1,9 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { formatRelativeDate } from '../model/utils/databaseHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type { LastPerformance } from '../types/workout'
 
 interface LastPerformanceBadgeProps {
@@ -11,6 +13,9 @@ interface LastPerformanceBadgeProps {
 export const LastPerformanceBadge: React.FC<LastPerformanceBadgeProps> = ({
   lastPerformance,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
+
   if (!lastPerformance) {
     return (
       <View style={styles.chip}>
@@ -31,32 +36,34 @@ export const LastPerformanceBadge: React.FC<LastPerformanceBadgeProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    alignSelf: 'flex-start',
-    marginBottom: spacing.sm,
-  },
-  firstTime: {
-    color: colors.warning,
-    fontSize: fontSize.xs,
-    fontStyle: 'italic',
-  },
-  values: {
-    color: colors.text,
-    fontSize: fontSize.xs,
-  },
-  separator: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-  },
-  date: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      alignSelf: 'flex-start',
+      marginBottom: spacing.sm,
+    },
+    firstTime: {
+      color: colors.warning,
+      fontSize: fontSize.xs,
+      fontStyle: 'italic',
+    },
+    values: {
+      color: colors.text,
+      fontSize: fontSize.xs,
+    },
+    separator: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+    },
+    date: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+    },
+  })
+}

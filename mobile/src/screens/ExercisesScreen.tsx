@@ -14,7 +14,9 @@ import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
 import { useHaptics } from '../hooks/useHaptics'
 import { useExerciseFilters } from '../hooks/useExerciseFilters'
 import { useExerciseManager } from '../hooks/useExerciseManager'
-import { colors, fontSize, spacing, borderRadius } from '../theme'
+import { fontSize, spacing, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -25,33 +27,40 @@ interface Props { exercises: Exercise[] }
 interface ExerciseItemProps {
   item: Exercise
   onOptionsPress: (item: Exercise) => void
+  colors: ThemeColors
 }
 
 const ExerciseItem = memo<ExerciseItemProps>(
-  ({ item, onOptionsPress }) => (
-    <View style={styles.exoItem}>
-      <View style={styles.exoInfo}>
-        <Text style={styles.exoTitle}>{item.name}</Text>
-        <Text style={styles.exoSubtitle}>{item.muscles?.join(', ')} • {item.equipment}</Text>
+  ({ item, onOptionsPress, colors }) => {
+    const styles = useExerciseItemStyles(colors)
+    return (
+      <View style={styles.exoItem}>
+        <View style={styles.exoInfo}>
+          <Text style={styles.exoTitle}>{item.name}</Text>
+          <Text style={styles.exoSubtitle}>{item.muscles?.join(', ')} • {item.equipment}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.moreBtn}
+          onPress={() => onOptionsPress(item)}
+        >
+          <Text style={styles.moreIcon}>•••</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.moreBtn}
-        onPress={() => onOptionsPress(item)}
-      >
-        <Text style={styles.moreIcon}>•••</Text>
-      </TouchableOpacity>
-    </View>
-  ),
+    )
+  },
   // Comparateur custom : WatermelonDB mute les instances en place — on vérifie aussi les champs
   (prev, next) =>
     prev.item === next.item &&
     prev.item.name === next.item.name &&
     prev.item.equipment === next.item.equipment &&
     JSON.stringify(prev.item.muscles) === JSON.stringify(next.item.muscles) &&
-    prev.onOptionsPress === next.onOptionsPress,
+    prev.onOptionsPress === next.onOptionsPress &&
+    prev.colors === next.colors,
 )
 
 const ExercisesContent: React.FC<Props> = ({ exercises }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const navigation = useNavigation()
   const haptics = useHaptics()
   const slideAnim = useKeyboardAnimation(-200)
@@ -151,10 +160,10 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
   }, [haptics, setSelectedExercise, setIsOptionsVisible])
 
   const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
-    <ExerciseItem item={item} onOptionsPress={handleOptionsPress} />
-  ), [handleOptionsPress])
+    <ExerciseItem item={item} onOptionsPress={handleOptionsPress} colors={colors} />
+  ), [handleOptionsPress, colors])
 
-  const renderSeparator = useCallback(() => <View style={styles.separator} />, [])
+  const renderSeparator = useCallback(() => <View style={styles.separator} />, [styles])
 
   return (
     <View style={styles.baseContainer}>
@@ -313,57 +322,73 @@ const EQUIP_BORDER_RADIUS = 10
 const BTN_PADDING = 14
 const LIST_PADDING_BOTTOM = 150
 
-const styles = StyleSheet.create({
-  baseContainer: { flex: 1, backgroundColor: colors.background },
-  container: { flex: 1 },
-  header: { paddingHorizontal: SCREEN_PADDING_H, paddingTop: HEADER_PADDING_V, paddingBottom: HEADER_PADDING_BOTTOM },
-  headerTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: HEADER_PADDING_BOTTOM, height: SEARCH_HEIGHT },
-  searchFakeInput: { flex: 1, backgroundColor: colors.card, borderRadius: borderRadius.md, paddingHorizontal: SEARCH_PADDING_H, height: SEARCH_HEIGHT, justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
-  searchFakeText: { color: colors.textSecondary, fontSize: fontSize.bodyMd },
-  searchBarContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: borderRadius.md, paddingHorizontal: SEARCH_PADDING_H, height: SEARCH_HEIGHT, borderWidth: 1, borderColor: colors.primary },
-  searchInput: { flex: 1, color: colors.text, fontSize: fontSize.md },
-  closeSearchText: { color: colors.primary, marginLeft: spacing.sm, fontWeight: '600' },
-  searchFilters: { marginBottom: 5 },
-  filterRow: { flexDirection: 'row' },
-  listWrapper: { flex: 1 },
-  list: { flex: 1 },
-  exoItem: { paddingVertical: LIST_ITEM_PADDING_V, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  exoInfo: { flex: 1 },
-  exoTitle: { color: colors.text, fontSize: FONT_SIZE_EXO_TITLE, fontWeight: '600' },
-  exoSubtitle: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL, marginTop: 3 },
-  moreBtn: { padding: ICON_PADDING },
-  moreIcon: { color: colors.placeholder, fontSize: fontSize.lg, fontWeight: 'bold' },
-  separator: { height: 1, backgroundColor: colors.card },
-  emptyList: { color: colors.textSecondary, textAlign: 'center', marginTop: 50, fontStyle: 'italic' },
-  footerFloating: { paddingHorizontal: SCREEN_PADDING_H, paddingTop: HEADER_PADDING_V, marginBottom: 70, backgroundColor: colors.background},
-  addButton: { backgroundColor: colors.primary, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', elevation: 8 },
-  addButtonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.md },
+function useExerciseItemStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    exoItem: { paddingVertical: LIST_ITEM_PADDING_V, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    exoInfo: { flex: 1 },
+    exoTitle: { color: colors.text, fontSize: FONT_SIZE_EXO_TITLE, fontWeight: '600' },
+    exoSubtitle: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL, marginTop: 3 },
+    moreBtn: { padding: ICON_PADDING },
+    moreIcon: { color: colors.placeholder, fontSize: fontSize.lg, fontWeight: 'bold' },
+  })
+}
 
-  label: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL, marginBottom: spacing.sm, fontWeight: '600', textTransform: 'uppercase' },
-  input: { backgroundColor: colors.cardSecondary, color: colors.text, padding: LIST_ITEM_PADDING_V, borderRadius: borderRadius.md, fontSize: fontSize.md, marginBottom: INPUT_MARGIN_BOTTOM },
-  chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: INPUT_MARGIN_BOTTOM },
-  chip: { paddingVertical: spacing.sm, paddingHorizontal: spacing.ms, borderRadius: borderRadius.lg, backgroundColor: colors.cardSecondary, marginRight: spacing.sm, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { color: colors.textSecondary, fontSize: fontSize.xs },
-  chipTextActive: { color: colors.text, fontWeight: 'bold' },
-  equipRow: { flexDirection: 'row', marginBottom: EQUIP_ROW_MARGIN_BOTTOM },
-  equipBtn: { paddingVertical: ICON_PADDING, paddingHorizontal: SEARCH_PADDING_H, borderRadius: EQUIP_BORDER_RADIUS, backgroundColor: colors.cardSecondary, marginRight: spacing.sm },
-  equipBtnActive: { backgroundColor: colors.secondaryButton, borderWidth: 1, borderColor: colors.primary },
-  equipText: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL },
-  equipTextActive: { color: colors.text, fontWeight: 'bold' },
-  cancelBtn: { flex: 0.47, backgroundColor: colors.secondaryButton, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center' },
-  confirmBtn: { flex: 0.47, backgroundColor: colors.primary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center' },
-  btnText: { color: colors.text, fontWeight: 'bold' },
-  sheetOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: LIST_ITEM_PADDING_V },
-  sheetIcon: { fontSize: fontSize.xl, marginRight: spacing.ms },
-  sheetText: { color: colors.text, fontSize: fontSize.md },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    baseContainer: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1 },
+    header: { paddingHorizontal: SCREEN_PADDING_H, paddingTop: HEADER_PADDING_V, paddingBottom: HEADER_PADDING_BOTTOM },
+    headerTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: HEADER_PADDING_BOTTOM, height: SEARCH_HEIGHT },
+    searchFakeInput: { flex: 1, backgroundColor: colors.card, borderRadius: borderRadius.md, paddingHorizontal: SEARCH_PADDING_H, height: SEARCH_HEIGHT, justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
+    searchFakeText: { color: colors.textSecondary, fontSize: fontSize.bodyMd },
+    searchBarContainer: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: borderRadius.md, paddingHorizontal: SEARCH_PADDING_H, height: SEARCH_HEIGHT, borderWidth: 1, borderColor: colors.primary },
+    searchInput: { flex: 1, color: colors.text, fontSize: fontSize.md },
+    closeSearchText: { color: colors.primary, marginLeft: spacing.sm, fontWeight: '600' },
+    searchFilters: { marginBottom: 5 },
+    filterRow: { flexDirection: 'row' },
+    listWrapper: { flex: 1 },
+    list: { flex: 1 },
+    exoItem: { paddingVertical: LIST_ITEM_PADDING_V, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    exoInfo: { flex: 1 },
+    exoTitle: { color: colors.text, fontSize: FONT_SIZE_EXO_TITLE, fontWeight: '600' },
+    exoSubtitle: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL, marginTop: 3 },
+    moreBtn: { padding: ICON_PADDING },
+    moreIcon: { color: colors.placeholder, fontSize: fontSize.lg, fontWeight: 'bold' },
+    separator: { height: 1, backgroundColor: colors.card },
+    emptyList: { color: colors.textSecondary, textAlign: 'center', marginTop: 50, fontStyle: 'italic' },
+    footerFloating: { paddingHorizontal: SCREEN_PADDING_H, paddingTop: HEADER_PADDING_V, marginBottom: 70, backgroundColor: colors.background},
+    addButton: { backgroundColor: colors.primary, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', elevation: 8 },
+    addButtonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.md },
+
+    label: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL, marginBottom: spacing.sm, fontWeight: '600', textTransform: 'uppercase' },
+    input: { backgroundColor: colors.cardSecondary, color: colors.text, padding: LIST_ITEM_PADDING_V, borderRadius: borderRadius.md, fontSize: fontSize.md, marginBottom: INPUT_MARGIN_BOTTOM },
+    chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: INPUT_MARGIN_BOTTOM },
+    chip: { paddingVertical: spacing.sm, paddingHorizontal: spacing.ms, borderRadius: borderRadius.lg, backgroundColor: colors.cardSecondary, marginRight: spacing.sm, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
+    chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipText: { color: colors.textSecondary, fontSize: fontSize.xs },
+    chipTextActive: { color: colors.text, fontWeight: 'bold' },
+    equipRow: { flexDirection: 'row', marginBottom: EQUIP_ROW_MARGIN_BOTTOM },
+    equipBtn: { paddingVertical: ICON_PADDING, paddingHorizontal: SEARCH_PADDING_H, borderRadius: EQUIP_BORDER_RADIUS, backgroundColor: colors.cardSecondary, marginRight: spacing.sm },
+    equipBtnActive: { backgroundColor: colors.secondaryButton, borderWidth: 1, borderColor: colors.primary },
+    equipText: { color: colors.textSecondary, fontSize: FONT_SIZE_LABEL },
+    equipTextActive: { color: colors.text, fontWeight: 'bold' },
+    cancelBtn: { flex: 0.47, backgroundColor: colors.secondaryButton, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center' },
+    confirmBtn: { flex: 0.47, backgroundColor: colors.primary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center' },
+    btnText: { color: colors.text, fontWeight: 'bold' },
+    sheetOption: { flexDirection: 'row', alignItems: 'center', paddingVertical: LIST_ITEM_PADDING_V },
+    sheetIcon: { fontSize: fontSize.xl, marginRight: spacing.ms },
+    sheetText: { color: colors.text, fontSize: fontSize.md },
+  })
+}
 
 const ObservableContent = withObservables([], () => ({
   exercises: database.get<Exercise>('exercises').query(Q.sortBy('name', Q.asc)).observe()
 }))(ExercisesContent)
 
-const ExercisesScreen = () => (<View style={styles.baseContainer}><ObservableContent /></View>)
+const ExercisesScreen = () => {
+  const colors = useColors()
+  return <View style={{ flex: 1, backgroundColor: colors.background }}><ObservableContent /></View>
+}
 
 export { ExercisesContent }
 export default ExercisesScreen

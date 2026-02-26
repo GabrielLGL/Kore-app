@@ -15,7 +15,9 @@ import {
   type BadgeDefinition,
 } from '../model/utils/badgeConstants'
 import { BadgeCard } from '../components/BadgeCard'
-import { colors, spacing, fontSize, borderRadius } from '../theme'
+import { spacing, fontSize, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 // ─── Ordre d'affichage des catégories ─────────────────────────────────────────
 
@@ -36,6 +38,9 @@ interface Props {
 }
 
 function BadgesScreenBase({ userBadges }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
+
   const unlockedIds = useMemo(
     () => new Set(userBadges.map(b => b.badgeId)),
     [userBadges],
@@ -103,47 +108,49 @@ function BadgesScreenBase({ userBadges }: Props) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  counterRow: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  counterText: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.xs,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: spacing.sm,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  gridItem: {
-    width: '31%',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    counterRow: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      alignItems: 'center',
+    },
+    counterText: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    section: {
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: fontSize.xs,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: spacing.sm,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    gridItem: {
+      width: '31%',
+    },
+  })
+}
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 

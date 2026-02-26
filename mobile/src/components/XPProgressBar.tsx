@@ -1,6 +1,8 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface XPProgressBarProps {
   currentXP: number
@@ -9,6 +11,9 @@ interface XPProgressBarProps {
 }
 
 export function XPProgressBar({ currentXP, requiredXP, percentage }: XPProgressBarProps) {
+  const colors = useColors()
+  const styles = useStyles(colors)
+
   return (
     <View style={styles.container}>
       <View style={styles.barBackground}>
@@ -21,24 +26,26 @@ export function XPProgressBar({ currentXP, requiredXP, percentage }: XPProgressB
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing.xs,
-  },
-  barBackground: {
-    height: 8,
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.sm,
-  },
-  label: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    textAlign: 'right',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      gap: spacing.xs,
+    },
+    barBackground: {
+      height: 8,
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+    },
+    label: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      textAlign: 'right',
+    },
+  })
+}

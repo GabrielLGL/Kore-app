@@ -1,6 +1,8 @@
 import React from 'react'
 import { TouchableOpacity, Text, StyleSheet } from 'react-native'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 
 interface OnboardingCardProps {
@@ -16,6 +18,8 @@ export const OnboardingCard: React.FC<OnboardingCardProps> = ({
   selected,
   onPress,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
 
   const handlePress = () => {
@@ -37,30 +41,32 @@ export const OnboardingCard: React.FC<OnboardingCardProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.secondaryButton,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  cardSelected: {
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  label: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-  },
-  labelSelected: {
-    color: colors.primary,
-  },
-  description: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginTop: spacing.xs,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.secondaryButton,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    cardSelected: {
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+    label: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: 'bold',
+    },
+    labelSelected: {
+      color: colors.primary,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginTop: spacing.xs,
+    },
+  })
+}

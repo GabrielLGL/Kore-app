@@ -3,7 +3,9 @@ import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native'
 import { BottomSheet } from './BottomSheet'
 import { Button } from './Button'
 import { updateHistoryNote } from '../model/utils/databaseHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type { RecapExerciseData, RecapComparisonData } from '../types/workout'
 
 interface WorkoutSummarySheetProps {
@@ -31,16 +33,20 @@ interface StatBlockProps {
   label: string
   value: string
   emoji: string
+  colors: ThemeColors
 }
 
-const StatBlock: React.FC<StatBlockProps> = ({ label, value, emoji }) => (
-  <View style={styles.statBlock}>
-    <Text style={styles.statValue}>{emoji} {value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-)
+const StatBlock: React.FC<StatBlockProps> = ({ label, value, emoji, colors }) => {
+  const styles = useStyles(colors)
+  return (
+    <View style={styles.statBlock}>
+      <Text style={styles.statValue}>{emoji} {value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  )
+}
 
-function getMotivationMessage(totalPrs: number, volumeGain: number): { text: string; color: string } {
+function getMotivationMessage(totalPrs: number, volumeGain: number, colors: ThemeColors): { text: string; color: string } {
   if (totalPrs > 0) {
     return { text: '🏅 Record battu !', color: colors.primary }
   }
@@ -68,6 +74,8 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   recapExercises,
   recapComparison,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const [note, setNote] = useState('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -95,7 +103,7 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
     onClose()
   }
 
-  const motivation = getMotivationMessage(totalPrs, recapComparison.volumeGain)
+  const motivation = getMotivationMessage(totalPrs, recapComparison.volumeGain, colors)
 
   // Muscles uniques de tous les exercices
   const allMuscles = Array.from(
@@ -132,10 +140,10 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
 
         {/* Stats grid 2×2 */}
         <View style={styles.statsGrid}>
-          <StatBlock label="Durée" value={formatDuration(durationSeconds)} emoji="⏱" />
-          <StatBlock label="Volume" value={`${totalVolume.toFixed(1)} kg`} emoji="🏋️" />
-          <StatBlock label="Séries" value={`${totalSets} validées`} emoji="✅" />
-          <StatBlock label="Records" value={`${totalPrs} PR`} emoji="🏆" />
+          <StatBlock label="Durée" value={formatDuration(durationSeconds)} emoji="⏱" colors={colors} />
+          <StatBlock label="Volume" value={`${totalVolume.toFixed(1)} kg`} emoji="🏋️" colors={colors} />
+          <StatBlock label="Séries" value={`${totalSets} validées`} emoji="✅" colors={colors} />
+          <StatBlock label="Records" value={`${totalPrs} PR`} emoji="🏆" colors={colors} />
         </View>
 
         {/* Section gamification */}
@@ -253,165 +261,167 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  motivationText: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  muscleChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  muscleChip: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  muscleChipText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    fontWeight: '500',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  statBlock: {
-    width: '47.5%',
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  statValue: {
-    color: colors.text,
-    fontSize: fontSize.xxxl,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  gamificationSection: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  gamRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  gamItem: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  gamCenter: {
-    textAlign: 'center',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.separator,
-    marginVertical: spacing.md,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: spacing.sm,
-  },
-  exoRow: {
-    marginBottom: spacing.sm,
-  },
-  exoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: 2,
-  },
-  exoName: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    flex: 1,
-  },
-  completeBadge: {
-    fontSize: fontSize.xs,
-  },
-  incompleteBadge: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    backgroundColor: colors.cardSecondary,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 1,
-    borderRadius: borderRadius.sm,
-  },
-  exoSets: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-  },
-  progressionFirstTime: {
-    color: colors.success,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  progressionVolRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  progressionLabel: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-  },
-  progressionDelta: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-  },
-  progressionExoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  progressionExoName: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  noteLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: spacing.xs,
-  },
-  noteInput: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.separator,
-    color: colors.text,
-    fontSize: fontSize.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    minHeight: 80,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    motivationText: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    muscleChips: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+    },
+    muscleChip: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    muscleChipText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      fontWeight: '500',
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.lg,
+    },
+    statBlock: {
+      width: '47.5%',
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    statValue: {
+      color: colors.text,
+      fontSize: fontSize.xxxl,
+      fontWeight: '700',
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    gamificationSection: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    gamRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: spacing.xs,
+    },
+    gamItem: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+    },
+    gamCenter: {
+      textAlign: 'center',
+    },
+    separator: {
+      height: 1,
+      backgroundColor: colors.separator,
+      marginVertical: spacing.md,
+    },
+    sectionTitle: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginBottom: spacing.sm,
+    },
+    exoRow: {
+      marginBottom: spacing.sm,
+    },
+    exoHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginBottom: 2,
+    },
+    exoName: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      flex: 1,
+    },
+    completeBadge: {
+      fontSize: fontSize.xs,
+    },
+    incompleteBadge: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      backgroundColor: colors.cardSecondary,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: 1,
+      borderRadius: borderRadius.sm,
+    },
+    exoSets: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+    },
+    progressionFirstTime: {
+      color: colors.success,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    progressionVolRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    progressionLabel: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+    },
+    progressionDelta: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+    },
+    progressionExoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    progressionExoName: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    noteLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: spacing.xs,
+    },
+    noteInput: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      borderWidth: 1,
+      borderColor: colors.separator,
+      color: colors.text,
+      fontSize: fontSize.md,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+      minHeight: 80,
+    },
+  })
+}

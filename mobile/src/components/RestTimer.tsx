@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import {
   scheduleRestEndNotification,
   cancelNotification,
@@ -18,6 +20,8 @@ interface Props {
  * Désormais intégré au flux de la page pour ne pas chevaucher la liste.
  */
 const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const [timeLeft, setTimeLeft] = useState(duration)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -141,45 +145,47 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    marginTop: spacing.xs,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    elevation: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  progressBarWrapper: {
-    height: 3,
-    backgroundColor: colors.cardSecondary,
-    borderRadius: 2,
-    marginBottom: spacing.sm,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    backgroundColor: colors.primary,
-    height: 3,
-  },
-  content: {
-    paddingVertical: spacing.ms,
-    paddingHorizontal: spacing.md,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  left: { flexDirection: 'column' },
-  label: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: 'bold', letterSpacing: 1 },
-  timer: { fontSize: fontSize.xxl, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
-  hintChip: {
-    backgroundColor: colors.surfaceOverlay,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  hint: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: '600' },
-})
-
 export default RestTimer
+
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+      marginTop: spacing.xs,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      elevation: 8,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary,
+    },
+    progressBarWrapper: {
+      height: 3,
+      backgroundColor: colors.cardSecondary,
+      borderRadius: 2,
+      marginBottom: spacing.sm,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      backgroundColor: colors.primary,
+      height: 3,
+    },
+    content: {
+      paddingVertical: spacing.ms,
+      paddingHorizontal: spacing.md,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    left: { flexDirection: 'column' },
+    label: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: 'bold', letterSpacing: 1 },
+    timer: { fontSize: fontSize.xxl, fontWeight: 'bold', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+    hintChip: {
+      backgroundColor: colors.surfaceOverlay,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+    },
+    hint: { color: colors.textSecondary, fontSize: fontSize.xs, fontWeight: '600' },
+  })
+}

@@ -20,7 +20,9 @@ import { ChipSelector } from '../components/ChipSelector'
 import { Button } from '../components/Button'
 import { useHaptics } from '../hooks/useHaptics'
 import { useModalState } from '../hooks/useModalState'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 import { parseNumericInput } from '../model/utils/databaseHelpers'
 
@@ -63,6 +65,8 @@ interface Props {
 }
 
 export function StatsMeasurementsScreenBase({ measurements }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const haptics = useHaptics()
   const addSheet = useModalState()
@@ -297,134 +301,136 @@ export function StatsMeasurementsScreenBase({ measurements }: Props) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  addRow: {
-    alignItems: 'flex-end',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  latestGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  latestCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    alignItems: 'center',
-    minWidth: '30%',
-    flex: 1,
-  },
-  latestValue: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  latestLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  chartWrapper: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-    marginTop: spacing.sm,
-  },
-  chart: {
-    borderRadius: borderRadius.md,
-  },
-  emptyChart: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.separator,
-  },
-  historyLeft: {
-    flex: 1,
-  },
-  historyDate: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  historyValues: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  deleteBtn: {
-    padding: spacing.xs,
-  },
-  deleteIcon: {
-    fontSize: fontSize.lg,
-  },
-  emptyState: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  // Form
-  formContent: {
-    padding: spacing.md,
-    gap: spacing.md,
-  },
-  inputRow: {
-    gap: spacing.xs,
-  },
-  inputLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  input: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    fontSize: fontSize.md,
-    color: colors.text,
-  },
-  formButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    addRow: {
+      alignItems: 'flex-end',
+      marginBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    latestGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    latestCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.sm,
+      padding: spacing.sm,
+      alignItems: 'center',
+      minWidth: '30%',
+      flex: 1,
+    },
+    latestValue: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    latestLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    chartWrapper: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+      marginTop: spacing.sm,
+    },
+    chart: {
+      borderRadius: borderRadius.md,
+    },
+    emptyChart: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+    },
+    historyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    rowBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.separator,
+    },
+    historyLeft: {
+      flex: 1,
+    },
+    historyDate: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    historyValues: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    deleteBtn: {
+      padding: spacing.xs,
+    },
+    deleteIcon: {
+      fontSize: fontSize.lg,
+    },
+    emptyState: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    // Form
+    formContent: {
+      padding: spacing.md,
+      gap: spacing.md,
+    },
+    inputRow: {
+      gap: spacing.xs,
+    },
+    inputLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    input: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.sm,
+      fontSize: fontSize.md,
+      color: colors.text,
+    },
+    formButtons: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+  })
+}
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 

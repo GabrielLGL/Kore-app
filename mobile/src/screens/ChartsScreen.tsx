@@ -22,7 +22,9 @@ import { AlertDialog } from '../components/AlertDialog'
 import { ChipSelector } from '../components/ChipSelector'
 import { useHaptics } from '../hooks/useHaptics'
 import { useExerciseFilters } from '../hooks/useExerciseFilters'
-import { colors, fontSize, borderRadius, spacing } from '../theme'
+import { fontSize, borderRadius, spacing } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
 import type { ExerciseSessionStat } from '../model/utils/databaseHelpers'
 
@@ -47,9 +49,22 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
   setsForExercise,
   sessions,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [selectedStat, setSelectedStat] = useState<ExerciseSessionStat | null>(null)
+
+  const chartConfig = {
+    backgroundColor: colors.card,
+    backgroundGradientFrom: colors.card,
+    backgroundGradientTo: colors.card,
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(${PRIMARY_RGB}, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(${TEXT_RGB}, ${opacity})`,
+    style: { borderRadius: CHART_BORDER_RADIUS },
+    propsForDots: { r: '4', strokeWidth: '2', stroke: colors.primary },
+  }
 
   const statsForSelectedExo = useMemo(
     () => buildExerciseStatsFromData(setsForExercise, histories, sessions),
@@ -84,7 +99,7 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
             Q.where('history_id', selectedStat.historyId)
           )
           .fetch()
-        await database.batch(...setsToDelete.map(s => s.prepareDestroyPermanently()))
+        await database.batch(setsToDelete.map(s => s.prepareDestroyPermanently()))
       })
       haptics.onDelete()
     } catch {
@@ -208,6 +223,8 @@ interface Props {
 }
 
 export const ChartsContent: React.FC<Props> = ({ exercises }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const { filterMuscle, setFilterMuscle, filterEquipment, setFilterEquipment, filteredExercises } =
     useExerciseFilters(exercises)
@@ -282,70 +299,61 @@ const HISTORY_TITLE_MARGIN_TOP = 25
 const HISTORY_TITLE_MARGIN_BOTTOM = 15
 const LOG_ROW_PADDING = 15
 
-const chartConfig = {
-  backgroundColor: colors.card,
-  backgroundGradientFrom: colors.card,
-  backgroundGradientTo: colors.card,
-  decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(${PRIMARY_RGB}, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(${TEXT_RGB}, ${opacity})`,
-  style: { borderRadius: CHART_BORDER_RADIUS },
-  propsForDots: { r: '4', strokeWidth: '2', stroke: colors.primary },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    filtersWrapper: { paddingVertical: FILTER_PADDING_V, borderBottomWidth: 1, borderBottomColor: colors.card },
+    filterRow: { paddingHorizontal: SCREEN_PADDING_H },
+    selectorContainer: {
+      paddingVertical: SELECTOR_PADDING_V,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.card,
+      backgroundColor: colors.background,
+    },
+    exoScroll: { paddingHorizontal: SCREEN_PADDING_H },
+    exoChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: FILTER_PADDING_V,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.cardSecondary,
+      marginRight: CHIP_MARGIN_RIGHT,
+    },
+    exoChipActive: { backgroundColor: colors.primary },
+    exoChipText: { color: colors.textSecondary, fontSize: FONT_SIZE_CHIP, fontWeight: '600' },
+    exoChipTextActive: { color: colors.text },
+    contentArea: { flex: 1 },
+    statsContainer: { flex: 1 },
+    listContent: { padding: SCREEN_PADDING_H, paddingBottom: LIST_PADDING_BOTTOM },
+    chartWrapper: { marginBottom: CHART_MARGIN_BOTTOM },
+    chart: { borderRadius: CHART_BORDER_RADIUS, marginVertical: spacing.sm },
+    historyTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: 'bold', marginTop: HISTORY_TITLE_MARGIN_TOP, marginBottom: HISTORY_TITLE_MARGIN_BOTTOM },
+    logRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      backgroundColor: colors.card,
+      padding: LOG_ROW_PADDING,
+      borderRadius: borderRadius.md,
+      marginBottom: CHIP_MARGIN_RIGHT,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+    },
+    logInfo: { flex: 1 },
+    logMainText: { color: colors.text, fontSize: fontSize.bodyMd, fontWeight: 'bold' },
+    logDate: { color: colors.placeholder, fontSize: fontSize.caption, marginTop: 2, marginBottom: 6 },
+    setDetailText: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
+    deleteBtn: { padding: CHIP_MARGIN_RIGHT },
+    deleteIcon: { fontSize: fontSize.lg },
+    emptyState: { marginTop: 50, paddingHorizontal: spacing.xxl },
+    emptyText: {
+      color: colors.placeholder,
+      textAlign: 'center',
+      fontSize: fontSize.bodyMd,
+      fontStyle: 'italic',
+      lineHeight: 22,
+    },
+  })
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  filtersWrapper: { paddingVertical: FILTER_PADDING_V, borderBottomWidth: 1, borderBottomColor: colors.card },
-  filterRow: { paddingHorizontal: SCREEN_PADDING_H },
-  selectorContainer: {
-    paddingVertical: SELECTOR_PADDING_V,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.card,
-    backgroundColor: colors.background,
-  },
-  exoScroll: { paddingHorizontal: SCREEN_PADDING_H },
-  exoChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: FILTER_PADDING_V,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.cardSecondary,
-    marginRight: CHIP_MARGIN_RIGHT,
-  },
-  exoChipActive: { backgroundColor: colors.primary },
-  exoChipText: { color: colors.textSecondary, fontSize: FONT_SIZE_CHIP, fontWeight: '600' },
-  exoChipTextActive: { color: colors.text },
-  contentArea: { flex: 1 },
-  statsContainer: { flex: 1 },
-  listContent: { padding: SCREEN_PADDING_H, paddingBottom: LIST_PADDING_BOTTOM },
-  chartWrapper: { marginBottom: CHART_MARGIN_BOTTOM },
-  chart: { borderRadius: CHART_BORDER_RADIUS, marginVertical: spacing.sm },
-  historyTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: 'bold', marginTop: HISTORY_TITLE_MARGIN_TOP, marginBottom: HISTORY_TITLE_MARGIN_BOTTOM },
-  logRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    backgroundColor: colors.card,
-    padding: LOG_ROW_PADDING,
-    borderRadius: borderRadius.md,
-    marginBottom: CHIP_MARGIN_RIGHT,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  logInfo: { flex: 1 },
-  logMainText: { color: colors.text, fontSize: fontSize.bodyMd, fontWeight: 'bold' },
-  logDate: { color: colors.placeholder, fontSize: fontSize.caption, marginTop: 2, marginBottom: 6 },
-  setDetailText: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
-  deleteBtn: { padding: CHIP_MARGIN_RIGHT },
-  deleteIcon: { fontSize: fontSize.lg },
-  emptyState: { marginTop: 50, paddingHorizontal: spacing.xxl },
-  emptyText: {
-    color: colors.placeholder,
-    textAlign: 'center',
-    fontSize: fontSize.bodyMd,
-    fontStyle: 'italic',
-    lineHeight: 22,
-  },
-})
 
 const ObservableContent = withObservables([], () => ({
   exercises: database
@@ -357,10 +365,13 @@ const ObservableContent = withObservables([], () => ({
     .observe(),
 }))(ChartsContent)
 
-const ChartsScreen = () => (
-  <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <ObservableContent />
-  </View>
-)
+const ChartsScreen = () => {
+  const colors = useColors()
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ObservableContent />
+    </View>
+  )
+}
 
 export default ChartsScreen

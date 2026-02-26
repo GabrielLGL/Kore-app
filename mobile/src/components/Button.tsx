@@ -1,6 +1,8 @@
 import React from 'react'
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native'
-import { colors, borderRadius, spacing, fontSize } from '../theme'
+import { Pressable, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native'
+import { borderRadius, spacing, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 
 type ButtonVariant = 'primary' | 'danger' | 'secondary' | 'ghost'
@@ -57,6 +59,8 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   enableHaptics = true,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
 
   const handlePress = async () => {
@@ -74,30 +78,27 @@ export const Button: React.FC<ButtonProps> = ({
     await onPress()
   }
 
-  // Calcul du style du bouton
-  const buttonStyle: ViewStyle[] = [
-    styles.base,
-    styles[`size_${size}`],
-    styles[`variant_${variant}`],
-    fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
-    style,
-  ].filter(Boolean) as ViewStyle[]
-
   // Calcul du style du texte
   const textStyles: TextStyle[] = [
     styles.text,
-    styles[`text_${size}`],
-    styles[`text_${variant}`],
+    styles[`text_${size}` as keyof typeof styles] as TextStyle,
+    styles[`text_${variant}` as keyof typeof styles] as TextStyle,
     disabled && styles.textDisabled,
     textStyle,
   ].filter(Boolean) as TextStyle[]
 
   return (
-    <TouchableOpacity
-      style={buttonStyle}
+    <Pressable
+      style={({ pressed }) => [
+        styles.base,
+        styles[`size_${size}` as keyof typeof styles] as ViewStyle,
+        styles[`variant_${variant}` as keyof typeof styles] as ViewStyle,
+        variant !== 'ghost' && (pressed ? neuShadow.pressed : neuShadow.elevated),
+        fullWidth && styles.fullWidth,
+        disabled && styles.disabled,
+        style,
+      ].filter(Boolean)}
       onPress={handlePress}
-      activeOpacity={0.7}
       disabled={disabled}
     >
       {typeof children === 'string' ? (
@@ -105,83 +106,85 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         children
       )}
-    </TouchableOpacity>
+    </Pressable>
   )
 }
 
-const styles = StyleSheet.create({
-  // Base
-  base: {
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    // Base
+    base: {
+      borderRadius: borderRadius.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    fullWidth: {
+      width: '100%',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
 
-  // Sizes
-  size_sm: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  size_md: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  size_lg: {
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-  },
+    // Sizes
+    size_sm: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    size_md: {
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+    },
+    size_lg: {
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.xl,
+    },
 
-  // Variants - Background
-  variant_primary: {
-    backgroundColor: colors.primary,
-  },
-  variant_danger: {
-    backgroundColor: colors.danger,
-  },
-  variant_secondary: {
-    backgroundColor: colors.secondaryButton,
-  },
-  variant_ghost: {
-    backgroundColor: 'transparent',
-  },
+    // Variants - Background
+    variant_primary: {
+      backgroundColor: colors.primary,
+    },
+    variant_danger: {
+      backgroundColor: colors.danger,
+    },
+    variant_secondary: {
+      backgroundColor: colors.secondaryButton,
+    },
+    variant_ghost: {
+      backgroundColor: 'transparent',
+    },
 
-  // Text base
-  text: {
-    fontWeight: 'bold',
-  },
+    // Text base
+    text: {
+      fontWeight: 'bold',
+    },
 
-  // Text sizes
-  text_sm: {
-    fontSize: fontSize.sm,
-  },
-  text_md: {
-    fontSize: fontSize.md,
-  },
-  text_lg: {
-    fontSize: fontSize.lg,
-  },
+    // Text sizes
+    text_sm: {
+      fontSize: fontSize.sm,
+    },
+    text_md: {
+      fontSize: fontSize.md,
+    },
+    text_lg: {
+      fontSize: fontSize.lg,
+    },
 
-  // Text variants
-  text_primary: {
-    color: colors.text,
-  },
-  text_danger: {
-    color: colors.text,
-  },
-  text_secondary: {
-    color: colors.text,
-  },
-  text_ghost: {
-    color: colors.primary,
-  },
+    // Text variants
+    text_primary: {
+      color: colors.text,
+    },
+    text_danger: {
+      color: colors.text,
+    },
+    text_secondary: {
+      color: colors.text,
+    },
+    text_ghost: {
+      color: colors.primary,
+    },
 
-  textDisabled: {
-    opacity: 0.6,
-  },
-})
+    textDisabled: {
+      opacity: 0.6,
+    },
+  })
+}

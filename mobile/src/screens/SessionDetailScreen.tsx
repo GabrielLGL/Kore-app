@@ -19,7 +19,9 @@ import { useHaptics } from '../hooks/useHaptics'
 import { useSessionManager } from '../hooks/useSessionManager'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation'
-import { colors, fontSize, spacing, borderRadius } from '../theme'
+import { fontSize, spacing, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface Props {
   session: Session
@@ -31,6 +33,8 @@ interface Props {
 
 export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercises, exercises, user, navigation }) => {
   // --- HOOKS ---
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const {
     // Target inputs states
@@ -64,7 +68,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
   }>({ title: '', message: '', onConfirm: async () => {} })
   const [showRestTimer, setShowRestTimer] = useState(false)
 
-  useLayoutEffect(() => { navigation.setOptions({ title: session.name, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }) }, [navigation, session.name])
+  useLayoutEffect(() => { navigation.setOptions({ title: session.name, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }) }, [navigation, session.name, colors])
 
   // --- HANDLERS ---
   const handleAddExercise = async (exerciseId: string, sets: string, reps: string, weight: string) => {
@@ -207,22 +211,24 @@ const BTN_PADDING = 18
 const BTN_MARGIN_BOTTOM = 10
 const LIST_PADDING_BOTTOM = 20
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  listWrapper: { flex: 1 },
-  emptyText: { color: colors.placeholder, textAlign: 'center', marginTop: 50, fontSize: fontSize.md, fontStyle: 'italic' },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    listWrapper: { flex: 1 },
+    emptyText: { color: colors.placeholder, textAlign: 'center', marginTop: 50, fontSize: fontSize.md, fontStyle: 'italic' },
 
-  footerContainer: { paddingHorizontal: SCREEN_PADDING_H, paddingBottom: FOOTER_PADDING_BOTTOM, paddingTop: FOOTER_PADDING_TOP, borderTopWidth: 1, borderTopColor: colors.card },
-  launchButton: { backgroundColor: colors.primary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center', marginBottom: BTN_MARGIN_BOTTOM },
-  launchButtonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.sm },
-  addButton: { backgroundColor: colors.cardSecondary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  addButtonText: { color: colors.primary, fontWeight: 'bold', fontSize: fontSize.sm },
+    footerContainer: { paddingHorizontal: SCREEN_PADDING_H, paddingBottom: FOOTER_PADDING_BOTTOM, paddingTop: FOOTER_PADDING_TOP, borderTopWidth: 1, borderTopColor: colors.card },
+    launchButton: { backgroundColor: colors.primary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center', marginBottom: BTN_MARGIN_BOTTOM },
+    launchButtonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.sm },
+    addButton: { backgroundColor: colors.cardSecondary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
+    addButtonText: { color: colors.primary, fontWeight: 'bold', fontSize: fontSize.sm },
 
-  // Modal Edit Styles
-  confirmBtn: { flex: 0.48, backgroundColor: colors.primary, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },
-  cancelBtn: { flex: 0.48, backgroundColor: colors.secondaryButton, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },
-  btnText: { color: colors.text, fontWeight: 'bold' },
-})
+    // Modal Edit Styles
+    confirmBtn: { flex: 0.48, backgroundColor: colors.primary, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },
+    cancelBtn: { flex: 0.48, backgroundColor: colors.secondaryButton, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },
+    btnText: { color: colors.text, fontWeight: 'bold' },
+  })
+}
 
 export default withObservables(['route'], ({ route }) => ({
   session: database.get<Session>('sessions').findAndObserve(route.params.sessionId),

@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { View, Text, StyleSheet, TouchableWithoutFeedback, Animated, Easing, Dimensions, BackHandler } from 'react-native'
 import { Portal } from '@gorhom/portal'
-import { colors, borderRadius, spacing, fontSize } from '../theme'
+import { borderRadius, spacing, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 const screenHeight = Dimensions.get('window').height
 
@@ -48,6 +50,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   children,
   animationDuration = 250,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const [showContent, setShowContent] = useState(visible)
   const slideAnim = useRef(new Animated.Value(screenHeight)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -107,6 +111,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         <Animated.View
           style={[
             styles.content,
+            neuShadow.elevated,
             { transform: [{ translateY: slideAnim }] },
           ]}
         >
@@ -124,43 +129,40 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    zIndex: 999,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.bottomSheetOverlay,
-  },
-  content: {
-    width: '100%',
-    backgroundColor: colors.card,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xxl,
-    paddingHorizontal: spacing.lg,
-    elevation: 20,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: colors.separator,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: spacing.md,
-  },
-  title: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+      zIndex: 999,
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.bottomSheetOverlay,
+    },
+    content: {
+      width: '100%',
+      backgroundColor: colors.card,
+      borderTopLeftRadius: borderRadius.xl,
+      borderTopRightRadius: borderRadius.xl,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.xxl,
+      paddingHorizontal: spacing.lg,
+    },
+    dragHandle: {
+      width: 40,
+      height: 4,
+      backgroundColor: colors.separator,
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginBottom: spacing.md,
+    },
+    title: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: spacing.lg,
+    },
+  })
+}

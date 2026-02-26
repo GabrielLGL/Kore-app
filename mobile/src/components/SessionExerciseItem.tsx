@@ -8,7 +8,9 @@ import { ExerciseInfoSheet } from './ExerciseInfoSheet'
 import { useHaptics } from '../hooks/useHaptics'
 import { of } from 'rxjs'
 import { catchError } from 'rxjs/operators'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface SessionExerciseItemProps {
   item: SessionExercise
@@ -23,6 +25,8 @@ interface EnhancedProps extends SessionExerciseItemProps {
 }
 
 const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise, onEditTargets, onRemove, drag, dragActive }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const [infoVisible, setInfoVisible] = useState(false)
   const haptics = useHaptics()
 
@@ -75,96 +79,98 @@ const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise,
   )
 }
 
-const styles = StyleSheet.create({
-  itemContainer: {
-    backgroundColor: colors.card,
-    marginHorizontal: spacing.md,
-    marginTop: spacing.sm,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cardSecondary,
-  },
-  itemContainerDragging: {
-    backgroundColor: colors.cardSecondary,
-  },
-  dragHandle: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    marginRight: spacing.sm,
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  dragBar: {
-    width: 18,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: colors.border,
-  },
-  itemInfo: { flex: 1 },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  itemTitle: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  infoBtn: {
-    marginLeft: spacing.sm,
-    padding: spacing.xs,
-  },
-  itemTags: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: spacing.ms,
-  },
-  noteIndicator: {
-    color: colors.textSecondary,
-    fontSize: fontSize.caption,
-    fontStyle: 'italic',
-    marginBottom: spacing.xs,
-  },
-  targetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  targetBox: {
-    backgroundColor: colors.cardSecondary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    minWidth: 55,
-  },
-  targetValue: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-  },
-  targetLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    textTransform: 'uppercase',
-    marginTop: 2,
-  },
-  targetSeparator: {
-    color: colors.placeholder,
-    fontSize: fontSize.md,
-    marginHorizontal: spacing.sm,
-    fontWeight: '300',
-  },
-  deleteBtn: { padding: spacing.md },
-  deleteIcon: { fontSize: fontSize.xl, color: colors.placeholder },
-})
-
 export const SessionExerciseItem = withObservables(['item'], ({ item }: SessionExerciseItemProps) => ({
   item,
   exercise: item.exercise.observe().pipe(catchError(() => of(null))),
 }))(SessionExerciseItemComponent)
+
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    itemContainer: {
+      backgroundColor: colors.card,
+      marginHorizontal: spacing.md,
+      marginTop: spacing.sm,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.cardSecondary,
+    },
+    itemContainerDragging: {
+      backgroundColor: colors.cardSecondary,
+    },
+    dragHandle: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      marginRight: spacing.sm,
+      justifyContent: 'center',
+      gap: spacing.xs,
+    },
+    dragBar: {
+      width: 18,
+      height: 2,
+      borderRadius: 1,
+      backgroundColor: colors.border,
+    },
+    itemInfo: { flex: 1 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    itemTitle: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: 'bold',
+      flex: 1,
+    },
+    infoBtn: {
+      marginLeft: spacing.sm,
+      padding: spacing.xs,
+    },
+    itemTags: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: spacing.ms,
+    },
+    noteIndicator: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption,
+      fontStyle: 'italic',
+      marginBottom: spacing.xs,
+    },
+    targetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    targetBox: {
+      backgroundColor: colors.cardSecondary,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.sm,
+      alignItems: 'center',
+      minWidth: 55,
+    },
+    targetValue: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: 'bold',
+    },
+    targetLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      textTransform: 'uppercase',
+      marginTop: 2,
+    },
+    targetSeparator: {
+      color: colors.placeholder,
+      fontSize: fontSize.md,
+      marginHorizontal: spacing.sm,
+      fontWeight: '300',
+    },
+    deleteBtn: { padding: spacing.md },
+    deleteIcon: { fontSize: fontSize.xl, color: colors.placeholder },
+  })
+}

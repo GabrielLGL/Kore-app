@@ -23,7 +23,9 @@ import {
   labelToPeriod,
 } from '../model/utils/statsHelpers'
 import { ChipSelector } from '../components/ChipSelector'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 
 const chartConfig = createChartConfig()
@@ -36,6 +38,8 @@ interface Props {
 }
 
 export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const { width: screenWidth } = useWindowDimensions()
   const [periodLabel, setPeriodLabel] = useState<string>('1 mois')
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null)
@@ -225,134 +229,136 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  totalCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginVertical: spacing.md,
-  },
-  totalLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  totalValue: {
-    fontSize: fontSize.hero,
-    fontWeight: '700',
-    color: colors.primary,
-    marginTop: spacing.xs,
-  },
-  comparison: {
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    marginTop: spacing.xs,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  sectionSpacingTop: {
-    marginTop: spacing.lg,
-  },
-  chartWrapper: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-    marginBottom: spacing.lg,
-  },
-  chart: {
-    borderRadius: borderRadius.md,
-  },
-  topList: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  topRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.separator,
-  },
-  topRank: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.primary,
-    width: 28,
-  },
-  topName: {
-    flex: 1,
-    fontSize: fontSize.md,
-    color: colors.text,
-    marginHorizontal: spacing.sm,
-  },
-  topVolume: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  emptyChart: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  // S02 — muscle week bars
-  muscleCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  muscleRow: {
-    gap: spacing.xs,
-  },
-  muscleLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  muscleName: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    flex: 1,
-  },
-  muscleSets: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginLeft: spacing.sm,
-  },
-  barBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.separator,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    totalCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginVertical: spacing.md,
+    },
+    totalLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    totalValue: {
+      fontSize: fontSize.hero,
+      fontWeight: '700',
+      color: colors.primary,
+      marginTop: spacing.xs,
+    },
+    comparison: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      marginTop: spacing.xs,
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    sectionSpacingTop: {
+      marginTop: spacing.lg,
+    },
+    chartWrapper: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+      marginBottom: spacing.lg,
+    },
+    chart: {
+      borderRadius: borderRadius.md,
+    },
+    topList: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    topRowBorder: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.separator,
+    },
+    topRank: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.primary,
+      width: 28,
+    },
+    topName: {
+      flex: 1,
+      fontSize: fontSize.md,
+      color: colors.text,
+      marginHorizontal: spacing.sm,
+    },
+    topVolume: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    emptyChart: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    emptyText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    // S02 — muscle week bars
+    muscleCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    muscleRow: {
+      gap: spacing.xs,
+    },
+    muscleLabelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    muscleName: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      flex: 1,
+    },
+    muscleSets: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      marginLeft: spacing.sm,
+    },
+    barBg: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.separator,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+    },
+  })
+}
 
 const enhance = withObservables([], () => ({
   sets: database.get<WorkoutSet>('sets').query().observe(),

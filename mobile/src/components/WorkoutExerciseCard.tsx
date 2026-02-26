@@ -10,7 +10,9 @@ import { getLastPerformanceForExercise } from '../model/utils/databaseHelpers'
 import { suggestProgression } from '../model/utils/progressionHelpers'
 import { database } from '../model/index'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type { SetInputData, ValidatedSetData, LastPerformance } from '../types/workout'
 
 // --- Types ---
@@ -50,6 +52,8 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
   repsTarget,
 }: WorkoutSetRowProps) {
   // Hooks AVANT tout return conditionnel (règle des hooks React)
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const [localWeight, setLocalWeight] = React.useState(input.weight)
   const [localReps, setLocalReps] = React.useState(input.reps)
   const weightTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -123,7 +127,7 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
   const { valid } = validateSetInput(localWeight, localReps)
 
   return (
-    <View style={styles.setRow}>
+    <View style={[styles.setRow, neuShadow.pressed]}>
       <Text style={styles.setLabel}>Série {setOrder}</Text>
       <View style={styles.inputGroup}>
         <TextInput
@@ -177,6 +181,8 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   onValidateSet,
   onUnvalidateSet,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const [isEditingNote, setIsEditingNote] = React.useState(false)
   const [noteText, setNoteText] = React.useState(exercise.notes ?? '')
@@ -229,6 +235,7 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
     <View
       style={[
         styles.card,
+        neuShadow.elevated,
         { borderLeftColor: isComplete ? colors.success : 'transparent' },
       ]}
     >
@@ -321,150 +328,155 @@ export const WorkoutExerciseCard = withObservables(
 
 // --- Styles ---
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderLeftWidth: 3,
-  },
-  exerciseName: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  target: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: 2,
-  },
-  lastPerfText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: 2,
-  },
-  suggestionText: {
-    color: colors.success,
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-  },
-  noteText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    fontStyle: 'italic',
-    marginBottom: spacing.xs,
-  },
-  noteInput: {
-    color: colors.text,
-    fontSize: fontSize.xs,
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    marginBottom: spacing.xs,
-    minHeight: 32,
-  },
-  addNoteLink: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    marginBottom: spacing.xs,
-  },
-  noSetsText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontStyle: 'italic',
-  },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      borderLeftWidth: 3,
+    },
+    exerciseName: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      marginBottom: spacing.sm,
+    },
+    target: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: 2,
+    },
+    lastPerfText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: 2,
+    },
+    suggestionText: {
+      color: colors.success,
+      fontSize: fontSize.xs,
+      fontWeight: '600',
+      marginBottom: spacing.sm,
+    },
+    noteText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      fontStyle: 'italic',
+      marginBottom: spacing.xs,
+    },
+    noteInput: {
+      color: colors.text,
+      fontSize: fontSize.xs,
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.sm,
+      marginBottom: spacing.xs,
+      minHeight: 32,
+    },
+    addNoteLink: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      marginBottom: spacing.xs,
+    },
+    noSetsText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontStyle: 'italic',
+    },
 
-  // Set row
-  setRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-    gap: spacing.sm,
-  },
-  setRowValidated: {
-    backgroundColor: colors.successBg,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-  },
-  setLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    width: 62,
-  },
+    // Set row
+    setRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      borderRadius: borderRadius.sm,
+      marginBottom: spacing.xs,
+      gap: spacing.sm,
+    },
+    setRowValidated: {
+      backgroundColor: colors.successBg,
+      borderRadius: borderRadius.sm,
+      paddingHorizontal: spacing.sm,
+    },
+    setLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      width: 62,
+    },
 
-  // Input group
-  inputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  input: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    color: colors.text,
-    fontSize: fontSize.md,
-    paddingVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  inputWeight: { width: 62 },
-  inputReps: { width: 52 },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  inputSuffix: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    width: 28,
-  },
+    // Input group
+    inputGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
+    input: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      color: colors.text,
+      fontSize: fontSize.md,
+      paddingVertical: spacing.xs,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    inputWeight: { width: 62 },
+    inputReps: { width: 52 },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    inputSuffix: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      width: 28,
+    },
 
-  // Validate button (not validated)
-  validateBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 'auto',
-  },
-  validateBtnDisabled: {
-    backgroundColor: colors.cardSecondary,
-  },
-  validateBtnActive: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: colors.success,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 'auto',
-  },
-  validateBtnText: {
-    color: colors.text,
-    fontWeight: 'bold',
-    fontSize: fontSize.md,
-  },
+    // Validate button (not validated)
+    validateBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 'auto',
+    },
+    validateBtnDisabled: {
+      backgroundColor: colors.cardSecondary,
+    },
+    validateBtnActive: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: colors.success,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 'auto',
+    },
+    validateBtnText: {
+      color: colors.text,
+      fontWeight: 'bold',
+      fontSize: fontSize.md,
+    },
 
-  // Validated state
-  validatedText: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    flex: 1,
-  },
-  prChip: {
-    backgroundColor: colors.primaryBg,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-  },
-  prBadge: {
-    color: colors.primary,
-    fontSize: fontSize.xs,
-    fontWeight: '800',
-  },
-})
+    // Validated state
+    validatedText: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      flex: 1,
+    },
+    prChip: {
+      backgroundColor: colors.primaryBg,
+      borderRadius: borderRadius.sm,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: 2,
+    },
+    prBadge: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: '800',
+    },
+  })
+}

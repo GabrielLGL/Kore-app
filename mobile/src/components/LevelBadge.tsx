@@ -1,12 +1,17 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
-import { colors, spacing, fontSize } from '../theme'
+import { spacing, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface LevelBadgeProps {
   level: number
 }
 
 export function LevelBadge({ level }: LevelBadgeProps) {
+  const colors = useColors()
+  const styles = useStyles(colors)
+
   return (
     <View style={styles.container}>
       <Text style={styles.star}>{'\u2B50'}</Text>
@@ -15,18 +20,20 @@ export function LevelBadge({ level }: LevelBadgeProps) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  star: {
-    fontSize: fontSize.lg,
-  },
-  text: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    star: {
+      fontSize: fontSize.lg,
+    },
+    text: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.text,
+    },
+  })
+}

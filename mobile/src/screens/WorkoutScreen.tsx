@@ -48,7 +48,9 @@ import { AlertDialog } from '../components/AlertDialog'
 import RestTimer from '../components/RestTimer'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation'
-import { colors, spacing, fontSize, borderRadius } from '../theme'
+import { spacing, fontSize, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type { RecapExerciseData, RecapComparisonData } from '../types/workout'
 import {
   setupNotificationChannel,
@@ -68,6 +70,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   user,
   navigation,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const startTimestampRef = useRef<number>(Date.now())
   const historyRef = useRef<History | null>(null)
   const notificationPermissionRef = useRef<boolean>(false)
@@ -151,7 +155,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       headerStyle: { backgroundColor: colors.background },
       headerTintColor: colors.text,
     })
-  }, [navigation, session.name])
+  }, [navigation, session.name, colors])
 
   useEffect(() => {
     createWorkoutHistory(session.id, startTimestampRef.current)
@@ -499,45 +503,47 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  listContent: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: 120, // extra space for floating footer + timer
-  },
-  emptyText: {
-    color: colors.placeholder,
-    textAlign: 'center',
-    marginTop: spacing.xxl,
-    fontSize: fontSize.md,
-    fontStyle: 'italic',
-  },
-  timerContainer: {
-    position: 'absolute',
-    bottom: 80,
-    left: 0,
-    right: 0,
-  },
-  footer: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.lg,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.card,
-    backgroundColor: colors.background,
-  },
-  endButton: {
-    backgroundColor: colors.success,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  endButtonText: {
-    color: colors.text,
-    fontWeight: 'bold',
-    fontSize: fontSize.md,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    listContent: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: 120, // extra space for floating footer + timer
+    },
+    emptyText: {
+      color: colors.placeholder,
+      textAlign: 'center',
+      marginTop: spacing.xxl,
+      fontSize: fontSize.md,
+      fontStyle: 'italic',
+    },
+    timerContainer: {
+      position: 'absolute',
+      bottom: 80,
+      left: 0,
+      right: 0,
+    },
+    footer: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.lg,
+      paddingTop: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.card,
+      backgroundColor: colors.background,
+    },
+    endButton: {
+      backgroundColor: colors.success,
+      padding: spacing.md,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    endButtonText: {
+      color: colors.text,
+      fontWeight: 'bold',
+      fontSize: fontSize.md,
+    },
+  })
+}
 
 export default withObservables(['route'], ({ route }) => ({
   session: database.get<Session>('sessions').findAndObserve(route.params.sessionId),

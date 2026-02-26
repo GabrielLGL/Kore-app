@@ -8,7 +8,9 @@ import User from '../model/models/User'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { Button } from '../components/Button'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, fontSize } from '../theme'
+import { spacing, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import {
   USER_LEVELS,
   USER_GOALS,
@@ -24,6 +26,8 @@ import type { RootStackParamList } from '../navigation'
 type OnboardingNavigation = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>
 
 export default function OnboardingScreen() {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const navigation = useNavigation<OnboardingNavigation>()
   const haptics = useHaptics()
 
@@ -160,58 +164,60 @@ export default function OnboardingScreen() {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    padding: spacing.lg,
-    paddingTop: (StatusBar.currentHeight ?? 44) + spacing.lg,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.secondaryButton,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-  },
-  title: {
-    color: colors.text,
-    fontSize: fontSize.xxl,
-    fontWeight: 'bold',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginBottom: spacing.xl,
-    lineHeight: 20,
-  },
-  cardsContainer: {
-    flex: 1,
-  },
-  footer: {
-    paddingBottom: spacing.lg,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-  },
-  confirmButton: {
-    flex: 2,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      padding: spacing.lg,
+      paddingTop: (StatusBar.currentHeight ?? 44) + spacing.lg,
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.secondaryButton,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+    },
+    title: {
+      color: colors.text,
+      fontSize: fontSize.xxl,
+      fontWeight: 'bold',
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginBottom: spacing.xl,
+      lineHeight: 20,
+    },
+    cardsContainer: {
+      flex: 1,
+    },
+    footer: {
+      paddingBottom: spacing.lg,
+    },
+    footerRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingBottom: spacing.lg,
+    },
+    backButton: {
+      flex: 1,
+    },
+    confirmButton: {
+      flex: 2,
+    },
+  })
+}

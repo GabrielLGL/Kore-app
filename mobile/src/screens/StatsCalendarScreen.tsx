@@ -18,7 +18,9 @@ import {
   toDateKey,
   formatDuration,
 } from '../model/utils/statsHelpers'
-import { colors, spacing, borderRadius, fontSize, intensityColors } from '../theme'
+import { spacing, borderRadius, fontSize, intensityColors } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 // ─── Constantes calendrier ────────────────────────────────────────────────────
 
@@ -113,6 +115,8 @@ interface TooltipInfo {
 }
 
 export function StatsCalendarScreenBase({ histories }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const [tooltip, setTooltip] = useState<TooltipInfo | null>(null)
 
   const calendarData = useMemo(() => computeCalendarData(histories), [histories])
@@ -271,131 +275,133 @@ export function StatsCalendarScreenBase({ histories }: Props) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  streakRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  streakCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  streakIcon: {
-    fontSize: fontSize.xxl,
-  },
-  streakValue: {
-    fontSize: fontSize.xxl,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: spacing.xs,
-  },
-  streakLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-  },
-  tooltip: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  tooltipDate: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    textTransform: 'capitalize',
-    marginBottom: spacing.xs,
-  },
-  tooltipRest: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  tooltipSession: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 2,
-  },
-  tooltipSessionName: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    flex: 1,
-  },
-  tooltipSessionDuration: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginLeft: spacing.sm,
-  },
-  calendarScroll: {
-    marginBottom: spacing.md,
-  },
-  calendarContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  dayLabelsColumn: {
-    marginRight: DAY_GAP,
-    alignItems: 'center',
-  },
-  monthLabelPlaceholder: {
-    height: fontSize.xs + spacing.xs,
-    marginBottom: DAY_GAP,
-  },
-  dayLabel: {
-    fontSize: fontSize.caption,
-    color: colors.textSecondary,
-    height: DAY_SIZE,
-    marginBottom: DAY_GAP,
-    lineHeight: DAY_SIZE,
-    width: 14,
-    textAlign: 'center',
-  },
-  weekColumn: {
-    marginRight: DAY_GAP,
-    alignItems: 'center',
-  },
-  monthLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginBottom: DAY_GAP,
-    height: fontSize.xs + spacing.xs,
-    textAlign: 'center',
-  },
-  dayBox: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
-    borderRadius: 3,
-    marginBottom: DAY_GAP,
-  },
-  legend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  legendBox: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
-    borderRadius: 3,
-  },
-  legendText: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    streakRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    streakCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    streakIcon: {
+      fontSize: fontSize.xxl,
+    },
+    streakValue: {
+      fontSize: fontSize.xxl,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: spacing.xs,
+    },
+    streakLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+    },
+    tooltip: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.sm,
+      padding: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    tooltipDate: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      textTransform: 'capitalize',
+      marginBottom: spacing.xs,
+    },
+    tooltipRest: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    tooltipSession: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 2,
+    },
+    tooltipSessionName: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      flex: 1,
+    },
+    tooltipSessionDuration: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginLeft: spacing.sm,
+    },
+    calendarScroll: {
+      marginBottom: spacing.md,
+    },
+    calendarContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    dayLabelsColumn: {
+      marginRight: DAY_GAP,
+      alignItems: 'center',
+    },
+    monthLabelPlaceholder: {
+      height: fontSize.xs + spacing.xs,
+      marginBottom: DAY_GAP,
+    },
+    dayLabel: {
+      fontSize: fontSize.caption,
+      color: colors.textSecondary,
+      height: DAY_SIZE,
+      marginBottom: DAY_GAP,
+      lineHeight: DAY_SIZE,
+      width: 14,
+      textAlign: 'center',
+    },
+    weekColumn: {
+      marginRight: DAY_GAP,
+      alignItems: 'center',
+    },
+    monthLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginBottom: DAY_GAP,
+      height: fontSize.xs + spacing.xs,
+      textAlign: 'center',
+    },
+    dayBox: {
+      width: DAY_SIZE,
+      height: DAY_SIZE,
+      borderRadius: 3,
+      marginBottom: DAY_GAP,
+    },
+    legend: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.xs,
+    },
+    legendBox: {
+      width: DAY_SIZE,
+      height: DAY_SIZE,
+      borderRadius: 3,
+    },
+    legendText: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+    },
+  })
+}
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 

@@ -7,7 +7,9 @@ import withObservables from '@nozbe/with-observables'
 // Importation des modèles de données
 import Set from '../model/models/Set'
 import Exercise from '../model/models/Exercise'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 // Définition des propriétés attendues
 interface Props {
@@ -20,10 +22,13 @@ interface Props {
  * Composant affichant les détails d'une série effectuée dans l'historique.
  */
 const SetItem: React.FC<Props> = ({ set, exercise, onLongPress }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
+
   return (
     // Zone cliquable avec gestion de l'appui long (ex: pour supprimer ou modifier)
     <TouchableOpacity
-      style={styles.container} 
+      style={[styles.container, neuShadow.elevatedSm]}
       onLongPress={onLongPress}
       delayLongPress={500} // Déclenchement après 0.5 seconde
       activeOpacity={0.7}
@@ -44,25 +49,24 @@ const SetItem: React.FC<Props> = ({ set, exercise, onLongPress }) => {
   )
 }
 
-// Définition des styles CSS
-const styles = StyleSheet.create({
-  container: {
-    padding: spacing.md,
-    backgroundColor: colors.card,
-    marginBottom: spacing.sm,
-    borderRadius: borderRadius.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardSecondary
-  },
-  info: { flexDirection: 'column' },
-  exerciseName: { fontSize: fontSize.md, fontWeight: 'bold', color: colors.text, marginBottom: 2 },
-  setOrder: { fontSize: fontSize.xs, color: colors.textSecondary },
-  perf: { fontSize: fontSize.xl, fontWeight: 'bold', color: colors.primary },
-  x: { fontSize: fontSize.sm, color: colors.textSecondary }
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      padding: spacing.md,
+      backgroundColor: colors.card,
+      marginBottom: spacing.sm,
+      borderRadius: borderRadius.sm,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    info: { flexDirection: 'column' },
+    exerciseName: { fontSize: fontSize.md, fontWeight: 'bold', color: colors.text, marginBottom: 2 },
+    setOrder: { fontSize: fontSize.xs, color: colors.textSecondary },
+    perf: { fontSize: fontSize.xl, fontWeight: 'bold', color: colors.primary },
+    x: { fontSize: fontSize.sm, color: colors.textSecondary }
+  })
+}
 
 /**
  * Configuration de l'observation des données.

@@ -5,7 +5,9 @@ import { Q } from '@nozbe/watermelondb'
 import { database } from '../model/index'
 import Program from '../model/models/Program'
 import Session from '../model/models/Session'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface Props {
   program: Program
@@ -22,13 +24,15 @@ const ProgramSection: React.FC<Props> = ({
   onLongPressProgram,
   onOptionsPress,
 }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const sessionCount = sessions.length
   const sessionLabel = sessionCount === 0
     ? 'Aucune séance'
     : `${sessionCount} séance${sessionCount > 1 ? 's' : ''}`
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, neuShadow.elevated]}>
       <View style={styles.row}>
         <TouchableOpacity
           style={styles.pressable}
@@ -49,45 +53,45 @@ const ProgramSection: React.FC<Props> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.sm,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingLeft: spacing.md,
-  },
-  pressable: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  optionsBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  moreIcon: {
-    color: colors.textSecondary,
-    fontSize: fontSize.lg,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      paddingLeft: spacing.md,
+    },
+    pressable: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+    },
+    title: {
+      fontSize: fontSize.lg,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    subtitle: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    optionsBtn: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    moreIcon: {
+      color: colors.textSecondary,
+      fontSize: fontSize.lg,
+      fontWeight: 'bold',
+      letterSpacing: 1,
+    },
+  })
+}
 
 export default withObservables(['program'], ({ program }) => ({
   program: program.observe(),

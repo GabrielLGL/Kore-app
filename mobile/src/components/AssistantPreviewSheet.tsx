@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { BottomSheet } from './BottomSheet'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, fontSize, borderRadius } from '../theme'
+import { spacing, fontSize, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type { GeneratedPlan, GeneratedExercise } from '../services/ai/types'
 
 function formatExerciseSets(ex: GeneratedExercise): string {
@@ -37,6 +39,8 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
   onValidate,
   fallbackNotice,
 }) => {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
   const [editableName, setEditableName] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -134,103 +138,105 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
   )
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginBottom: spacing.xs,
-  },
-  nameInput: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    color: colors.text,
-    fontSize: fontSize.md,
-    marginBottom: spacing.md,
-  },
-  scrollView: {
-    flex: 1,
-    marginBottom: spacing.md,
-  },
-  summary: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginBottom: spacing.md,
-  },
-  sessionCard: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  sessionName: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  exerciseRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-  },
-  exerciseName: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  exerciseSets: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-  },
-  fallbackNotice: {
-    color: colors.textSecondary,
-    fontSize: fontSize.xs,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  buttonsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-  },
-  modifyButton: {
-    flex: 1,
-    backgroundColor: colors.secondaryButton,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  modifyButtonText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  validateButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  validateButtonText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xxl,
+      gap: spacing.md,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginBottom: spacing.xs,
+    },
+    nameInput: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      color: colors.text,
+      fontSize: fontSize.md,
+      marginBottom: spacing.md,
+    },
+    scrollView: {
+      flex: 1,
+      marginBottom: spacing.md,
+    },
+    summary: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginBottom: spacing.md,
+    },
+    sessionCard: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    sessionName: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      marginBottom: spacing.sm,
+    },
+    exerciseRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.xs,
+    },
+    exerciseName: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    exerciseSets: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+    },
+    fallbackNotice: {
+      color: colors.textSecondary,
+      fontSize: fontSize.xs,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    buttonsRow: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginTop: spacing.sm,
+    },
+    modifyButton: {
+      flex: 1,
+      backgroundColor: colors.secondaryButton,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    modifyButtonText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+    },
+    validateButton: {
+      flex: 1,
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    disabledButton: {
+      opacity: 0.6,
+    },
+    validateButtonText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+    },
+  })
+}

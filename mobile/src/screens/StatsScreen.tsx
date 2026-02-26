@@ -16,7 +16,9 @@ import History from '../model/models/History'
 import WorkoutSet from '../model/models/Set'
 import User from '../model/models/User'
 import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume } from '../model/utils/statsHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 import type { RootStackParamList } from '../navigation'
 
@@ -46,7 +48,8 @@ const STAT_BUTTONS: StatButton[] = [
 
 // ─── KPI Item ─────────────────────────────────────────────────────────────────
 
-function KpiItem({ label, value }: { label: string; value: string }) {
+function KpiItem({ label, value, colors }: { label: string; value: string; colors: ThemeColors }) {
+  const styles = useStyles(colors)
   return (
     <View style={styles.kpiItem}>
       <Text style={styles.kpiValue}>{value}</Text>
@@ -64,6 +67,8 @@ interface Props {
 }
 
 export function StatsScreenBase({ users, histories, sets }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const navigation = useNavigation<StatsNavigation>()
   const haptics = useHaptics()
 
@@ -88,11 +93,11 @@ export function StatsScreenBase({ users, histories, sets }: Props) {
         <Text style={styles.motivation}>{motivationalPhrase}</Text>
         <View style={styles.separator} />
         <View style={styles.kpisRow}>
-          <KpiItem label="Séances" value={String(kpis.totalSessions)} />
+          <KpiItem label="Séances" value={String(kpis.totalSessions)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} />
+          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Records" value={String(kpis.totalPRs)} />
+          <KpiItem label="Records" value={String(kpis.totalPRs)} colors={colors} />
         </View>
       </View>
 
@@ -116,86 +121,88 @@ export function StatsScreenBase({ users, histories, sets }: Props) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl + 60, // espace tab bar
-  },
-  // Header Card
-  headerCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  userName: {
-    fontSize: fontSize.xxl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  motivation: {
-    fontSize: fontSize.sm,
-    fontStyle: 'italic',
-    color: colors.primary,
-    marginTop: spacing.xs,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.separator,
-    marginVertical: spacing.md,
-  },
-  kpisRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  kpiItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  kpiValue: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  kpiLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  kpiSeparator: {
-    width: 1,
-    height: spacing.xl,
-    backgroundColor: colors.separator,
-  },
-  // Grille boutons
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  gridBtn: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '31%',
-  },
-  btnIcon: {
-    fontSize: fontSize.xxxl,
-  },
-  btnLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl + 60, // espace tab bar
+    },
+    // Header Card
+    headerCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    userName: {
+      fontSize: fontSize.xxl,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    motivation: {
+      fontSize: fontSize.sm,
+      fontStyle: 'italic',
+      color: colors.primary,
+      marginTop: spacing.xs,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: colors.separator,
+      marginVertical: spacing.md,
+    },
+    kpisRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    kpiItem: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    kpiValue: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    kpiLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    kpiSeparator: {
+      width: 1,
+      height: spacing.xl,
+      backgroundColor: colors.separator,
+    },
+    // Grille boutons
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    gridBtn: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '31%',
+    },
+    btnIcon: {
+      fontSize: fontSize.xxxl,
+    },
+    btnLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
+  })
+}
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 

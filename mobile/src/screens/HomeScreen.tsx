@@ -20,7 +20,9 @@ import UserBadge from '../model/models/UserBadge'
 import { BADGES_LIST } from '../model/utils/badgeConstants'
 import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume, buildHeatmapData } from '../model/utils/statsHelpers'
 import { xpToNextLevel, formatTonnage } from '../model/utils/gamificationHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 import { LevelBadge } from '../components/LevelBadge'
 import { XPProgressBar } from '../components/XPProgressBar'
@@ -71,7 +73,8 @@ const SECTIONS: Section[] = [
 
 // ─── KPI Item ─────────────────────────────────────────────────────────────────
 
-function KpiItem({ label, value }: { label: string; value: string }) {
+function KpiItem({ label, value, colors }: { label: string; value: string; colors: ThemeColors }) {
+  const styles = useStyles(colors)
   return (
     <View style={styles.kpiItem}>
       <Text style={styles.kpiValue}>{value}</Text>
@@ -90,6 +93,8 @@ interface Props {
 }
 
 function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const navigation = useNavigation<HomeNavigation>()
   const haptics = useHaptics()
 
@@ -142,13 +147,13 @@ function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
         </View>
         <View style={styles.separator} />
         <View style={styles.kpisRow}>
-          <KpiItem label="S\u00e9ances" value={String(kpis.totalSessions)} />
+          <KpiItem label="S\u00e9ances" value={String(kpis.totalSessions)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} />
+          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Tonnage" value={formatTonnage(user?.totalTonnage ?? 0)} />
+          <KpiItem label="Tonnage" value={formatTonnage(user?.totalTonnage ?? 0)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Records" value={String(kpis.totalPRs)} />
+          <KpiItem label="Records" value={String(kpis.totalPRs)} colors={colors} />
         </View>
       </View>
 
@@ -211,147 +216,149 @@ function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingTop: (StatusBar.currentHeight ?? 44) + spacing.sm,
-    paddingBottom: spacing.xl,
-  },
-  // Header Card
-  headerCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  headerTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  headerTextBlock: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  settingsBtn: {
-    padding: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.cardSecondary,
-  },
-  settingsIcon: {
-    fontSize: fontSize.xxl,
-  },
-  greeting: {
-    fontSize: fontSize.xxl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  motivation: {
-    fontSize: fontSize.sm,
-    fontStyle: 'italic',
-    color: colors.primary,
-    marginTop: spacing.xs,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.separator,
-    marginVertical: spacing.md,
-  },
-  kpisRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  kpiItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  kpiValue: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  kpiLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  kpiSeparator: {
-    width: 1,
-    height: spacing.xl,
-    backgroundColor: colors.separator,
-  },
-  // Gamification Card
-  gamificationCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  badgesSeparator: {
-    height: 1,
-    backgroundColor: colors.separator,
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  badgesLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  badgesCount: {
-    fontSize: fontSize.sm,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  // Heatmap Card
-  heatmapCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  // Sections
-  section: {
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  // Grille boutons
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  gridBtn: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '31%',
-  },
-  btnIcon: {
-    fontSize: fontSize.xxxl,
-  },
-  btnLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    textAlign: 'center',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingTop: (StatusBar.currentHeight ?? 44) + spacing.sm,
+      paddingBottom: spacing.xl,
+    },
+    // Header Card
+    headerCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    headerTopRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+    },
+    headerTextBlock: {
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    settingsBtn: {
+      padding: spacing.sm,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.cardSecondary,
+    },
+    settingsIcon: {
+      fontSize: fontSize.xxl,
+    },
+    greeting: {
+      fontSize: fontSize.xxl,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    motivation: {
+      fontSize: fontSize.sm,
+      fontStyle: 'italic',
+      color: colors.primary,
+      marginTop: spacing.xs,
+    },
+    separator: {
+      height: 1,
+      backgroundColor: colors.separator,
+      marginVertical: spacing.md,
+    },
+    kpisRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    kpiItem: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    kpiValue: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    kpiLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    kpiSeparator: {
+      width: 1,
+      height: spacing.xl,
+      backgroundColor: colors.separator,
+    },
+    // Gamification Card
+    gamificationCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    badgesSeparator: {
+      height: 1,
+      backgroundColor: colors.separator,
+    },
+    badgesRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    badgesLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    badgesCount: {
+      fontSize: fontSize.sm,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    // Heatmap Card
+    heatmapCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    // Sections
+    section: {
+      marginBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: fontSize.lg,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+    },
+    // Grille boutons
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    gridBtn: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '31%',
+    },
+    btnIcon: {
+      fontSize: fontSize.xxxl,
+    },
+    btnLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+    },
+  })
+}
 
 // ─── Export pour les tests ────────────────────────────────────────────────────
 

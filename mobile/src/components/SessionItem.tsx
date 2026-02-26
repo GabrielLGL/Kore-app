@@ -12,7 +12,9 @@ import { database } from '../model/index'
 import Session from '../model/models/Session'
 import Exercise from '../model/models/Exercise'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, borderRadius, spacing, fontSize } from '../theme'
+import { borderRadius, spacing, fontSize } from '../theme'
+import { useTheme } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 // Définition des propriétés (Props) attendues par le composant
 interface Props {
@@ -26,6 +28,8 @@ interface Props {
  * Composant représentant une ligne de séance dans la liste des programmes.
  */
 const SessionItem: React.FC<Props> = ({ session, onPress, onOptionsPress, exercises }) => {
+  const { colors, neuShadow } = useTheme()
+  const styles = useStyles(colors)
   const haptics = useHaptics()
 
   // Génération d'un texte de prévisualisation (ex: "Squat, Tractions, Développé...")
@@ -35,7 +39,7 @@ const SessionItem: React.FC<Props> = ({ session, onPress, onOptionsPress, exerci
     : null
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, neuShadow.elevated]}>
       {/* Zone cliquable principale pour ouvrir le détail de la séance */}
       <TouchableOpacity
         onPress={onPress}
@@ -68,23 +72,22 @@ const SessionItem: React.FC<Props> = ({ session, onPress, onOptionsPress, exerci
   )
 }
 
-// Styles CSS-in-JS du composant
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.cardSecondary,
-  },
-  clickableArea: { flex: 1, padding: spacing.md },
-  optionsButton: { padding: spacing.md },
-  title: { fontSize: fontSize.lg, fontWeight: 'bold', color: colors.text },
-  preview: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
-  moreIcon: { color: colors.placeholder, fontSize: fontSize.md, fontWeight: 'bold' },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      marginBottom: spacing.md,
+      alignItems: 'center',
+    },
+    clickableArea: { flex: 1, padding: spacing.md },
+    optionsButton: { padding: spacing.md },
+    title: { fontSize: fontSize.lg, fontWeight: 'bold', color: colors.text },
+    preview: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.xs },
+    moreIcon: { color: colors.placeholder, fontSize: fontSize.md, fontWeight: 'bold' },
+  })
+}
 
 /**
  * Exportation du composant enveloppé dans withObservables.

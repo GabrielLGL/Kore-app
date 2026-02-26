@@ -19,7 +19,9 @@ import {
   labelToPeriod,
 } from '../model/utils/statsHelpers'
 import { ChipSelector } from '../components/ChipSelector'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 interface Props {
   sets: WorkoutSet[]
@@ -28,6 +30,8 @@ interface Props {
 }
 
 export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const [periodLabel, setPeriodLabel] = useState<string>('1 mois')
   const period = labelToPeriod(periodLabel)
 
@@ -91,69 +95,71 @@ export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  barsList: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    gap: spacing.md,
-  },
-  barRow: {
-    gap: spacing.xs,
-  },
-  barLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  muscleName: {
-    fontSize: fontSize.sm,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  musclePct: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  barTrack: {
-    height: 8,
-    backgroundColor: colors.cardSecondary,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 4,
-  },
-  totalText: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: spacing.md,
-  },
-  emptyState: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  emptyText: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-})
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.md,
+      paddingBottom: spacing.xl,
+    },
+    barsList: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginTop: spacing.md,
+      gap: spacing.md,
+    },
+    barRow: {
+      gap: spacing.xs,
+    },
+    barLabelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    muscleName: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    musclePct: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    barTrack: {
+      height: 8,
+      backgroundColor: colors.cardSecondary,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: 8,
+      backgroundColor: colors.primary,
+      borderRadius: 4,
+    },
+    totalText: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.md,
+    },
+    emptyState: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+      marginTop: spacing.md,
+    },
+    emptyText: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  })
+}
 
 const enhance = withObservables([], () => ({
   sets: database.get<WorkoutSet>('sets').query().observe(),

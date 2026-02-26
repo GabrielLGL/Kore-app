@@ -12,7 +12,9 @@ import { AssistantPreviewSheet } from '../components/AssistantPreviewSheet'
 import { AlertDialog } from '../components/AlertDialog'
 import { useModalState } from '../hooks/useModalState'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, fontSize, borderRadius } from '../theme'
+import { spacing, fontSize, borderRadius } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 import type Program from '../model/models/Program'
 import type User from '../model/models/User'
 import type { AIFormData, AIGoal, AILevel, AIDuration, AISplit, GeneratedPlan } from '../services/ai/types'
@@ -199,6 +201,8 @@ interface AssistantScreenInnerProps {
 }
 
 export function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInnerProps) {
+  const colors = useColors()
+  const styles = useStyles(colors)
   const haptics      = useHaptics()
   const previewModal = useModalState()
 
@@ -721,198 +725,200 @@ export default withObservables([], () => ({
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+function useStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  // ── Progress ────────────────────────────────────────────────────────────
-  progressTrack: {
-    height: 6,
-    backgroundColor: colors.card,
-    width: '100%',
-  },
-  progressFill: {
-    height: 6,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.sm,
-  },
+    // ── Progress ────────────────────────────────────────────────────────────
+    progressTrack: {
+      height: 6,
+      backgroundColor: colors.card,
+      width: '100%',
+    },
+    progressFill: {
+      height: 6,
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+    },
 
-  // ── Header ──────────────────────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.card,
-  },
-  backBtnText: {
-    color: colors.text,
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-  },
-  backBtnPlaceholder: {
-    width: 40,
-    height: 40,
-  },
-  stepCounter: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  badge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.lg,
-  },
-  badgeText: {
-    color: colors.text,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-  },
+    // ── Header ──────────────────────────────────────────────────────────────
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.card,
+    },
+    backBtnText: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: '600',
+    },
+    backBtnPlaceholder: {
+      width: 40,
+      height: 40,
+    },
+    stepCounter: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+    },
+    badge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+    },
+    badgeText: {
+      color: colors.text,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+    },
 
-  // ── Content wrapper (fade animation) ────────────────────────────────────
-  contentWrapper: {
-    flex: 1,
-  },
+    // ── Content wrapper (fade animation) ────────────────────────────────────
+    contentWrapper: {
+      flex: 1,
+    },
 
-  // ── Scroll ──────────────────────────────────────────────────────────────
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
+    // ── Scroll ──────────────────────────────────────────────────────────────
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
 
-  // ── Question ────────────────────────────────────────────────────────────
-  question: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.xl,
-    lineHeight: 34,
-  },
+    // ── Question ────────────────────────────────────────────────────────────
+    question: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.xl,
+      lineHeight: 34,
+    },
 
-  // ── Options single-choice ────────────────────────────────────────────────
-  optionsList: {
-    gap: spacing.sm,
-  },
-  optionCard: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  optionCardActive: {
-    borderColor: colors.primary,
-  },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  optionIcon: {
-    fontSize: fontSize.xxxl,
-  },
-  optionTextWrap: {
-    flex: 1,
-  },
-  optionLabel: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-  },
-  optionLabelActive: {
-    color: colors.primary,
-  },
-  optionSub: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    marginTop: 2,
-  },
+    // ── Options single-choice ────────────────────────────────────────────────
+    optionsList: {
+      gap: spacing.sm,
+    },
+    optionCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    optionCardActive: {
+      borderColor: colors.primary,
+    },
+    optionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    optionIcon: {
+      fontSize: fontSize.xxxl,
+    },
+    optionTextWrap: {
+      flex: 1,
+    },
+    optionLabel: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+    },
+    optionLabelActive: {
+      color: colors.primary,
+    },
+    optionSub: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginTop: 2,
+    },
 
-  // ── Chips multi-select ───────────────────────────────────────────────────
-  chipsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  chipActive: {
-    borderColor: colors.primary,
-  },
-  chipText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontWeight: '500',
-  },
-  chipTextActive: {
-    color: colors.text,
-    fontWeight: '600',
-  },
+    // ── Chips multi-select ───────────────────────────────────────────────────
+    chipsWrap: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginBottom: spacing.xl,
+    },
+    chip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.lg,
+      backgroundColor: colors.card,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    chipActive: {
+      borderColor: colors.primary,
+    },
+    chipText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: '500',
+    },
+    chipTextActive: {
+      color: colors.text,
+      fontWeight: '600',
+    },
 
-  // ── Bouton Suivant ───────────────────────────────────────────────────────
-  nextBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  nextBtnDisabled: {
-    opacity: 0.4,
-  },
-  nextBtnText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '700',
-  },
+    // ── Bouton Suivant ───────────────────────────────────────────────────────
+    nextBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.md,
+      paddingVertical: spacing.md,
+      alignItems: 'center',
+    },
+    nextBtnDisabled: {
+      opacity: 0.4,
+    },
+    nextBtnText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '700',
+    },
 
-  // ── Bouton recommencer (footer) ──────────────────────────────────────────
-  resetFooterBtn: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  resetFooterBtnText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontWeight: '500',
-  },
+    // ── Bouton recommencer (footer) ──────────────────────────────────────────
+    resetFooterBtn: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+    },
+    resetFooterBtnText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: '500',
+    },
 
-  // ── Empty state ──────────────────────────────────────────────────────────
-  emptyContainer: {
-    padding: spacing.lg,
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-})
+    // ── Empty state ──────────────────────────────────────────────────────────
+    emptyContainer: {
+      padding: spacing.lg,
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+  })
+}

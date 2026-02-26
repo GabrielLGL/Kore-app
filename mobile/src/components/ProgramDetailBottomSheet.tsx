@@ -10,7 +10,9 @@ import Program from '../model/models/Program'
 import Session from '../model/models/Session'
 import Exercise from '../model/models/Exercise'
 import { useHaptics } from '../hooks/useHaptics'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
+import { useColors } from '../contexts/ThemeContext'
+import type { ThemeColors } from '../theme'
 
 const { height: screenHeight } = Dimensions.get('window')
 
@@ -29,6 +31,8 @@ const SessionPreviewRowInner: React.FC<SessionPreviewRowInnerProps> = ({
   onPress,
   onOptionsPress,
 }) => {
+  const colors = useColors()
+  const rowStyles = useRowStyles(colors)
   const haptics = useHaptics()
 
   const exercisePreview =
@@ -84,6 +88,9 @@ const ProgramDetailContentInner: React.FC<ProgramDetailContentInnerProps> = ({
   onAddSession,
   onSessionOptions,
 }) => {
+  const colors = useColors()
+  const contentStyles = useContentStyles(colors)
+
   return (
     <>
       <ScrollView style={{ maxHeight: screenHeight * 0.55 }} showsVerticalScrollIndicator={false}>
@@ -166,58 +173,62 @@ export default ProgramDetailBottomSheet
 
 // --- Styles ---
 
-const rowStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.cardSecondary,
-    borderRadius: borderRadius.sm,
-    marginBottom: spacing.sm,
-  },
-  clickable: {
-    flex: 1,
-    padding: spacing.md,
-  },
-  sessionName: {
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  exercisePreview: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-  },
-  optionsBtn: {
-    padding: spacing.md,
-  },
-  moreIcon: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontWeight: 'bold',
-  },
-})
+function useRowStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      marginBottom: spacing.sm,
+    },
+    clickable: {
+      flex: 1,
+      padding: spacing.md,
+    },
+    sessionName: {
+      fontSize: fontSize.md,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    exercisePreview: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    optionsBtn: {
+      padding: spacing.md,
+    },
+    moreIcon: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: 'bold',
+    },
+  })
+}
 
-const contentStyles = StyleSheet.create({
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    textAlign: 'center',
-    paddingVertical: spacing.lg,
-  },
-  addButton: {
-    marginTop: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.cardSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: colors.primary,
-    fontWeight: 'bold',
-    fontSize: fontSize.sm,
-  },
-})
+function useContentStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      textAlign: 'center',
+      paddingVertical: spacing.lg,
+    },
+    addButton: {
+      marginTop: spacing.sm,
+      padding: spacing.md,
+      backgroundColor: colors.cardSecondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderStyle: 'dashed',
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    addButtonText: {
+      color: colors.primary,
+      fontWeight: 'bold',
+      fontSize: fontSize.sm,
+    },
+  })
+}
