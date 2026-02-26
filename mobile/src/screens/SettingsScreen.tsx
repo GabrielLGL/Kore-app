@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch, TouchableOpacity } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
+import { LinearGradient } from 'expo-linear-gradient'
 import * as Sharing from 'expo-sharing'
 import { database } from '../model/index'
 import User from '../model/models/User'
@@ -28,7 +29,7 @@ interface Props {
 
 const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
-  const { colors, isDark, toggleTheme } = useTheme()
+  const { colors, isDark, toggleTheme, neuShadow } = useTheme()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
   const [userName, setUserName] = useState(user?.name ?? '')
@@ -40,7 +41,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: 'transparent',
     },
     content: {
       padding: spacing.lg,
@@ -50,6 +51,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       borderRadius: borderRadius.md,
       padding: spacing.lg,
       marginBottom: spacing.lg,
+      ...neuShadow.elevatedSm,
     },
     sectionTitle: {
       color: colors.text,
@@ -205,9 +207,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       backgroundColor: colors.cardSecondary,
       alignItems: 'center',
       justifyContent: 'center',
+      ...neuShadow.pressed,
     },
     streakTargetBtnActive: {
       backgroundColor: colors.primary,
+      ...neuShadow.elevatedSm,
     },
     streakTargetText: {
       fontSize: fontSize.md,
@@ -227,6 +231,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       borderRadius: borderRadius.sm,
       padding: spacing.md,
       alignItems: 'center' as const,
+      ...neuShadow.elevatedSm,
     },
     exportButtonDisabled: {
       opacity: 0.6,
@@ -319,7 +324,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       const filePath = await exportAllData()
       await Sharing.shareAsync(filePath, {
         mimeType: 'application/json',
-        dialogTitle: 'Exporter mes donn\u00e9es Kore',
+        dialogTitle: 'Exporter mes données Kore',
       })
     } catch (error) {
       if (__DEV__) console.error('Export failed:', error)
@@ -348,7 +353,13 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <LinearGradient
+      colors={[colors.bgGradientStart, colors.bgGradientEnd]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.3, y: 1 }}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Section Mon profil */}
         <View style={styles.section}>
@@ -498,12 +509,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Gamification */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{'\u2B50'} Gamification</Text>
+          <Text style={styles.sectionTitle}>⭐ Gamification</Text>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Objectif hebdomadaire</Text>
               <Text style={styles.settingDescription}>
-                Nombre de s{'\u00E9'}ances par semaine pour maintenir le streak
+                Nombre de séances par semaine pour maintenir le streak
               </Text>
             </View>
           </View>
@@ -538,7 +549,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 </Text>
               </TouchableOpacity>
             ))}
-            <Text style={styles.streakTargetLabel}>s{'\u00E9'}ances/sem</Text>
+            <Text style={styles.streakTargetLabel}>séances/sem</Text>
           </View>
         </View>
 
@@ -569,7 +580,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Données */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{'\uD83D\uDCBE'} Donn{'\u00e9'}es</Text>
+          <Text style={styles.sectionTitle}>💾 Données</Text>
           <TouchableOpacity
             style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
             onPress={handleExport}
@@ -577,16 +588,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             activeOpacity={0.7}
           >
             <Text style={styles.exportButtonText}>
-              {exporting ? 'Export en cours...' : 'Exporter mes donn\u00e9es'}
+              {exporting ? 'Export en cours...' : 'Exporter mes données'}
             </Text>
           </TouchableOpacity>
-          <Text style={styles.exportHint}>Vos donn{'\u00e9'}es vous appartiennent</Text>
+          <Text style={styles.exportHint}>Vos données vous appartiennent</Text>
         </View>
 
         <AlertDialog
           visible={exportError}
           title="Erreur d'export"
-          message="Impossible d'exporter les donn\u00e9es. Veuillez r\u00e9essayer."
+          message="Impossible d'exporter les données. Veuillez réessayer."
           confirmText="OK"
           confirmColor={colors.primary}
           onConfirm={() => setExportError(false)}
@@ -634,6 +645,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </LinearGradient>
   )
 }
 
