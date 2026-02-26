@@ -24,12 +24,14 @@ import StatsExercisesScreen from '../screens/StatsExercisesScreen'
 import StatsMeasurementsScreen from '../screens/StatsMeasurementsScreen'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import OnboardingScreen from '../screens/OnboardingScreen'
+import BadgesScreen from '../screens/BadgesScreen'
 import { database } from '../model'
 import User from '../model/models/User'
 
 export type RootStackParamList = {
   Onboarding: undefined;
   Home: undefined;
+  Badges: undefined;
   Programs: undefined;
   Exercices: undefined;
   Assistant: undefined;
@@ -172,6 +174,7 @@ export default function AppNavigator() {
             <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: 'Exercices & Records' }} />
             <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: 'Mesures corporelles' }} />
             <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: 'Historique' }} />
+            <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: 'Mes Badges' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </PortalProvider>

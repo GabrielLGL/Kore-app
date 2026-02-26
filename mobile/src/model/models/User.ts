@@ -35,6 +35,9 @@ export default class User extends Model {
   @field('total_tonnage') totalTonnage!: number
   @text('last_workout_week') lastWorkoutWeek!: string | null
 
+  // Gamification Pro — version 22
+  @field('total_prs') totalPrs!: number
+
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
 }

@@ -16,6 +16,8 @@ import { database } from '../model'
 import History from '../model/models/History'
 import WorkoutSet from '../model/models/Set'
 import User from '../model/models/User'
+import UserBadge from '../model/models/UserBadge'
+import { BADGES_LIST } from '../model/utils/badgeConstants'
 import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume, buildHeatmapData } from '../model/utils/statsHelpers'
 import { xpToNextLevel, formatTonnage } from '../model/utils/gamificationHelpers'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
@@ -84,9 +86,10 @@ interface Props {
   users: User[]
   histories: History[]
   sets: WorkoutSet[]
+  userBadges: UserBadge[]
 }
 
-function HomeScreenBase({ users, histories, sets }: Props) {
+function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
   const navigation = useNavigation<HomeNavigation>()
   const haptics = useHaptics()
 
@@ -161,6 +164,20 @@ function HomeScreenBase({ users, histories, sets }: Props) {
           currentStreak={user?.currentStreak ?? 0}
           streakTarget={user?.streakTarget ?? 3}
         />
+        <View style={styles.badgesSeparator} />
+        <TouchableOpacity
+          style={styles.badgesRow}
+          activeOpacity={0.7}
+          onPress={() => {
+            haptics.onPress()
+            navigation.navigate('Badges')
+          }}
+        >
+          <Text style={styles.badgesLabel}>{'\uD83C\uDFC5'} Mes Badges</Text>
+          <Text style={styles.badgesCount}>
+            {userBadges.length}/{BADGES_LIST.length} {'\u203A'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* ── Card Heatmap ── */}
@@ -275,6 +292,24 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     gap: spacing.sm,
   },
+  badgesSeparator: {
+    height: 1,
+    backgroundColor: colors.separator,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  badgesLabel: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  badgesCount: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: colors.primary,
+  },
   // Heatmap Card
   heatmapCard: {
     backgroundColor: colors.card,
@@ -328,6 +363,7 @@ const enhance = withObservables([], () => ({
   users: database.get<User>('users').query().observe(),
   histories: database.get<History>('histories').query(Q.where('deleted_at', null)).observe(),
   sets: database.get<WorkoutSet>('sets').query().observe(),
+  userBadges: database.get<UserBadge>('user_badges').query().observe(),
 }))
 
 export default enhance(HomeScreenBase)

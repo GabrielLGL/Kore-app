@@ -11,6 +11,7 @@ import User from './models/User'
 import SessionExercise from './models/SessionExercise'
 import PerformanceLog from './models/PerformanceLog'
 import BodyMeasurement from './models/BodyMeasurement'
+import UserBadge from './models/UserBadge'
 
 const adapter = new SQLiteAdapter({
   schema: mySchema,
@@ -36,5 +37,6 @@ export const database = new Database({
     SessionExercise,
     PerformanceLog,
     BodyMeasurement,
+    UserBadge,
   ],
 })

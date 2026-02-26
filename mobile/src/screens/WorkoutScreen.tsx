@@ -32,6 +32,9 @@ import {
   detectMilestones,
   type MilestoneEvent,
 } from '../model/utils/gamificationHelpers'
+import { checkBadges, type CheckBadgesParams } from '../model/utils/badgeHelpers'
+import { type BadgeDefinition } from '../model/utils/badgeConstants'
+import UserBadge from '../model/models/UserBadge'
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer'
 import { useWorkoutState } from '../hooks/useWorkoutState'
 import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
@@ -40,6 +43,7 @@ import { WorkoutHeader } from '../components/WorkoutHeader'
 import { WorkoutExerciseCard } from '../components/WorkoutExerciseCard'
 import { WorkoutSummarySheet } from '../components/WorkoutSummarySheet'
 import { MilestoneCelebration } from '../components/MilestoneCelebration'
+import { BadgeCelebration } from '../components/BadgeCelebration'
 import { AlertDialog } from '../components/AlertDialog'
 import RestTimer from '../components/RestTimer'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -78,6 +82,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const [durationSeconds, setDurationSeconds] = useState(0)
   const [milestones, setMilestones] = useState<MilestoneEvent[]>([])
   const [milestoneVisible, setMilestoneVisible] = useState(false)
+  const [newBadges, setNewBadges] = useState<BadgeDefinition[]>([])
+  const [badgeCelebrationVisible, setBadgeCelebrationVisible] = useState(false)
+  const badgeCelebrationWasOpenRef = useRef(false)
   const [sessionXPGained, setSessionXPGained] = useState(0)
   const [newLevelResult, setNewLevelResult] = useState(1)
   const [newStreakResult, setNewStreakResult] = useState(0)
@@ -94,7 +101,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const { setInputs, validatedSets, totalVolume, updateSetInput, validateSet, unvalidateSet } =
     useWorkoutState(sessionExercises, historyId)
 
-  // Quand le resume se ferme, montrer le milestone si present, sinon naviguer Home
+  // Quand le résumé se ferme : milestone → badge → home
   useEffect(() => {
     if (summaryVisible) {
       summaryWasOpenRef.current = true
@@ -103,18 +110,36 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       if (milestones.length > 0) {
         setMilestoneVisible(true)
         haptics.onSuccess()
+      } else if (newBadges.length > 0) {
+        setBadgeCelebrationVisible(true)
+        haptics.onSuccess()
       } else {
         navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
       }
     }
-  }, [summaryVisible, navigation, milestones.length, haptics])
+  }, [summaryVisible, navigation, milestones.length, newBadges.length, haptics])
 
-  // Quand le milestone se ferme, naviguer Home
+  // Quand le milestone se ferme : badge → home
   useEffect(() => {
     if (!milestoneVisible && milestones.length > 0 && !summaryVisible && summaryWasOpenRef.current === false) {
+      if (newBadges.length > 0) {
+        setBadgeCelebrationVisible(true)
+        haptics.onSuccess()
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
+      }
+    }
+  }, [milestoneVisible, milestones.length, summaryVisible, navigation, newBadges.length, haptics])
+
+  // Quand la célébration badge se ferme : home
+  useEffect(() => {
+    if (badgeCelebrationVisible) {
+      badgeCelebrationWasOpenRef.current = true
+    } else if (badgeCelebrationWasOpenRef.current) {
+      badgeCelebrationWasOpenRef.current = false
       navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
     }
-  }, [milestoneVisible, milestones.length, summaryVisible, navigation])
+  }, [badgeCelebrationVisible, navigation])
 
   const completedSets = Object.keys(validatedSets).length
   const totalSetsTarget = sessionExercises.reduce((sum, se) => sum + (se.setsTarget ?? 0), 0)
@@ -221,6 +246,30 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
           level: user.level || 1,
         }
 
+        // Badges — données complémentaires
+        const newTotalPrs = (user.totalPrs || 0) + totalPrs
+        const newBestStreak = Math.max(streakResult.bestStreak, streakResult.currentStreak)
+
+        const allSetsRaw = await database.get<UserBadge>('sets').query().fetch() as unknown as Array<{ _raw: { exercise_id: string } }>
+        const distinctExerciseCount = new Set(allSetsRaw.map(s => s._raw.exercise_id)).size
+
+        const existingBadgeRecords = await database.get<UserBadge>('user_badges').query().fetch()
+        const existingBadgeIds = existingBadgeRecords.map(b => b.badgeId)
+
+        const badgeParams: CheckBadgesParams = {
+          user: {
+            totalTonnage: newTotalTonnage,
+            bestStreak: newBestStreak,
+            level: newLevel,
+            totalPrs: newTotalPrs,
+          },
+          existingBadgeIds,
+          sessionCount: totalSessionCount,
+          sessionVolume: sessionTonnage,
+          distinctExerciseCount,
+        }
+        const detectedBadges = checkBadges(badgeParams)
+
         setSessionXPGained(sessionXP)
         setNewLevelResult(newLevel)
         setNewStreakResult(streakResult.currentStreak)
@@ -233,7 +282,14 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
             u.currentStreak = streakResult.currentStreak
             u.bestStreak = streakResult.bestStreak
             u.lastWorkoutWeek = streakResult.lastWorkoutWeek
+            u.totalPrs = newTotalPrs
           })
+          for (const badge of detectedBadges) {
+            await database.get<UserBadge>('user_badges').create(record => {
+              record.badgeId = badge.id
+              record.unlockedAt = new Date()
+            })
+          }
         })
 
         const after = {
@@ -244,6 +300,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         const detected = detectMilestones(before, after)
         if (detected.length > 0) {
           setMilestones(detected)
+        }
+        if (detectedBadges.length > 0) {
+          setNewBadges(detectedBadges)
         }
       } catch (e) {
         if (__DEV__) console.error('[WorkoutScreen] gamification update:', e)
@@ -428,6 +487,13 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         visible={milestoneVisible}
         milestone={milestones[0] ?? null}
         onClose={() => setMilestoneVisible(false)}
+      />
+
+      {/* Celebration badge */}
+      <BadgeCelebration
+        visible={badgeCelebrationVisible}
+        badge={newBadges[newBadges.length - 1] ?? null}
+        onClose={() => setBadgeCelebrationVisible(false)}
       />
     </SafeAreaView>
   )

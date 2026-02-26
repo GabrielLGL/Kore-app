@@ -77,6 +77,7 @@ describe('HomeScreen Dashboard', () => {
           users={[]}
           histories={[] as unknown as History[]}
           sets={[] as unknown as WorkoutSet[]}
+          userBadges={[]}
         />
       )
     ).not.toThrow()
@@ -88,6 +89,7 @@ describe('HomeScreen Dashboard', () => {
         users={[makeUser()]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('Salut, Gabriel !')).toBeTruthy()
@@ -99,6 +101,7 @@ describe('HomeScreen Dashboard', () => {
         users={[]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('Salut, Toi !')).toBeTruthy()
@@ -110,6 +113,7 @@ describe('HomeScreen Dashboard', () => {
         users={[makeUser()]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('42')).toBeTruthy()
@@ -123,6 +127,7 @@ describe('HomeScreen Dashboard', () => {
         users={[]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('Entra\u00eenement')).toBeTruthy()
@@ -136,6 +141,7 @@ describe('HomeScreen Dashboard', () => {
         users={[]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('Programmes')).toBeTruthy()
@@ -155,6 +161,7 @@ describe('HomeScreen Dashboard', () => {
         users={[]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     fireEvent.press(getByText('Dur\u00e9e'))
@@ -167,6 +174,7 @@ describe('HomeScreen Dashboard', () => {
         users={[]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     fireEvent.press(getByText('Programmes'))
@@ -179,6 +187,7 @@ describe('HomeScreen Dashboard', () => {
         users={[makeUser()]}
         histories={[] as unknown as History[]}
         sets={[] as unknown as WorkoutSet[]}
+        userBadges={[]}
       />
     )
     expect(getByText('Continue comme ça !')).toBeTruthy()

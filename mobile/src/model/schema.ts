@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 21, // v21 : ajout animation_key/description sur exercises
+  version: 22, // v22 : gamification-pro (user_badges + total_prs)
   tables: [
     tableSchema({
       name: 'programs',
@@ -81,8 +81,18 @@ export const mySchema = appSchema({
             {name: 'streak_target', type: 'number'},
             {name: 'total_tonnage', type: 'number'},
             {name: 'last_workout_week', type: 'string', isOptional: true},
+            {name: 'total_prs', type: 'number'},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
+        ]
+    }),
+    tableSchema({
+        name: 'user_badges',
+        columns: [
+            {name: 'badge_id', type: 'string'},
+            {name: 'unlocked_at', type: 'number'},
+            {name: 'created_at', type: 'number'},
+            {name: 'updated_at', type: 'number'},
         ]
     }),
     tableSchema({
