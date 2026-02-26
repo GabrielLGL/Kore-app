@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 22, // v22 : gamification-pro (user_badges + total_prs)
+  version: 23, // v23 : thème dynamique dark/light (theme_mode)
   tables: [
     tableSchema({
       name: 'programs',
@@ -82,6 +82,7 @@ export const mySchema = appSchema({
             {name: 'total_tonnage', type: 'number'},
             {name: 'last_workout_week', type: 'string', isOptional: true},
             {name: 'total_prs', type: 'number'},
+            {name: 'theme_mode', type: 'string', isOptional: true},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
         ]

@@ -138,3 +138,90 @@ export const neuShadow = {
     borderColor: '#1a1d22',
   },
 }
+
+/**
+ * Palette light neumorphique (miroir du dark)
+ */
+export const lightColors = {
+  background: '#e8ecef',
+  card: '#e8ecef',
+  cardSecondary: '#dde2e6',
+  primary: '#00cec9',
+  danger: '#ff6b6b',
+  success: '#00cec9',
+  warning: '#e17055',
+  border: '#c5cad1',
+  separator: '#c5cad1',
+  text: '#2d3436',
+  textSecondary: '#636e72',
+  placeholder: '#8a9299',
+  overlay: 'rgba(20, 25, 30, 0.85)',
+  bottomSheetOverlay: 'rgba(20, 25, 30, 0.45)',
+  secondaryButton: '#dde2e6',
+  shadow: '#b0b8c1',
+  successBg: 'rgba(0, 206, 201, 0.12)',
+  primaryBg: 'rgba(0, 206, 201, 0.15)',
+  surfaceOverlay: 'rgba(0, 0, 0, 0.06)',
+  neuShadowDark: '#b0b8c1',
+  neuShadowLight: '#ffffff',
+  secondaryAccent: '#6c5ce7',
+}
+
+/**
+ * Ombres light neumorphiques — Platform-aware
+ */
+export const neuShadowLight = {
+  elevated: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#b0b8c1',
+        shadowOffset: { width: 8, height: 8 },
+        shadowOpacity: 0.9,
+        shadowRadius: 16,
+      },
+      android: { elevation: 10 },
+    }),
+    borderWidth: 1,
+    borderColor: '#ffffff',
+  },
+  elevatedSm: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#b0b8c1',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+      },
+      android: { elevation: 5 },
+    }),
+    borderWidth: 1,
+    borderColor: '#ffffff',
+  },
+  pressed: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#b0b8c1',
+        shadowOffset: { width: 1, height: 1 },
+        shadowOpacity: 0.4,
+        shadowRadius: 3,
+      },
+      android: { elevation: 1 },
+    }),
+    borderWidth: 1,
+    borderColor: '#c5cad1',
+  },
+}
+
+/** Type union des deux palettes */
+export type ThemeColors = typeof colors
+export type ThemeMode = 'dark' | 'light'
+
+/** Retourne la palette de couleurs selon le mode actif */
+export function getThemeColors(mode: ThemeMode): ThemeColors {
+  return mode === 'light' ? (lightColors as ThemeColors) : colors
+}
+
+/** Retourne les ombres neumorphiques selon le mode actif */
+export function getThemeNeuShadow(mode: ThemeMode) {
+  return mode === 'light' ? neuShadowLight : neuShadow
+}

@@ -38,6 +38,9 @@ export default class User extends Model {
   // Gamification Pro — version 22
   @field('total_prs') totalPrs!: number
 
+  // Thème dynamique — version 23
+  @text('theme_mode') themeMode!: string | null
+
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
 }
