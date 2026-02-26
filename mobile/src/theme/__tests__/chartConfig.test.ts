@@ -11,17 +11,21 @@ describe('createChartConfig', () => {
     expect(config.style).toEqual({ borderRadius: 16 })
   })
 
-  it('color callback returns rgba blue string', () => {
+  it('color callback returns rgba from theme primary color', () => {
     const config = createChartConfig()
-    expect(config.color(0.5)).toBe('rgba(0, 122, 255, 0.5)')
-    expect(config.color(1)).toBe('rgba(0, 122, 255, 1)')
-    expect(config.color()).toBe('rgba(0, 122, 255, 1)')
+    expect(config.color(0.5)).toMatch(/^rgba\(\d+, \d+, \d+, 0\.5\)$/)
+    expect(config.color(1)).toMatch(/^rgba\(\d+, \d+, \d+, 1\)$/)
+    expect(config.color()).toMatch(/^rgba\(\d+, \d+, \d+, 1\)$/)
+    // Vérifie que la couleur est bien dérivée du theme (pas l'iOS blue hardcodé)
+    expect(config.color(1)).not.toBe('rgba(0, 122, 255, 1)')
   })
 
-  it('labelColor callback returns rgba white string', () => {
+  it('labelColor callback returns rgba from theme text color', () => {
     const config = createChartConfig()
-    expect(config.labelColor(0.8)).toBe('rgba(255, 255, 255, 0.8)')
-    expect(config.labelColor()).toBe('rgba(255, 255, 255, 1)')
+    expect(config.labelColor(0.8)).toMatch(/^rgba\(\d+, \d+, \d+, 0\.8\)$/)
+    expect(config.labelColor()).toMatch(/^rgba\(\d+, \d+, \d+, 1\)$/)
+    // Vérifie que la couleur est bien dérivée du theme (pas le blanc hardcodé)
+    expect(config.labelColor(1)).not.toBe('rgba(255, 255, 255, 1)')
   })
 
   it('respects custom decimalPlaces', () => {

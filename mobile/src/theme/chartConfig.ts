@@ -1,5 +1,15 @@
 import { colors } from './index'
 
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result
+    ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
+    : { r: 0, g: 0, b: 0 }
+}
+
+const primaryRgb = hexToRgb(colors.primary)
+const textRgb = hexToRgb(colors.text)
+
 const CHART_DOTS = { r: '4', strokeWidth: '2', stroke: colors.primary }
 
 /**
@@ -19,8 +29,8 @@ export function createChartConfig(options: {
     backgroundGradientFrom: colors.card,
     backgroundGradientTo: colors.card,
     decimalPlaces,
-    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    color: (opacity = 1) => `rgba(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b}, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(${textRgb.r}, ${textRgb.g}, ${textRgb.b}, ${opacity})`,
     style: { borderRadius: 16 },
     ...(showDots ? { propsForDots: CHART_DOTS } : {}),
   }
