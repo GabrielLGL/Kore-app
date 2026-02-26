@@ -45,7 +45,7 @@ export function isValidNumeric(value: string | number, min: number = 0): boolean
  * Valide les entrées d'un workout (sets, reps, weight)
  *
  * @param sets - Nombre de séries (string)
- * @param reps - Nombre de répétitions (string)
+ * @param reps - Nombre de répétitions (string) — entier "N" ou range "N-M" (ex: "8" ou "6-8")
  * @param weight - Poids (string, optionnel)
  * @returns Objet { valid: boolean, errors: string[] }
  *
@@ -58,7 +58,8 @@ export function isValidNumeric(value: string | number, min: number = 0): boolean
 export function validateWorkoutInput(
   sets: string,
   reps: string,
-  weight?: string
+  weight?: string,
+  setsMax?: string
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = []
 
@@ -69,11 +70,27 @@ export function validateWorkoutInput(
     errors.push('Le nombre de séries doit être un nombre valide')
   }
 
-  // Validation des répétitions
-  if (!reps.trim() || reps === '0') {
-    errors.push('Le nombre de répétitions est requis et doit être supérieur à 0')
-  } else if (!isValidNumeric(reps, 0)) {
-    errors.push('Le nombre de répétitions doit être un nombre valide')
+  // Validation des répétitions (entier OU range "N-M")
+  if (!reps.trim()) {
+    errors.push('Le nombre de répétitions est requis')
+  } else {
+    const repsParts = reps.split('-')
+    if (repsParts.length === 1) {
+      const n = parseInt(repsParts[0], 10)
+      if (isNaN(n) || n < 1 || n > 99) {
+        errors.push('Le nombre de répétitions doit être un entier entre 1 et 99')
+      }
+    } else if (repsParts.length === 2) {
+      const rMin = parseInt(repsParts[0], 10)
+      const rMax = parseInt(repsParts[1], 10)
+      if (isNaN(rMin) || isNaN(rMax) || rMin < 1 || rMax < 1 || rMin > 99 || rMax > 99) {
+        errors.push('La range de reps doit être entre 1 et 99')
+      } else if (rMin > rMax) {
+        errors.push('Le min de reps doit être ≤ au max')
+      }
+    } else {
+      errors.push('Format de reps invalide — utiliser un entier ou une range (ex: 6-8)')
+    }
   }
 
   // Validation du poids (optionnel mais doit être valide si fourni)
@@ -81,6 +98,17 @@ export function validateWorkoutInput(
     if (!isValidNumeric(weight, -1)) {
       // -1 pour permettre 0
       errors.push('Le poids doit être un nombre valide')
+    }
+  }
+
+  // Validation du max de séries (optionnel, doit être ≥ min si fourni)
+  if (setsMax !== undefined && setsMax.trim() !== '') {
+    const setsMaxNum = parseInt(setsMax, 10)
+    const setsNum = parseInt(sets, 10)
+    if (isNaN(setsMaxNum)) {
+      errors.push('Le max de séries doit être un nombre valide')
+    } else if (!isNaN(setsNum) && setsMaxNum < setsNum) {
+      errors.push('Le max de séries doit être ≥ au min')
     }
   }
 

@@ -41,16 +41,18 @@ const mockSession = { id: 'sess-1' }
 const createMockSessionExercise = (overrides: {
   id?: string
   setsTarget?: number
+  setsTargetMax?: number
   repsTarget?: string
   weightTarget?: number
 } = {}) => ({
   id: overrides.id ?? 'se-1',
   setsTarget: overrides.setsTarget ?? 3,
+  setsTargetMax: overrides.setsTargetMax ?? 0,
   repsTarget: overrides.repsTarget ?? '10',
   weightTarget: overrides.weightTarget ?? 60,
   exercise: { fetch: jest.fn().mockResolvedValue({ id: 'exo-1' }) },
   update: jest.fn().mockImplementation(async (fn: (se: Record<string, unknown>) => void) => {
-    fn({ setsTarget: 0, repsTarget: '', weightTarget: 0 })
+    fn({ setsTarget: 0, setsTargetMax: 0, repsTarget: '', weightTarget: 0 })
   }),
   destroyPermanently: jest.fn().mockResolvedValue(undefined),
 })
@@ -73,6 +75,7 @@ describe('useSessionManager', () => {
         exercise: { set: jest.fn() },
         position: 0,
         setsTarget: 0,
+        setsTargetMax: 0,
         repsTarget: '',
         weightTarget: 0,
         sets: 0,
@@ -191,6 +194,7 @@ describe('useSessionManager', () => {
 
       expect(success!).toBe(false)
     })
+
   })
 
   // --- updateTargets ---

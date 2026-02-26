@@ -76,14 +76,34 @@ describe('validationHelpers', () => {
     it('should reject empty reps', () => {
       const result = validateWorkoutInput('3', '', '50')
       expect(result.valid).toBe(false)
-      expect(result.errors).toContain(
-        'Le nombre de répétitions est requis et doit être supérieur à 0'
-      )
+      expect(result.errors).toContain('Le nombre de répétitions est requis')
     })
 
     it('should reject zero reps', () => {
       const result = validateWorkoutInput('3', '0', '50')
       expect(result.valid).toBe(false)
+    })
+
+    it('should accept a valid reps range "6-8"', () => {
+      const result = validateWorkoutInput('3', '6-8', '50')
+      expect(result.valid).toBe(true)
+    })
+
+    it('should reject reps range where min > max', () => {
+      const result = validateWorkoutInput('3', '8-6', '50')
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContain('Le min de reps doit être ≤ au max')
+    })
+
+    it('should reject reps range with out-of-bounds value', () => {
+      const result = validateWorkoutInput('3', '0-8', '50')
+      expect(result.valid).toBe(false)
+    })
+
+    it('should reject invalid reps format (too many dashes)', () => {
+      const result = validateWorkoutInput('3', '6-8-10', '50')
+      expect(result.valid).toBe(false)
+      expect(result.errors).toContain('Format de reps invalide — utiliser un entier ou une range (ex: 6-8)')
     })
 
     it('should reject invalid numeric sets', () => {

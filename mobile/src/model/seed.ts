@@ -175,7 +175,7 @@ export const seedExercises = async () => {
       }
 
       if (toCreate.length > 0) {
-        await database.batch(...toCreate)
+        await database.batch(toCreate)
       }
     })
   } catch (error) {

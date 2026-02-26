@@ -123,9 +123,11 @@ describe('ExerciseTargetInputs', () => {
         <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('3'), '99')
+      const setsInput = getByDisplayValue('3')
+      fireEvent.changeText(setsInput, '99')
+      fireEvent(setsInput, 'blur')
 
-      expect(onSetsChange).toHaveBeenCalledWith('10')
+      expect(onSetsChange).toHaveBeenLastCalledWith('10')
     })
 
     it('clamp les séries à 1 si la valeur est inférieure au min', () => {
@@ -134,9 +136,11 @@ describe('ExerciseTargetInputs', () => {
         <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('3'), '-5')
+      const setsInput = getByDisplayValue('3')
+      fireEvent.changeText(setsInput, '-5')
+      fireEvent(setsInput, 'blur')
 
-      expect(onSetsChange).toHaveBeenCalledWith('1')
+      expect(onSetsChange).toHaveBeenLastCalledWith('1')
     })
 
     it('clamp les reps à 99 si la valeur dépasse le max', () => {
@@ -145,9 +149,11 @@ describe('ExerciseTargetInputs', () => {
         <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('10'), '200')
+      const repsInput = getByDisplayValue('10')
+      fireEvent.changeText(repsInput, '200')
+      fireEvent(repsInput, 'blur')
 
-      expect(onRepsChange).toHaveBeenCalledWith('99')
+      expect(onRepsChange).toHaveBeenLastCalledWith('99')
     })
 
     it('clamp le poids à 999 si la valeur dépasse le max', () => {
@@ -156,9 +162,11 @@ describe('ExerciseTargetInputs', () => {
         <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('60'), '1500')
+      const weightInput = getByDisplayValue('60')
+      fireEvent.changeText(weightInput, '1500')
+      fireEvent(weightInput, 'blur')
 
-      expect(onWeightChange).toHaveBeenCalledWith('999')
+      expect(onWeightChange).toHaveBeenLastCalledWith('999')
     })
 
     it('clamp le poids à 0 si la valeur est négative', () => {
@@ -167,9 +175,11 @@ describe('ExerciseTargetInputs', () => {
         <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('60'), '-10')
+      const weightInput = getByDisplayValue('60')
+      fireEvent.changeText(weightInput, '-10')
+      fireEvent(weightInput, 'blur')
 
-      expect(onWeightChange).toHaveBeenCalledWith('0')
+      expect(onWeightChange).toHaveBeenLastCalledWith('0')
     })
 
     it('passe les valeurs vides sans modification', () => {
@@ -193,79 +203,87 @@ describe('ExerciseTargetInputs', () => {
 
       expect(onWeightChange).toHaveBeenCalledWith('85.5')
     })
+
+    it('fast-typing séries : passe la valeur brute puis clamp au blur', () => {
+      const onSetsChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
+      )
+
+      const setsInput = getByDisplayValue('3')
+      fireEvent.changeText(setsInput, '40')
+      expect(onSetsChange).toHaveBeenLastCalledWith('40')
+
+      fireEvent(setsInput, 'blur')
+      expect(onSetsChange).toHaveBeenLastCalledWith('10')
+    })
+
+    it('fast-typing poids : passe la valeur brute, pas de rappel au blur si valide', () => {
+      const onWeightChange = jest.fn()
+      const { getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
+      )
+
+      const weightInput = getByDisplayValue('60')
+      fireEvent.changeText(weightInput, '40')
+      expect(onWeightChange).toHaveBeenLastCalledWith('40')
+
+      const callCountBeforeBlur = onWeightChange.mock.calls.length
+      fireEvent(weightInput, 'blur')
+      expect(onWeightChange).toHaveBeenCalledTimes(callCountBeforeBlur)
+    })
   })
 
-  describe('mode range séries', () => {
-    const rangeProps = {
-      ...defaultProps,
-      setsMax: '5',
-      onSetsMaxChange: jest.fn(),
-    }
-
+  describe('toggle reps Fixe / Plage', () => {
     beforeEach(() => {
       jest.clearAllMocks()
     })
 
-    it('affiche un seul input séries si onSetsMaxChange est absent', () => {
-      // mode simple : sets='3', reps='10', weight='60' → 3 valeurs distinctes
-      const { queryByPlaceholderText } = render(<ExerciseTargetInputs {...defaultProps} />)
+    it('démarre en mode Fixe (un seul input reps)', () => {
+      const { queryByPlaceholderText, getByDisplayValue } = render(
+        <ExerciseTargetInputs {...defaultProps} />
+      )
+      expect(getByDisplayValue('10')).toBeTruthy()
       expect(queryByPlaceholderText('min')).toBeNull()
       expect(queryByPlaceholderText('max')).toBeNull()
     })
 
-    it('affiche deux inputs séries si onSetsMaxChange est fourni', () => {
-      const { getByPlaceholderText } = render(<ExerciseTargetInputs {...rangeProps} />)
+    it('affiche deux inputs après appui sur "Plage"', () => {
+      const { getByText, getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} />
+      )
+      fireEvent.press(getByText('Plage'))
       expect(getByPlaceholderText('min')).toBeTruthy()
       expect(getByPlaceholderText('max')).toBeTruthy()
     })
 
-    it('affiche la valeur setsMax dans le second input', () => {
-      const { getByDisplayValue } = render(<ExerciseTargetInputs {...rangeProps} />)
-      expect(getByDisplayValue('5')).toBeTruthy()
+    it('compose "N-M" quand min et max sont saisis en mode Plage', () => {
+      const onRepsChange = jest.fn()
+      const { getByText, getByDisplayValue, getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
+      )
+      fireEvent.press(getByText('Plage'))
+      fireEvent.changeText(getByDisplayValue('10'), '6')
+      fireEvent.changeText(getByPlaceholderText('max'), '10')
+      expect(onRepsChange).toHaveBeenLastCalledWith('6-10')
     })
 
-    it('appelle onSetsMaxChange quand le champ setsMax change', () => {
-      const onSetsMaxChange = jest.fn()
-      const { getByPlaceholderText } = render(
-        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
+    it('retour en mode Fixe : onRepsChange reçoit repsMin seul', () => {
+      const onRepsChange = jest.fn()
+      const { getByText } = render(
+        <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
       )
-      fireEvent.changeText(getByPlaceholderText('max'), '4')
-      expect(onSetsMaxChange).toHaveBeenCalledWith('4')
+      fireEvent.press(getByText('Plage'))
+      fireEvent.press(getByText('Fixe'))
+      expect(onRepsChange).toHaveBeenLastCalledWith('10')
     })
 
-    it('clamp setsMax à 10 si la valeur dépasse le max', () => {
-      const onSetsMaxChange = jest.fn()
-      const { getByPlaceholderText } = render(
-        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
+    it('démarre en mode Plage si reps contient "-"', () => {
+      const { getByDisplayValue, getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} reps="6-10" />
       )
-      fireEvent.changeText(getByPlaceholderText('max'), '99')
-      expect(onSetsMaxChange).toHaveBeenCalledWith('10')
-    })
-
-    it('passe la valeur vide sans modification pour setsMax', () => {
-      const onSetsMaxChange = jest.fn()
-      const { getByPlaceholderText } = render(
-        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
-      )
-      fireEvent.changeText(getByPlaceholderText('max'), '')
-      expect(onSetsMaxChange).toHaveBeenCalledWith('')
-    })
-
-    it('onSetsChange et onSetsMaxChange ne sont pas croisés', () => {
-      const onSetsChange = jest.fn()
-      const onSetsMaxChange = jest.fn()
-      const { getByPlaceholderText } = render(
-        <ExerciseTargetInputs
-          {...defaultProps}
-          sets="3"
-          setsMax="5"
-          onSetsChange={onSetsChange}
-          onSetsMaxChange={onSetsMaxChange}
-        />
-      )
-      fireEvent.changeText(getByPlaceholderText('max'), '6')
-      expect(onSetsMaxChange).toHaveBeenCalledTimes(1)
-      expect(onSetsChange).not.toHaveBeenCalled()
+      expect(getByDisplayValue('6')).toBeTruthy()
+      expect(getByPlaceholderText('max')).toBeTruthy()
     })
   })
 

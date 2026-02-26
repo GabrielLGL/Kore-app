@@ -434,7 +434,7 @@ export const seedDevData = async () => {
         )
       }
 
-      await database.batch(...batch)
+      await database.batch(batch)
     })
   } catch (error) {
     if (__DEV__) console.error('❌ Erreur seedDevData:', error)
