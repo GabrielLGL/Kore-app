@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emoji: {
-    fontSize: 48,
+    fontSize: fontSize.jumbo,
     marginBottom: spacing.md,
   },
   title: {

@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   streakIcon: {
-    fontSize: 24,
+    fontSize: fontSize.xxl,
   },
   streakValue: {
     fontSize: fontSize.xxl,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     marginBottom: DAY_GAP,
   },
   dayLabel: {
-    fontSize: 11,
+    fontSize: fontSize.caption,
     color: colors.textSecondary,
     height: DAY_SIZE,
     marginBottom: DAY_GAP,

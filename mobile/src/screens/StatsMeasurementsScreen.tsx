@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   deleteIcon: {
-    fontSize: 18,
+    fontSize: fontSize.lg,
   },
   emptyState: {
     backgroundColor: colors.card,

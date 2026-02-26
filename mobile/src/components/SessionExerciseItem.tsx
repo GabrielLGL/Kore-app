@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   },
   noteIndicator: {
     color: colors.textSecondary,
-    fontSize: 11,
+    fontSize: fontSize.caption,
     fontStyle: 'italic',
     marginBottom: spacing.xs,
   },

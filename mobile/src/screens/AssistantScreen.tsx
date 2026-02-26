@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   optionIcon: {
-    fontSize: 28,
+    fontSize: fontSize.xxxl,
   },
   optionTextWrap: {
     flex: 1,

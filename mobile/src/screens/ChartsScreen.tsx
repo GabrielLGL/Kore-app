@@ -22,7 +22,7 @@ import { AlertDialog } from '../components/AlertDialog'
 import { ChipSelector } from '../components/ChipSelector'
 import { useHaptics } from '../hooks/useHaptics'
 import { useExerciseFilters } from '../hooks/useExerciseFilters'
-import { colors } from '../theme'
+import { colors, fontSize, borderRadius } from '../theme'
 import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
 import type { ExerciseSessionStat } from '../model/utils/databaseHelpers'
 
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   exoChip: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     backgroundColor: colors.cardSecondary,
     marginRight: 10,
   },
@@ -307,29 +307,29 @@ const styles = StyleSheet.create({
   listContent: { padding: 20, paddingBottom: 100 },
   chartWrapper: { marginBottom: 20 },
   chart: { borderRadius: 16, marginVertical: 8 },
-  historyTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold', marginTop: 25, marginBottom: 15 },
+  historyTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: 'bold', marginTop: 25, marginBottom: 15 },
   logRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     backgroundColor: colors.card,
     padding: 15,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     marginBottom: 10,
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
   },
   logInfo: { flex: 1 },
-  logMainText: { color: colors.text, fontSize: 15, fontWeight: 'bold' },
-  logDate: { color: colors.placeholder, fontSize: 11, marginTop: 2, marginBottom: 6 },
-  setDetailText: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+  logMainText: { color: colors.text, fontSize: fontSize.bodyMd, fontWeight: 'bold' },
+  logDate: { color: colors.placeholder, fontSize: fontSize.caption, marginTop: 2, marginBottom: 6 },
+  setDetailText: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
   deleteBtn: { padding: 10 },
-  deleteIcon: { fontSize: 18 },
+  deleteIcon: { fontSize: fontSize.lg },
   emptyState: { marginTop: 50, paddingHorizontal: 40 },
   emptyText: {
     color: colors.placeholder,
     textAlign: 'center',
-    fontSize: 15,
+    fontSize: fontSize.bodyMd,
     fontStyle: 'italic',
     lineHeight: 22,
   },

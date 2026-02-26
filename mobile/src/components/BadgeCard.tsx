@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   emoji: {
-    fontSize: 28,
+    fontSize: fontSize.xxxl,
     marginBottom: spacing.xs,
   },
   title: {

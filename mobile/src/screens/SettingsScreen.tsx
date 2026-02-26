@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   providerComingSoon: {
-    fontSize: 11,
+    fontSize: fontSize.caption,
     color: colors.textSecondary,
     fontStyle: 'italic',
   },

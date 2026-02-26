@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     width: '31%',
   },
   btnIcon: {
-    fontSize: 28,
+    fontSize: fontSize.xxxl,
   },
   btnLabel: {
     fontSize: fontSize.xs,

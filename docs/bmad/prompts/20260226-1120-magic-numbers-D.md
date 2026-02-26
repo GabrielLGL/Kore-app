@@ -137,4 +137,7 @@ addButton: { backgroundColor: colors.primary, padding: 16, borderRadius: borderR
 Aucune dépendance sur Groupe A ou B. Peut être lancé en parallèle.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1145
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-1120-refactor-magic-numbers-D.md

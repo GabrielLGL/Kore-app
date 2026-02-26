@@ -73,6 +73,9 @@ export const fontSize = {
   xxl: 24,
   xxxl: 28,
   hero: 32,
+  caption: 11,
+  bodyMd: 15,
+  jumbo: 48,
 }
 
 /**
