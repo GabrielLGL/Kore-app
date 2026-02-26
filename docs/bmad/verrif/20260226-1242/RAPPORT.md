@@ -38,8 +38,8 @@
 
 | # | Problème | Fichiers | Effort | Groupe |
 |---|----------|----------|--------|--------|
-| 1 | databaseHelpers.ts 863L → split modules | databaseHelpers.ts + tests | 2-3h | A |
-| 2 | statsHelpers.ts 602L → split modules | statsHelpers.ts + tests | 1-2h | B |
+| 1 | databaseHelpers.ts 863L → split modules | databaseHelpers.ts + tests | 2-3h | A | ✅ Résolu (déjà fait — barrel 25L → 7 sous-modules) |
+| 2 | statsHelpers.ts 602L → split modules | statsHelpers.ts + tests | 1-2h | B | ✅ Résolu (déjà fait — barrel 18L → 7 sous-modules) |
 | 3 | WorkoutExerciseCard.tsx — useCallback + React.memo sur WorkoutSetRow | WorkoutExerciseCard.tsx | 30min | E | ✅ Résolu 20260226-1900 |
 | 4 | Magic numbers sans correspondance exacte dans le theme | ExercisesScreen, ChartsScreen, SessionDetailScreen | 30min | F | ✅ Résolu 20260226-1900 |
 
