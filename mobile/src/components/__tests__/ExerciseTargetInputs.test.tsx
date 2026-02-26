@@ -195,6 +195,80 @@ describe('ExerciseTargetInputs', () => {
     })
   })
 
+  describe('mode range séries', () => {
+    const rangeProps = {
+      ...defaultProps,
+      setsMax: '5',
+      onSetsMaxChange: jest.fn(),
+    }
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('affiche un seul input séries si onSetsMaxChange est absent', () => {
+      // mode simple : sets='3', reps='10', weight='60' → 3 valeurs distinctes
+      const { queryByPlaceholderText } = render(<ExerciseTargetInputs {...defaultProps} />)
+      expect(queryByPlaceholderText('min')).toBeNull()
+      expect(queryByPlaceholderText('max')).toBeNull()
+    })
+
+    it('affiche deux inputs séries si onSetsMaxChange est fourni', () => {
+      const { getByPlaceholderText } = render(<ExerciseTargetInputs {...rangeProps} />)
+      expect(getByPlaceholderText('min')).toBeTruthy()
+      expect(getByPlaceholderText('max')).toBeTruthy()
+    })
+
+    it('affiche la valeur setsMax dans le second input', () => {
+      const { getByDisplayValue } = render(<ExerciseTargetInputs {...rangeProps} />)
+      expect(getByDisplayValue('5')).toBeTruthy()
+    })
+
+    it('appelle onSetsMaxChange quand le champ setsMax change', () => {
+      const onSetsMaxChange = jest.fn()
+      const { getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
+      )
+      fireEvent.changeText(getByPlaceholderText('max'), '4')
+      expect(onSetsMaxChange).toHaveBeenCalledWith('4')
+    })
+
+    it('clamp setsMax à 10 si la valeur dépasse le max', () => {
+      const onSetsMaxChange = jest.fn()
+      const { getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
+      )
+      fireEvent.changeText(getByPlaceholderText('max'), '99')
+      expect(onSetsMaxChange).toHaveBeenCalledWith('10')
+    })
+
+    it('passe la valeur vide sans modification pour setsMax', () => {
+      const onSetsMaxChange = jest.fn()
+      const { getByPlaceholderText } = render(
+        <ExerciseTargetInputs {...defaultProps} setsMax="5" onSetsMaxChange={onSetsMaxChange} />
+      )
+      fireEvent.changeText(getByPlaceholderText('max'), '')
+      expect(onSetsMaxChange).toHaveBeenCalledWith('')
+    })
+
+    it('onSetsChange et onSetsMaxChange ne sont pas croisés', () => {
+      const onSetsChange = jest.fn()
+      const onSetsMaxChange = jest.fn()
+      const { getByPlaceholderText } = render(
+        <ExerciseTargetInputs
+          {...defaultProps}
+          sets="3"
+          setsMax="5"
+          onSetsChange={onSetsChange}
+          onSetsMaxChange={onSetsMaxChange}
+        />
+      )
+      fireEvent.changeText(getByPlaceholderText('max'), '6')
+      expect(onSetsMaxChange).toHaveBeenCalledTimes(1)
+      expect(onSetsChange).not.toHaveBeenCalled()
+    })
+  })
+
   describe('props optionnelles', () => {
     it('se rend sans crash avec autoFocus à true', () => {
       expect(() =>
