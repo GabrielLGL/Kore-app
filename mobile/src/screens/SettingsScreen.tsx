@@ -8,7 +8,6 @@ import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
 import { useTheme } from '../contexts/ThemeContext'
-import { NeuShadow } from '../components/NeuShadow'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { AlertDialog } from '../components/AlertDialog'
 import { exportAllData } from '../model/utils/exportHelpers'
@@ -51,6 +50,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       backgroundColor: colors.card,
       borderRadius: borderRadius.md,
       padding: spacing.lg,
+      marginBottom: spacing.lg,
+      ...neuShadow.elevatedSm,
     },
     sectionTitle: {
       color: colors.text,
@@ -361,7 +362,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Section Mon profil */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>👤 Mon profil</Text>
           <View style={styles.settingRow}>
@@ -443,10 +443,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             </View>
           )}
         </View>
-        </NeuShadow>
 
         {/* Section Apparence */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🎨 Apparence</Text>
           <View style={styles.settingRow}>
@@ -467,10 +465,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             />
           </View>
         </View>
-        </NeuShadow>
 
         {/* Section Minuteur */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⏱️ Minuteur de repos</Text>
 
@@ -510,10 +506,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             </View>
           </View>
         </View>
-        </NeuShadow>
 
         {/* Section Gamification */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⭐ Gamification</Text>
           <View style={styles.settingRow}>
@@ -558,10 +552,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             <Text style={styles.streakTargetLabel}>séances/sem</Text>
           </View>
         </View>
-        </NeuShadow>
 
         {/* Section Intelligence Artificielle */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>✨ Intelligence Artificielle</Text>
 
@@ -585,10 +577,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             </View>
           </View>
         </View>
-        </NeuShadow>
 
         {/* Section Données */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💾 Données</Text>
           <TouchableOpacity
@@ -603,7 +593,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
           </TouchableOpacity>
           <Text style={styles.exportHint}>Vos données vous appartiennent</Text>
         </View>
-        </NeuShadow>
 
         <AlertDialog
           visible={exportError}
@@ -617,7 +606,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         />
 
         {/* Section À propos */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ℹ️ À propos</Text>
 
@@ -636,10 +624,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             <Text style={styles.infoValue}>React Native + WatermelonDB</Text>
           </View>
         </View>
-        </NeuShadow>
 
         {/* Section Aide */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>❓ Aide</Text>
 
@@ -657,7 +643,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             • Le PR (Personal Record) s'affiche automatiquement
           </Text>
         </View>
-        </NeuShadow>
       </ScrollView>
     </SafeAreaView>
     </LinearGradient>

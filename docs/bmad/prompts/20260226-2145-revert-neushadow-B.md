@@ -133,4 +133,7 @@ cd mobile && npm test -- --testPathPattern="SettingsScreen" --passWithNoTests 2>
 Aucune dépendance sur Groupe A. Peut tourner en parallèle.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-2145
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-2145-style-settings-neushadow-revert-B.md
