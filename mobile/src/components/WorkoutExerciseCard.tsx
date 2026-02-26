@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { from } from 'rxjs'
 import { switchMap } from 'rxjs/operators'
@@ -54,6 +54,7 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
   const [localReps, setLocalReps] = React.useState(input.reps)
   const weightTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const repsTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scaleAnim = React.useRef(new Animated.Value(1)).current
 
   React.useEffect(() => {
     return () => {
@@ -105,6 +106,11 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
       repsTimerRef.current = null
       onUpdateInput(inputKey, 'reps', localReps)
     }
+    // Animation spring sur validation
+    Animated.sequence([
+      Animated.spring(scaleAnim, { toValue: 1.25, useNativeDriver: true, speed: 40, bounciness: 10 }),
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 0 }),
+    ]).start()
     onValidate(localWeight, localReps)
   }
 
@@ -145,14 +151,16 @@ const WorkoutSetRow: React.FC<WorkoutSetRowProps> = ({
         />
         <Text style={styles.inputSuffix}>reps</Text>
       </View>
-      <TouchableOpacity
-        style={[styles.validateBtn, !valid && styles.validateBtnDisabled]}
-        onPress={handleValidate}
-        disabled={!valid}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.validateBtnText}>✓</Text>
-      </TouchableOpacity>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <TouchableOpacity
+          style={[styles.validateBtn, !valid && styles.validateBtnDisabled]}
+          onPress={handleValidate}
+          disabled={!valid}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.validateBtnText}>✓</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   )
 }

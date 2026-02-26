@@ -74,4 +74,7 @@ Story : `docs/stories/exercice-list-redesign/S05-header-stats.md`
 Aucune dépendance sur le Groupe B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1045
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-1045-feat-workout-exercise-card.md
