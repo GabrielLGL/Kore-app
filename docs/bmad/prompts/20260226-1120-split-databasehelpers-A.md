@@ -150,4 +150,7 @@ importGeneratedSession(session, programId): Promise<void>
 Aucune dépendance sur Groupe B ou D. Peut être lancé en parallèle.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1430
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-1430-refactor-split-databasehelpers-A.md
