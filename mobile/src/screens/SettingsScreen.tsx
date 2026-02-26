@@ -6,10 +6,11 @@ import * as Sharing from 'expo-sharing'
 import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
+import { useTheme } from '../contexts/ThemeContext'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { AlertDialog } from '../components/AlertDialog'
 import { exportAllData } from '../model/utils/exportHelpers'
-import { colors, spacing, borderRadius, fontSize } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
 import {
   USER_LEVELS,
   USER_GOALS,
@@ -27,6 +28,7 @@ interface Props {
 
 const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
+  const { colors, isDark, toggleTheme } = useTheme()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
   const [userName, setUserName] = useState(user?.name ?? '')
@@ -34,6 +36,213 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const [editingGoal, setEditingGoal] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState(false)
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: spacing.lg,
+    },
+    section: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: fontSize.xl,
+      fontWeight: 'bold',
+      marginBottom: spacing.md,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.cardSecondary,
+    },
+    settingInfo: {
+      flex: 1,
+      marginRight: spacing.md,
+    },
+    settingLabel: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    settingDescription: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+    },
+    inputGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    input: {
+      backgroundColor: colors.cardSecondary,
+      color: colors.text,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.sm,
+      fontSize: fontSize.md,
+      fontWeight: 'bold',
+      width: 80,
+      textAlign: 'center',
+    },
+    inputUnit: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+      marginLeft: spacing.sm,
+    },
+    nameInput: {
+      width: 140,
+      textAlign: 'right',
+    },
+    profileCards: {
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.cardSecondary,
+    },
+    infoLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+      marginRight: spacing.sm,
+    },
+    infoValue: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      flexShrink: 1,
+      textAlign: 'right',
+    },
+    helpText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      lineHeight: 22,
+    },
+    helpBold: {
+      color: colors.text,
+      fontWeight: 'bold',
+    },
+    aiSubLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      marginBottom: spacing.sm,
+    },
+    providerList: {
+      gap: spacing.xs,
+    },
+    providerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.sm,
+      gap: spacing.md,
+    },
+    providerRowActive: {
+      backgroundColor: colors.cardSecondary,
+    },
+    radioCircle: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      borderWidth: 2,
+      borderColor: colors.textSecondary,
+    },
+    radioCircleActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primary,
+    },
+    providerLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+    },
+    providerLabelActive: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    providerRowDisabled: {
+      opacity: 0.4,
+    },
+    providerRowContent: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    providerLabelDisabled: {
+      color: colors.textSecondary,
+    },
+    providerComingSoon: {
+      fontSize: fontSize.caption,
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+    },
+    streakTargetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    streakTargetBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.cardSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    streakTargetBtnActive: {
+      backgroundColor: colors.primary,
+    },
+    streakTargetText: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      color: colors.textSecondary,
+    },
+    streakTargetTextActive: {
+      color: colors.text,
+    },
+    streakTargetLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      marginLeft: spacing.xs,
+    },
+    exportButton: {
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      alignItems: 'center' as const,
+    },
+    exportButtonDisabled: {
+      opacity: 0.6,
+    },
+    exportButtonText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
+    },
+    exportHint: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      textAlign: 'center' as const,
+      marginTop: spacing.sm,
+    },
+  })
 
   useEffect(() => {
     if (!user) return
@@ -224,6 +433,28 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
           )}
         </View>
 
+        {/* Section Apparence */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🎨 Apparence</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Mode {isDark ? 'sombre' : 'clair'}</Text>
+              <Text style={styles.settingDescription}>
+                {isDark ? 'Neumorphisme dark — fond #21242b' : 'Neumorphisme light — fond #e8ecef'}
+              </Text>
+            </View>
+            <Switch
+              value={isDark}
+              onValueChange={async () => {
+                haptics.onPress()
+                await toggleTheme()
+              }}
+              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+              thumbColor={colors.text}
+            />
+          </View>
+        </View>
+
         {/* Section Minuteur */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⏱️ Minuteur de repos</Text>
@@ -405,213 +636,6 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  section: {
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: fontSize.xl,
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cardSecondary,
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  settingLabel: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  settingDescription: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-  },
-  inputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  input: {
-    backgroundColor: colors.cardSecondary,
-    color: colors.text,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-    fontSize: fontSize.md,
-    fontWeight: 'bold',
-    width: 80,
-    textAlign: 'center',
-  },
-  inputUnit: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-    marginLeft: spacing.sm,
-  },
-  nameInput: {
-    width: 140,
-    textAlign: 'right',
-  },
-  profileCards: {
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.cardSecondary,
-  },
-  infoLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-    marginRight: spacing.sm,
-  },
-  infoValue: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  helpText: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    lineHeight: 22,
-  },
-  helpBold: {
-    color: colors.text,
-    fontWeight: 'bold',
-  },
-  aiSubLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-  },
-  providerList: {
-    gap: spacing.xs,
-  },
-  providerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.sm,
-    gap: spacing.md,
-  },
-  providerRowActive: {
-    backgroundColor: colors.cardSecondary,
-  },
-  radioCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: colors.textSecondary,
-  },
-  radioCircleActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
-  },
-  providerLabel: {
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-  },
-  providerLabelActive: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-  providerRowDisabled: {
-    opacity: 0.4,
-  },
-  providerRowContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  providerLabelDisabled: {
-    color: colors.textSecondary,
-  },
-  providerComingSoon: {
-    fontSize: fontSize.caption,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  streakTargetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  streakTargetBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.cardSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  streakTargetBtnActive: {
-    backgroundColor: colors.primary,
-  },
-  streakTargetText: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  streakTargetTextActive: {
-    color: colors.text,
-  },
-  streakTargetLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginLeft: spacing.xs,
-  },
-  exportButton: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.sm,
-    padding: spacing.md,
-    alignItems: 'center' as const,
-  },
-  exportButtonDisabled: {
-    opacity: 0.6,
-  },
-  exportButtonText: {
-    color: colors.text,
-    fontSize: fontSize.md,
-    fontWeight: '600' as const,
-  },
-  exportHint: {
-    color: colors.textSecondary,
-    fontSize: fontSize.sm,
-    textAlign: 'center' as const,
-    marginTop: spacing.sm,
-  },
-})
 
 export { SettingsContent }
 

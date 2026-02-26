@@ -4,8 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Platform, BackHandler, ToastAndroid } from 'react-native'
 import { useNavigationContainerRef } from '@react-navigation/native'
 import { PortalProvider } from '@gorhom/portal'
-import { colors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext'
+import type { ThemeMode } from '../theme'
 
 import HomeScreen from '../screens/HomeScreen'
 import ProgramsScreen from '../screens/ProgramsScreen'
@@ -49,18 +50,6 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
-
-const MyDarkTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: colors.background,
-    card: colors.card,
-    text: colors.text,
-    border: colors.cardSecondary,
-    primary: colors.primary,
-  },
-};
 
 /**
  * Composant responsable de gérer le bouton retour matériel sur Android.
@@ -112,12 +101,26 @@ function GlobalBackHandler({ navigationRef }: { navigationRef: NavigationContain
 }
 
 /**
- * Navigateur Racine de l'application.
- * Stack-only : le HomeScreen (dashboard) sert de hub de navigation.
+ * Contenu de l'application — enfant de ThemeProvider pour accéder au thème dynamique.
+ * Gère la navigation et le thème de navigation réactif.
  */
-export default function AppNavigator() {
-  const navigationRef = useNavigationContainerRef<RootStackParamList>();
+function AppContent() {
+  const { colors, mode } = useTheme()
+  const navigationRef = useNavigationContainerRef<RootStackParamList>()
   const [initialRoute, setInitialRoute] = useState<keyof RootStackParamList | null>(null)
+
+  const navTheme = {
+    ...DarkTheme,
+    dark: mode === 'dark',
+    colors: {
+      ...DarkTheme.colors,
+      background: colors.background,
+      card: colors.card,
+      text: colors.text,
+      border: colors.cardSecondary,
+      primary: colors.primary,
+    },
+  }
 
   useEffect(() => {
     database.get<User>('users').query().fetch().then(users => {
@@ -126,57 +129,83 @@ export default function AppNavigator() {
     })
   }, [])
 
-  if (initialRoute === null) {
-    return null
-  }
+  if (initialRoute === null) return null
+
+  return (
+    <NavigationContainer ref={navigationRef} theme={navTheme}>
+      <GlobalBackHandler navigationRef={navigationRef} />
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: colors.background },
+          statusBarStyle: mode === 'dark' ? 'light' : 'dark',
+          statusBarBackgroundColor: colors.background,
+        }}
+      >
+        {/* Onboarding */}
+        <Stack.Screen
+          name="Onboarding"
+          component={OnboardingScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Dashboard principal */}
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ headerShown: false }}
+        />
+        {/* Écrans principaux (ex-onglets) */}
+        <Stack.Screen name="Programs" component={ProgramsScreen} options={{ title: 'Programmes' }} />
+        <Stack.Screen name="Exercices" component={ExercisesScreen} options={{ title: 'Bibliothèque' }} />
+        <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: 'Assistant IA' }} />
+        <Stack.Screen name="Stats" component={StatsScreen} options={{ title: 'Statistiques' }} />
+        {/* Écrans de détail */}
+        <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: 'Gestion de la séance' }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Paramètres' }} />
+        <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
+        <Stack.Screen name="StatsDuration" component={StatsDurationScreen} options={{ title: 'Durée des séances' }} />
+        <Stack.Screen name="StatsVolume" component={StatsVolumeScreen} options={{ title: "Volume d'entraînement" }} />
+        <Stack.Screen name="StatsCalendar" component={StatsCalendarScreen} options={{ title: "Calendrier d'activité" }} />
+        <Stack.Screen name="StatsRepartition" component={StatsRepartitionScreen} options={{ title: 'Répartition musculaire' }} />
+        <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: 'Exercices & Records' }} />
+        <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: 'Mesures corporelles' }} />
+        <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: 'Historique' }} />
+        <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: 'Mes Badges' }} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
+
+/**
+ * Navigateur Racine de l'application.
+ * Stack-only : le HomeScreen (dashboard) sert de hub de navigation.
+ * Charge la préférence de thème au démarrage et fournit le ThemeProvider.
+ */
+export default function AppNavigator() {
+  const [initialMode, setInitialMode] = useState<ThemeMode>('dark')
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    database.get<User>('users').query().fetch().then(users => {
+      const savedMode = users[0]?.themeMode
+      if (savedMode === 'light' || savedMode === 'dark') {
+        setInitialMode(savedMode)
+      }
+      setReady(true)
+    })
+  }, [])
+
+  if (!ready) return null
 
   return (
     <ErrorBoundary>
       <PortalProvider>
-        <NavigationContainer ref={navigationRef} theme={MyDarkTheme}>
-          <GlobalBackHandler navigationRef={navigationRef} />
-          <Stack.Navigator
-            initialRouteName={initialRoute}
-            screenOptions={{
-              headerStyle: { backgroundColor: colors.background },
-              headerTintColor: colors.text,
-              headerShadowVisible: false,
-              contentStyle: { backgroundColor: colors.background },
-              statusBarStyle: 'light',
-              statusBarBackgroundColor: colors.background,
-            }}
-          >
-            {/* Onboarding */}
-            <Stack.Screen
-              name="Onboarding"
-              component={OnboardingScreen}
-              options={{ headerShown: false }}
-            />
-            {/* Dashboard principal */}
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={{ headerShown: false }}
-            />
-            {/* Écrans principaux (ex-onglets) */}
-            <Stack.Screen name="Programs" component={ProgramsScreen} options={{ title: 'Programmes' }} />
-            <Stack.Screen name="Exercices" component={ExercisesScreen} options={{ title: 'Bibliothèque' }} />
-            <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: 'Assistant IA' }} />
-            <Stack.Screen name="Stats" component={StatsScreen} options={{ title: 'Statistiques' }} />
-            {/* Écrans de détail */}
-            <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: 'Gestion de la séance' }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Paramètres' }} />
-            <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
-            <Stack.Screen name="StatsDuration" component={StatsDurationScreen} options={{ title: 'Durée des séances' }} />
-            <Stack.Screen name="StatsVolume" component={StatsVolumeScreen} options={{ title: "Volume d'entraînement" }} />
-            <Stack.Screen name="StatsCalendar" component={StatsCalendarScreen} options={{ title: "Calendrier d'activité" }} />
-            <Stack.Screen name="StatsRepartition" component={StatsRepartitionScreen} options={{ title: 'Répartition musculaire' }} />
-            <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: 'Exercices & Records' }} />
-            <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: 'Mesures corporelles' }} />
-            <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: 'Historique' }} />
-            <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: 'Mes Badges' }} />
-          </Stack.Navigator>
-        </NavigationContainer>
+        <ThemeProvider initialMode={initialMode}>
+          <AppContent />
+        </ThemeProvider>
       </PortalProvider>
     </ErrorBoundary>
   )

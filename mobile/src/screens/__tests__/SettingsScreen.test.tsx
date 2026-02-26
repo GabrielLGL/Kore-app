@@ -9,6 +9,21 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'Success', Error: 'Error' },
 }))
 
+const mockToggleTheme = jest.fn().mockResolvedValue(undefined)
+jest.mock('../../contexts/ThemeContext', () => {
+  const { colors } = require('../../theme')
+  return {
+    useTheme: () => ({
+      colors,
+      isDark: true,
+      mode: 'dark' as const,
+      toggleTheme: mockToggleTheme,
+      setThemeMode: jest.fn().mockResolvedValue(undefined),
+      neuShadow: {},
+    }),
+  }
+})
+
 jest.mock('../../model/index', () => ({
   database: {
     write: jest.fn(),
@@ -82,9 +97,9 @@ describe('SettingsContent — section minuteur', () => {
     const mockUpdate = jest.fn()
     const user = makeUser({ timerEnabled: true, update: mockUpdate })
 
-    const { getByRole } = render(<SettingsContent user={user as never} />)
+    const { getAllByRole } = render(<SettingsContent user={user as never} />)
 
-    const switchEl = getByRole('switch')
+    const switchEl = getAllByRole('switch')[1] // index 0 = Apparence, index 1 = Minuteur
     fireEvent(switchEl, 'valueChange', false)
 
     await waitFor(() => {
@@ -93,9 +108,9 @@ describe('SettingsContent — section minuteur', () => {
   })
 
   it('ne sauvegarde pas si user est null lors du toggle timer', async () => {
-    const { getByRole } = render(<SettingsContent user={null} />)
+    const { getAllByRole } = render(<SettingsContent user={null} />)
 
-    const switchEl = getByRole('switch')
+    const switchEl = getAllByRole('switch')[1] // index 0 = Apparence, index 1 = Minuteur
     fireEvent(switchEl, 'valueChange', false)
 
     await waitFor(() => {
@@ -174,9 +189,9 @@ describe('SettingsContent — section minuteur', () => {
     const mockUpdate = jest.fn()
     const user = makeUser({ timerEnabled: true, update: mockUpdate })
 
-    const { getByRole } = render(<SettingsContent user={user as never} />)
+    const { getAllByRole } = render(<SettingsContent user={user as never} />)
 
-    const switchEl = getByRole('switch')
+    const switchEl = getAllByRole('switch')[1] // index 0 = Apparence, index 1 = Minuteur
     fireEvent(switchEl, 'valueChange', false)
 
     // The write fails, so timerEnabled should revert to true
@@ -301,5 +316,29 @@ describe('SettingsContent — section Aide', () => {
     expect(getByText(/Navigation/)).toBeTruthy()
     expect(getByText(/Programmes/)).toBeTruthy()
     expect(getByText(/Exercices/)).toBeTruthy()
+  })
+})
+
+describe('SettingsContent — section Apparence', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockToggleTheme.mockResolvedValue(undefined)
+  })
+
+  it('affiche le switch du mode sombre', () => {
+    const { getByText, getAllByRole } = render(<SettingsContent user={null} />)
+    expect(getByText('🎨 Apparence')).toBeTruthy()
+    expect(getByText('Mode sombre')).toBeTruthy()
+    const switches = getAllByRole('switch')
+    expect(switches.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('appelle toggleTheme au changement du switch Apparence', async () => {
+    const { getAllByRole } = render(<SettingsContent user={null} />)
+    const apparenceSwitch = getAllByRole('switch')[0]
+    fireEvent(apparenceSwitch, 'valueChange', false)
+    await waitFor(() => {
+      expect(mockToggleTheme).toHaveBeenCalledTimes(1)
+    })
   })
 })
