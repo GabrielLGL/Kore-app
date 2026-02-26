@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { View, Text, TextInput, StyleSheet } from 'react-native'
+import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native'
 import { BottomSheet } from './BottomSheet'
 import { Button } from './Button'
 import { updateHistoryNote } from '../model/utils/databaseHelpers'
 import { colors, spacing, borderRadius, fontSize } from '../theme'
+import type { RecapExerciseData, RecapComparisonData } from '../types/workout'
 
 interface WorkoutSummarySheetProps {
   visible: boolean
@@ -16,6 +17,8 @@ interface WorkoutSummarySheetProps {
   xpGained: number
   level: number
   currentStreak: number
+  recapExercises: RecapExerciseData[]
+  recapComparison: RecapComparisonData
 }
 
 function formatDuration(seconds: number): string {
@@ -37,6 +40,20 @@ const StatBlock: React.FC<StatBlockProps> = ({ label, value, emoji }) => (
   </View>
 )
 
+function getMotivationMessage(totalPrs: number, volumeGain: number): { text: string; color: string } {
+  if (totalPrs > 0) {
+    return { text: '🏅 Record battu !', color: colors.primary }
+  }
+  if (volumeGain > 0) {
+    return { text: '🔺 En progression !', color: colors.success }
+  }
+  return { text: '💪 Bonne séance !', color: colors.success }
+}
+
+function formatWeight(w: number): string {
+  return w % 1 === 0 ? `${w}` : `${w}`
+}
+
 export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   visible,
   onClose,
@@ -48,6 +65,8 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   xpGained,
   level,
   currentStreak,
+  recapExercises,
+  recapComparison,
 }) => {
   const [note, setNote] = useState('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -76,72 +95,188 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
     onClose()
   }
 
+  const motivation = getMotivationMessage(totalPrs, recapComparison.volumeGain)
+
+  // Muscles uniques de tous les exercices
+  const allMuscles = Array.from(
+    new Set(recapExercises.flatMap(e => e.muscles))
+  ).filter(m => m.trim().length > 0)
+
+  // Exercices avec delta poids max (pour section Progression)
+  const exercisesWithDelta = recapExercises.filter(
+    e => e.prevMaxWeight > 0 && e.currMaxWeight !== e.prevMaxWeight
+  )
+
   return (
     <BottomSheet
       visible={visible}
       onClose={handleClose}
       title="Séance terminée !"
     >
-      {totalPrs > 0 ? (
-        <Text style={styles.celebrationText}>🏅 Nouveau record personnel !</Text>
-      ) : totalSets > 0 ? (
-        <Text style={[styles.celebrationText, { color: colors.success }]}>💪 Beau travail !</Text>
-      ) : null}
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Message motivant */}
+        <Text style={[styles.motivationText, { color: motivation.color }]}>
+          {motivation.text}
+        </Text>
 
-      <View style={styles.statsGrid}>
-        <StatBlock label="Durée" value={formatDuration(durationSeconds)} emoji="⏱" />
-        <StatBlock label="Volume" value={`${totalVolume.toFixed(1)} kg`} emoji="🏋️" />
-        <StatBlock label="Séries" value={`${totalSets} validées`} emoji="✅" />
-        <StatBlock label="Records" value={`${totalPrs} PR`} emoji="🏆" />
-      </View>
+        {/* Chips muscles travaillés */}
+        {allMuscles.length > 0 && (
+          <View style={styles.muscleChips}>
+            {allMuscles.map(muscle => (
+              <View key={muscle} style={styles.muscleChip}>
+                <Text style={styles.muscleChipText}>{muscle}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
-      <View style={styles.gamificationSection}>
-        <View style={styles.gamRow}>
-          <Text style={styles.gamItem}>
-            {'\u2B50'} +{xpGained} XP
-          </Text>
-          <Text style={styles.gamItem}>
-            {'\uD83C\uDFAF'} Niveau {level}
+        {/* Stats grid 2×2 */}
+        <View style={styles.statsGrid}>
+          <StatBlock label="Durée" value={formatDuration(durationSeconds)} emoji="⏱" />
+          <StatBlock label="Volume" value={`${totalVolume.toFixed(1)} kg`} emoji="🏋️" />
+          <StatBlock label="Séries" value={`${totalSets} validées`} emoji="✅" />
+          <StatBlock label="Records" value={`${totalPrs} PR`} emoji="🏆" />
+        </View>
+
+        {/* Section gamification */}
+        <View style={styles.gamificationSection}>
+          <View style={styles.gamRow}>
+            <Text style={styles.gamItem}>
+              {'\u2B50'} +{xpGained} XP
+            </Text>
+            <Text style={styles.gamItem}>
+              {'\uD83C\uDFAF'} Niveau {level}
+            </Text>
+          </View>
+          <Text style={[styles.gamItem, styles.gamCenter]}>
+            {'\uD83D\uDD25'} Streak {currentStreak}
           </Text>
         </View>
-        <Text style={[styles.gamItem, styles.gamCenter]}>
-          {'\uD83D\uDD25'} Streak {currentStreak}
-        </Text>
-      </View>
 
-      <View style={styles.separator} />
+        {/* Section "Ce que tu as fait" */}
+        {recapExercises.length > 0 && (
+          <>
+            <View style={styles.separator} />
+            <Text style={styles.sectionTitle}>Ce que tu as fait</Text>
+            {recapExercises.map((exo, idx) => {
+              const isComplete = exo.setsValidated >= exo.setsTarget && exo.setsTarget > 0
+              return (
+                <View key={idx} style={styles.exoRow}>
+                  <View style={styles.exoHeader}>
+                    <Text style={styles.exoName}>{exo.exerciseName}</Text>
+                    {exo.setsTarget > 0 && (
+                      isComplete
+                        ? <Text style={styles.completeBadge}>✅</Text>
+                        : <Text style={styles.incompleteBadge}>
+                            {exo.setsValidated}/{exo.setsTarget}
+                          </Text>
+                    )}
+                  </View>
+                  <Text style={styles.exoSets}>
+                    {exo.sets.map(s => `${s.reps}×${formatWeight(s.weight)} kg`).join('  ·  ')}
+                  </Text>
+                </View>
+              )
+            })}
+          </>
+        )}
 
-      <Text style={styles.noteLabel}>Note de séance</Text>
-      <TextInput
-        style={styles.noteInput}
-        multiline
-        numberOfLines={3}
-        value={note}
-        onChangeText={handleNoteChange}
-        placeholder="Ressenti, conditions, progrès..."
-        placeholderTextColor={colors.placeholder}
-        textAlignVertical="top"
-      />
+        {/* Section "Progression" */}
+        {recapExercises.length > 0 && (
+          <>
+            <View style={styles.separator} />
+            <Text style={styles.sectionTitle}>Progression</Text>
 
-      <Button
-        variant="primary"
-        size="lg"
-        fullWidth
-        onPress={handleClose}
-        enableHaptics={false}
-      >
-        Terminer
-      </Button>
+            {/* Delta volume total */}
+            {recapComparison.prevVolume === null ? (
+              <Text style={styles.progressionFirstTime}>🎉 Première séance !</Text>
+            ) : (
+              <View style={styles.progressionVolRow}>
+                <Text style={styles.progressionLabel}>Volume total</Text>
+                {recapComparison.volumeGain > 0 ? (
+                  <Text style={[styles.progressionDelta, { color: colors.success }]}>
+                    +{recapComparison.volumeGain.toFixed(1)} kg 🔺
+                  </Text>
+                ) : recapComparison.volumeGain < 0 ? (
+                  <Text style={[styles.progressionDelta, { color: colors.danger }]}>
+                    {recapComparison.volumeGain.toFixed(1)} kg 🔻
+                  </Text>
+                ) : (
+                  <Text style={[styles.progressionDelta, { color: colors.textSecondary }]}>
+                    Même volume
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Delta poids max par exercice */}
+            {exercisesWithDelta.map((exo, idx) => (
+              <View key={idx} style={styles.progressionExoRow}>
+                <Text style={styles.progressionExoName}>{exo.exerciseName}</Text>
+                <Text style={[
+                  styles.progressionDelta,
+                  { color: exo.currMaxWeight > exo.prevMaxWeight ? colors.success : colors.danger }
+                ]}>
+                  {formatWeight(exo.prevMaxWeight)} → {formatWeight(exo.currMaxWeight)} kg
+                  {exo.currMaxWeight > exo.prevMaxWeight ? ' 🔺' : ' 🔻'}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        <View style={styles.separator} />
+
+        <Text style={styles.noteLabel}>Note de séance</Text>
+        <TextInput
+          style={styles.noteInput}
+          multiline
+          numberOfLines={3}
+          value={note}
+          onChangeText={handleNoteChange}
+          placeholder="Ressenti, conditions, progrès..."
+          placeholderTextColor={colors.placeholder}
+          textAlignVertical="top"
+        />
+
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          onPress={handleClose}
+          enableHaptics={false}
+        >
+          Terminer
+        </Button>
+      </ScrollView>
     </BottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  celebrationText: {
-    color: colors.primary,
-    fontSize: fontSize.sm,
+  motivationText: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
     textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  muscleChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    justifyContent: 'center',
     marginBottom: spacing.md,
+  },
+  muscleChip: {
+    backgroundColor: colors.cardSecondary,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  muscleChipText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+    fontWeight: '500',
   },
   statsGrid: {
     flexDirection: 'row',
@@ -191,6 +326,77 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.separator,
     marginVertical: spacing.md,
+  },
+  sectionTitle: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: spacing.sm,
+  },
+  exoRow: {
+    marginBottom: spacing.sm,
+  },
+  exoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: 2,
+  },
+  exoName: {
+    color: colors.text,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    flex: 1,
+  },
+  completeBadge: {
+    fontSize: fontSize.xs,
+  },
+  incompleteBadge: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+    backgroundColor: colors.cardSecondary,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 1,
+    borderRadius: borderRadius.sm,
+  },
+  exoSets: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+  },
+  progressionFirstTime: {
+    color: colors.success,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  progressionVolRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  progressionLabel: {
+    color: colors.text,
+    fontSize: fontSize.sm,
+  },
+  progressionDelta: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+  },
+  progressionExoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  progressionExoName: {
+    color: colors.textSecondary,
+    fontSize: fontSize.xs,
+    flex: 1,
+    marginRight: spacing.sm,
   },
   noteLabel: {
     color: colors.textSecondary,

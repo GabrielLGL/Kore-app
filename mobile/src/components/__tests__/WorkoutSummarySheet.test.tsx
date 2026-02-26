@@ -34,6 +34,8 @@ const defaultProps = {
   xpGained: 85,
   level: 12,
   currentStreak: 3,
+  recapExercises: [],
+  recapComparison: { prevVolume: null, currVolume: 0, volumeGain: 0 },
 }
 
 describe('WorkoutSummarySheet', () => {
@@ -209,27 +211,43 @@ describe('WorkoutSummarySheet', () => {
     })
   })
 
-  describe('texte de célébration', () => {
-    it('affiche "Nouveau record" quand totalPrs > 0', () => {
+  describe('message motivant', () => {
+    it('affiche "Record battu" quand totalPrs > 0', () => {
       const { getByText } = render(
         <WorkoutSummarySheet {...defaultProps} totalPrs={2} totalSets={10} />
       )
-      expect(getByText(/Nouveau record personnel/)).toBeTruthy()
+      expect(getByText(/Record battu/)).toBeTruthy()
     })
 
-    it('affiche "Beau travail" quand totalPrs = 0 et totalSets > 0', () => {
+    it('affiche "En progression" quand volumeGain > 0 et pas de PR', () => {
       const { getByText } = render(
-        <WorkoutSummarySheet {...defaultProps} totalPrs={0} totalSets={5} />
+        <WorkoutSummarySheet
+          {...defaultProps}
+          totalPrs={0}
+          totalSets={5}
+          recapComparison={{ prevVolume: 1000, currVolume: 1200, volumeGain: 200 }}
+        />
       )
-      expect(getByText(/Beau travail/)).toBeTruthy()
+      expect(getByText(/En progression/)).toBeTruthy()
     })
 
-    it('n\'affiche pas de texte de célébration quand totalPrs = 0 et totalSets = 0', () => {
-      const { queryByText } = render(
+    it('affiche "Bonne séance" quand pas de PR et pas de progression', () => {
+      const { getByText } = render(
+        <WorkoutSummarySheet
+          {...defaultProps}
+          totalPrs={0}
+          totalSets={5}
+          recapComparison={{ prevVolume: 1200, currVolume: 1000, volumeGain: -200 }}
+        />
+      )
+      expect(getByText(/Bonne séance/)).toBeTruthy()
+    })
+
+    it('affiche un message même quand totalSets = 0', () => {
+      const { getByText } = render(
         <WorkoutSummarySheet {...defaultProps} totalPrs={0} totalSets={0} />
       )
-      expect(queryByText(/Nouveau record/)).toBeNull()
-      expect(queryByText(/Beau travail/)).toBeNull()
+      expect(getByText(/Bonne séance/)).toBeTruthy()
     })
   })
 

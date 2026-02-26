@@ -8,7 +8,7 @@ import Session from '../models/Session'
 import SessionExercise from '../models/SessionExercise'
 import User from '../models/User'
 import WorkoutSet from '../models/Set'
-import type { LastPerformance } from '../../types/workout'
+import type { LastPerformance, RecapExerciseData, ValidatedSetData } from '../../types/workout'
 import type { PresetProgram } from '../onboardingPrograms'
 import type { GeneratedPlan, GeneratedSession } from '../../services/ai/types'
 
@@ -442,6 +442,93 @@ export async function getExerciseStatsFromSets(
     .fetch()
 
   return buildExerciseStatsFromData(sets, histories, sessions)
+}
+
+/**
+ * Retourne le volume total (somme reps × poids) de la dernière séance terminée
+ * pour une session donnée, en excluant la séance en cours.
+ *
+ * @param sessionId - ID de la Session
+ * @param excludeHistoryId - ID de la History en cours (à exclure)
+ * @returns Volume total en kg, ou null si aucune séance précédente
+ */
+export async function getLastSessionVolume(
+  sessionId: string,
+  excludeHistoryId: string
+): Promise<number | null> {
+  const histories = await database
+    .get<History>('histories')
+    .query(
+      Q.where('session_id', sessionId),
+      Q.where('deleted_at', null),
+      Q.where('id', Q.notEq(excludeHistoryId))
+    )
+    .fetch()
+
+  const completed = histories.filter(h => h.endTime != null)
+  if (completed.length === 0) return null
+
+  const mostRecent = completed.sort(
+    (a, b) => b.startTime.getTime() - a.startTime.getTime()
+  )[0]
+
+  const sets = await database
+    .get<WorkoutSet>('sets')
+    .query(Q.where('history_id', mostRecent.id))
+    .fetch()
+
+  return sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
+}
+
+/**
+ * Construit les données de récap exercice par exercice à partir des sets validés
+ * en mémoire + lookups DB pour les métadonnées (nom, muscles, prev max weight).
+ *
+ * @param sessionExercises - SessionExercises de la séance (depuis withObservables)
+ * @param validatedSets - Sets validés en mémoire (depuis useWorkoutState)
+ * @param historyId - ID de la History en cours (pour exclure du calcul prevMaxWeight)
+ * @returns Liste des données de récap par exercice (exercices sans set validé exclus)
+ */
+export async function buildRecapExercises(
+  sessionExercises: SessionExercise[],
+  validatedSets: Record<string, ValidatedSetData>,
+  historyId: string
+): Promise<RecapExerciseData[]> {
+  const result: RecapExerciseData[] = []
+
+  for (const se of sessionExercises) {
+    const setsTarget = se.setsTarget ?? 0
+    const seSets: Array<{ reps: number; weight: number }> = []
+    let currMaxWeight = 0
+
+    for (let order = 1; order <= setsTarget; order++) {
+      const key = `${se.id}_${order}`
+      const validated = validatedSets[key]
+      if (validated) {
+        seSets.push({ reps: validated.reps, weight: validated.weight })
+        if (validated.weight > currMaxWeight) currMaxWeight = validated.weight
+      }
+    }
+
+    if (seSets.length === 0) continue
+
+    const exercise = await se.exercise.fetch()
+    if (!exercise) continue
+
+    const prevMaxWeight = await getMaxWeightForExercise(exercise.id, historyId)
+
+    result.push({
+      exerciseName: exercise.name,
+      setsValidated: seSets.length,
+      setsTarget,
+      sets: seSets,
+      prevMaxWeight,
+      currMaxWeight,
+      muscles: exercise.muscles,
+    })
+  }
+
+  return result
 }
 
 /**

@@ -20,6 +20,8 @@ import History from '../model/models/History'
 import {
   createWorkoutHistory,
   completeWorkoutHistory,
+  buildRecapExercises,
+  getLastSessionVolume,
 } from '../model/utils/databaseHelpers'
 import {
   calculateSessionXP,
@@ -43,6 +45,7 @@ import RestTimer from '../components/RestTimer'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation'
 import { colors, spacing, fontSize, borderRadius } from '../theme'
+import type { RecapExerciseData, RecapComparisonData } from '../types/workout'
 import {
   setupNotificationChannel,
   requestNotificationPermission,
@@ -78,6 +81,12 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const [sessionXPGained, setSessionXPGained] = useState(0)
   const [newLevelResult, setNewLevelResult] = useState(1)
   const [newStreakResult, setNewStreakResult] = useState(0)
+  const [recapExercises, setRecapExercises] = useState<RecapExerciseData[]>([])
+  const [recapComparison, setRecapComparison] = useState<RecapComparisonData>({
+    prevVolume: null,
+    currVolume: 0,
+    volumeGain: 0,
+  })
 
   const haptics = useHaptics()
   const footerSlide = useKeyboardAnimation(120)
@@ -241,6 +250,20 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       }
     }
 
+    // ── Récap enrichi ──
+    try {
+      const recap = await buildRecapExercises(sessionExercises, validatedSets, historyId)
+      const prevVol = await getLastSessionVolume(session.id, historyId)
+      setRecapExercises(recap)
+      setRecapComparison({
+        prevVolume: prevVol,
+        currVolume: totalVolume,
+        volumeGain: prevVol !== null ? totalVolume - prevVol : 0,
+      })
+    } catch (e) {
+      if (__DEV__) console.error('[WorkoutScreen] buildRecapExercises:', e)
+    }
+
     setConfirmEndVisible(false)
     setSummaryVisible(true)
     haptics.onMajorSuccess()
@@ -396,6 +419,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         xpGained={sessionXPGained}
         level={newLevelResult}
         currentStreak={newStreakResult}
+        recapExercises={recapExercises}
+        recapComparison={recapComparison}
       />
 
       {/* Celebration milestone */}

@@ -16,3 +16,19 @@ export interface LastPerformance {
   setsCount: number
   date: Date
 }
+
+export interface RecapExerciseData {
+  exerciseName: string
+  setsValidated: number
+  setsTarget: number
+  sets: Array<{ reps: number; weight: number }>
+  prevMaxWeight: number
+  currMaxWeight: number
+  muscles: string[]
+}
+
+export interface RecapComparisonData {
+  prevVolume: number | null
+  currVolume: number
+  volumeGain: number
+}
