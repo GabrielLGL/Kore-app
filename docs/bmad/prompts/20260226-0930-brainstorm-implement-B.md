@@ -100,4 +100,7 @@ Ajouter bouton "Recommencer" avec confirmation `<AlertDialog>` pour réinitialis
 Aucune dépendance sur le Groupe A. Peut être lancé en parallèle.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1100
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-1100-feat-assistant-preview.md

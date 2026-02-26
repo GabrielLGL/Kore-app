@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native'
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { BottomSheet } from './BottomSheet'
 import { useHaptics } from '../hooks/useHaptics'
 import { colors, spacing, fontSize, borderRadius } from '../theme'
 import type { GeneratedPlan, GeneratedExercise } from '../services/ai/types'
-
-const SCROLL_MAX_HEIGHT = Dimensions.get('window').height * 0.45
 
 function formatExerciseSets(ex: GeneratedExercise): string {
   if (ex.setsTarget > 0 && ex.repsTarget) {
@@ -65,6 +63,13 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
 
   const title = mode === 'program' ? 'Programme généré' : 'Séance générée'
 
+  const totalExercises = plan
+    ? plan.sessions.reduce((acc, s) => acc + s.exercises.length, 0)
+    : 0
+  const summary = plan
+    ? `${plan.sessions.length} séance${plan.sessions.length > 1 ? 's' : ''} · ${totalExercises} exercice${totalExercises > 1 ? 's' : ''}`
+    : ''
+
   return (
     <BottomSheet visible={visible} onClose={onClose} title={title}>
       {isLoading ? (
@@ -82,6 +87,7 @@ export const AssistantPreviewSheet: React.FC<AssistantPreviewSheetProps> = ({
             placeholder="Nom du programme ou de la séance"
             placeholderTextColor={colors.textSecondary}
           />
+          <Text style={styles.summary}>{summary}</Text>
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {plan.sessions.map((session, si) => (
@@ -152,7 +158,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   scrollView: {
-    maxHeight: SCROLL_MAX_HEIGHT,
+    flex: 1,
+    marginBottom: spacing.md,
+  },
+  summary: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
     marginBottom: spacing.md,
   },
   sessionCard: {
