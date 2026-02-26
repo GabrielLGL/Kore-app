@@ -51,4 +51,4 @@ aucune
 ✅ Résolu — 20260226-1930
 
 ## Commit
-[sera rempli après commit]
+c966026 style(SettingsScreen): UTF-8 encoding + LinearGradient background + neumorphic shadows

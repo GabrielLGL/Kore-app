@@ -42,4 +42,4 @@ Aucune — pattern Portal déjà documenté dans CLAUDE.md.
 ✅ Résolu — 20260226-2145
 
 ## Commit
-[sera rempli après push]
+`3019f48` fix(navigation): move ThemeProvider above PortalProvider

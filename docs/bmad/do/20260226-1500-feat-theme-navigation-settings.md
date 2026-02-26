@@ -58,4 +58,4 @@ aucune (comportement décrit dans CLAUDE.md section 2.2 — ThemeContext déjà 
 ✅ Résolu — 20260226-1500
 
 ## Commit
-[à remplir]
+802f4cb feat(theme): ThemeProvider navigation + dark/light toggle Settings — Groupe C

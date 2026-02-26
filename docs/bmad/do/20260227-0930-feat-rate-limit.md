@@ -29,4 +29,4 @@ aucune
 ✅ Résolu — 20260227-0930
 
 ## Commit
-[à remplir]
+f717453 feat(subscribe): add in-memory rate limiting (5 req/h/IP)

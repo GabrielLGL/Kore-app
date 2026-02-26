@@ -35,4 +35,4 @@ Aucune (JSDoc dans le composant uniquement)
 ✅ Résolu — 20260226-2200
 
 ## Commit
-[sera rempli après commit]
+e01f449 feat(ExerciseTargetInputs): add sets range mode (setsMax prop)

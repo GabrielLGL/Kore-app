@@ -32,4 +32,4 @@ aucune
 ✅ Résolu — 20260227-0935
 
 ## Commit
-[à remplir]
+c8c7cfd test(subscribe): add rate limiting coverage (429 + X-RateLimit headers)

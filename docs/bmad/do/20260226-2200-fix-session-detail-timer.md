@@ -38,4 +38,4 @@ aucune
 ✅ Résolu — 20260226-2200
 
 ## Commit
-[à remplir]
+b1079b0 fix(SessionDetailScreen): remove RestTimer from session planning screen

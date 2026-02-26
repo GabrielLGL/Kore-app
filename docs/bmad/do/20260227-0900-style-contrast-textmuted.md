@@ -37,4 +37,4 @@ Aucune (noms de clés inchangés, aucun nouveau pattern)
 ✅ Résolu — 20260227-0900
 
 ## Commit
-[sera rempli]
+dfc22cb style(theme): fix text-muted contrast — WCAG AA

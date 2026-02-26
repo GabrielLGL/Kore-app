@@ -89,4 +89,4 @@ Aucune (migration purement de wiring styles, aucun nouveau pattern ou API)
 ✅ Résolu — 20260226-1701
 
 ## Commit
-[sera rempli]
+4803cb9 style(theme): migrate 40 components/screens to dynamic useColors() hook — Groupe D

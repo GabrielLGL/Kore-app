@@ -30,4 +30,4 @@ Aucune
 ✅ Résolu — 20260227-0033
 
 ## Commit
-[sera rempli après commit]
+811445a feat(landing): add /privacy link in footer, form, and sitemap

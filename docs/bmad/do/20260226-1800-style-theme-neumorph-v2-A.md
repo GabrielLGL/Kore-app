@@ -49,4 +49,4 @@ aucune (pas de nouveau composant/hook/pattern)
 ✅ Résolu — 20260226-1800
 
 ## Commit
-[sera rempli]
+7451f46 style(theme): neumorphisme v2 — contraste dramatique + tokens gradient — Groupe A

@@ -32,4 +32,4 @@ Aucune (pattern déjà documenté dans NeuShadow JSDoc)
 ✅ Résolu — 20260226-2135
 
 ## Commit
-[à remplir]
+078e78c style(NeuShadow): fix double-Shadow → Shadow unique + borderColor

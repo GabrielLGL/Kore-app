@@ -32,3 +32,4 @@ aucune
 ✅ Résolu — 20260226-1900
 
 ## Commit
+5854608 chore(HomeScreen): replace unicode escapes with literal UTF-8 characters

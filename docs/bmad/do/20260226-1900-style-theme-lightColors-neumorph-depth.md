@@ -33,4 +33,4 @@ aucune
 ✅ Résolu — 20260226-1900
 
 ## Commit
-[à remplir]
+8151e23 style(theme): lightColors depth — background/card contrast for neumorphic relief
