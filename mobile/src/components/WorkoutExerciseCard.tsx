@@ -1,8 +1,8 @@
 import React from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from 'react-native'
 import withObservables from '@nozbe/with-observables'
-import { from } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { from, of } from 'rxjs'
+import { switchMap, catchError } from 'rxjs/operators'
 import SessionExercise from '../model/models/SessionExercise'
 import Exercise from '../model/models/Exercise'
 import { validateSetInput } from '../model/utils/validationHelpers'
@@ -301,7 +301,11 @@ export const WorkoutExerciseCard = withObservables(
     lastPerformance: sessionExercise.exercise.observe().pipe(
       switchMap(exercise =>
         from(getLastPerformanceForExercise(exercise.id, historyId ?? ''))
-      )
+      ),
+      catchError(err => {
+        if (__DEV__) console.error('WorkoutExerciseCard: lastPerformance error', err)
+        return of(null)
+      })
     ),
   })
 )(WorkoutExerciseCardContent)

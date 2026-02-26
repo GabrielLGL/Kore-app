@@ -12,28 +12,23 @@ export function createGeminiProvider(apiKey: string): AIProvider {
   return {
     async generate(form: AIFormData, context: DBContext): Promise<GeneratedPlan> {
       const { signal, clear } = withTimeout(30000)
-      let response: Response
-      try {
-        response = await fetch(GEMINI_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': apiKey,
+      const response = await fetch(GEMINI_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+        },
+        body: JSON.stringify({
+          contents: [
+            { parts: [{ text: buildPrompt(form, context) }] },
+          ],
+          generationConfig: {
+            maxOutputTokens: 2048,
+            temperature: 0.7,
           },
-          body: JSON.stringify({
-            contents: [
-              { parts: [{ text: buildPrompt(form, context) }] },
-            ],
-            generationConfig: {
-              maxOutputTokens: 2048,
-              temperature: 0.7,
-            },
-          }),
-          signal,
-        })
-      } finally {
-        clear()
-      }
+        }),
+        signal,
+      }).finally(() => clear())
 
       if (!response.ok) {
         return throwGeminiError(response)
@@ -50,28 +45,23 @@ export function createGeminiProvider(apiKey: string): AIProvider {
 
 export async function testGeminiConnection(apiKey: string): Promise<void> {
   const { signal, clear } = withTimeout(10000)
-  let response: Response
-  try {
-    response = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
+  const response = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+    },
+    body: JSON.stringify({
+      contents: [
+        { parts: [{ text: 'Réponds uniquement "ok".' }] },
+      ],
+      generationConfig: {
+        maxOutputTokens: 10,
+        temperature: 0,
       },
-      body: JSON.stringify({
-        contents: [
-          { parts: [{ text: 'Réponds uniquement "ok".' }] },
-        ],
-        generationConfig: {
-          maxOutputTokens: 10,
-          temperature: 0,
-        },
-      }),
-      signal,
-    })
-  } finally {
-    clear()
-  }
+    }),
+    signal,
+  }).finally(() => clear())
 
   if (!response.ok) {
     return throwGeminiError(response)

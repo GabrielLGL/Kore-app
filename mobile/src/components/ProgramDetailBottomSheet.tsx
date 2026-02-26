@@ -2,6 +2,8 @@ import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
+import { of } from 'rxjs'
+import { catchError } from 'rxjs/operators'
 import { database } from '../model/index'
 import { BottomSheet } from './BottomSheet'
 import Program from '../model/models/Program'
@@ -58,7 +60,12 @@ const SessionPreviewRow = withObservables(['session'], ({ session }: { session: 
   session: session.observe(),
   exercises: database.get<Exercise>('exercises').query(
     Q.on('session_exercises', 'session_id', session.id)
-  ).observe(),
+  ).observe().pipe(
+    catchError(err => {
+      if (__DEV__) console.error('SessionPreviewRow: exercises error', err)
+      return of([] as Exercise[])
+    })
+  ),
 }))(SessionPreviewRowInner)
 
 // --- ProgramDetailContent ---
@@ -109,7 +116,12 @@ const ProgramDetailContent = withObservables(
     sessions: database.get<Session>('sessions').query(
       Q.where('program_id', program.id),
       Q.sortBy('position', Q.asc)
-    ).observe(),
+    ).observe().pipe(
+      catchError(err => {
+        if (__DEV__) console.error('ProgramDetailContent: sessions error', err)
+        return of([] as Session[])
+      })
+    ),
   })
 )(ProgramDetailContentInner)
 

@@ -25,4 +25,7 @@
 - Les 2 patterns corrigés
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1730
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-1730-fix-quality-remaining.md
