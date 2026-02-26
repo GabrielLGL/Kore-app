@@ -443,17 +443,17 @@ describe('AssistantScreenInner', () => {
     pressAndFlush(result, 'PPL')
     // Phase
     expect(result.getByText('Dans quelle phase es-tu ?')).toBeTruthy()
-    pressAndFlush(result, 'Prise de masse 🍖')
+    pressAndFlush(result, 'Prise de masse')
     // Recovery
     expect(result.getByText('Comment te récupères-tu ?')).toBeTruthy()
-    pressAndFlush(result, 'Normale 😊')
+    pressAndFlush(result, 'Normale')
     // Injuries
     expect(result.getByText('As-tu des zones sensibles ?')).toBeTruthy()
-    fireEvent.press(result.getByText('Aucune ✅'))
+    fireEvent.press(result.getByText('Aucune'))
     pressAndFlush(result, 'Suivant →')
     // Age group
     expect(result.getByText(/tranche d'âge/)).toBeTruthy()
-    pressAndFlush(result, '26–35 ans 💪')
+    pressAndFlush(result, '26–35 ans')
     // Days per week
     expect(result.getByText('Combien de jours par semaine ?')).toBeTruthy()
   })
@@ -482,14 +482,14 @@ describe('AssistantScreenInner', () => {
     // Split: Full Body
     pressAndFlush(result, 'Full Body')
     // Phase
-    pressAndFlush(result, 'Prise de masse 🍖')
+    pressAndFlush(result, 'Prise de masse')
     // Recovery
-    pressAndFlush(result, 'Normale 😊')
+    pressAndFlush(result, 'Normale')
     // Injuries
-    fireEvent.press(result.getByText('Aucune ✅'))
+    fireEvent.press(result.getByText('Aucune'))
     pressAndFlush(result, 'Suivant →')
     // Age
-    pressAndFlush(result, '26–35 ans 💪')
+    pressAndFlush(result, '26–35 ans')
     // Days
     pressAndFlush(result, '3j')
     // Muscles focus (last step) → Suivant will trigger generate
@@ -518,11 +518,11 @@ describe('AssistantScreenInner', () => {
     pressAndFlush(result, 'Suivant →')
     pressAndFlush(result, '60 min')
     pressAndFlush(result, 'Full Body')
-    pressAndFlush(result, 'Prise de masse 🍖')
-    pressAndFlush(result, 'Normale 😊')
-    fireEvent.press(result.getByText('Aucune ✅'))
+    pressAndFlush(result, 'Prise de masse')
+    pressAndFlush(result, 'Normale')
+    fireEvent.press(result.getByText('Aucune'))
     pressAndFlush(result, 'Suivant →')
-    pressAndFlush(result, '26–35 ans 💪')
+    pressAndFlush(result, '26–35 ans')
     pressAndFlush(result, '3j')
     pressAndFlush(result, 'Suivant →')
 

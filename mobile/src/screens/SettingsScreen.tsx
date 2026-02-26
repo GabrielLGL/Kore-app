@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch, TouchableOpacity } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -53,11 +54,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       marginBottom: spacing.lg,
       ...neuShadow.elevatedSm,
     },
+    sectionTitleRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
     sectionTitle: {
       color: colors.text,
       fontSize: fontSize.xl,
       fontWeight: 'bold',
-      marginBottom: spacing.md,
     },
     settingRow: {
       flexDirection: 'row',
@@ -363,7 +369,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Section Mon profil */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👤 Mon profil</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="person-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Mon profil</Text>
+          </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Prénom</Text>
@@ -446,7 +455,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Apparence */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🎨 Apparence</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="color-palette-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Apparence</Text>
+          </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Mode {isDark ? 'sombre' : 'clair'}</Text>
@@ -468,7 +480,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Minuteur */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⏱️ Minuteur de repos</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="time-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Minuteur de repos</Text>
+          </View>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
@@ -509,7 +524,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Gamification */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>⭐ Gamification</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="star-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Gamification</Text>
+          </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>Objectif hebdomadaire</Text>
@@ -555,7 +573,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Intelligence Artificielle */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✨ Intelligence Artificielle</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="hardware-chip-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Intelligence Artificielle</Text>
+          </View>
 
           <Text style={styles.aiSubLabel}>Provider</Text>
           <View style={styles.providerList}>
@@ -580,7 +601,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Données */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💾 Données</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="save-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Données</Text>
+          </View>
           <TouchableOpacity
             style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
             onPress={handleExport}
@@ -607,7 +631,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section À propos */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ℹ️ À propos</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>À propos</Text>
+          </View>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Application</Text>
@@ -627,7 +654,10 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         {/* Section Aide */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>❓ Aide</Text>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="help-circle-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>Aide</Text>
+          </View>
 
           <Text style={styles.helpText}>
             <Text style={styles.helpBold}>Navigation :{'\n'}</Text>

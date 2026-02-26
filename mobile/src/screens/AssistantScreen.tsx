@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Animated,
   ScrollView,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
 import { database } from '../model'
@@ -30,7 +31,7 @@ interface StepOption {
   value: string | number
   label: string
   sub?: string
-  icon?: string
+  icon?: keyof typeof Ionicons.glyphMap
 }
 
 type WizardStepKind = 'single' | 'multi' | 'programs' | 'multi-focus' | 'multi-muscle' | 'multi-injuries'
@@ -46,21 +47,21 @@ interface WizardStep {
 // ─── Options ──────────────────────────────────────────────────────────────────
 
 const MODE_OPTIONS: StepOption[] = [
-  { value: 'program', label: 'Programme complet', sub: 'Plusieurs séances structurées', icon: '📅' },
-  { value: 'session', label: 'Séance du jour', sub: "Une session pour aujourd'hui", icon: '⚡' },
+  { value: 'program', label: 'Programme complet', sub: 'Plusieurs séances structurées', icon: 'calendar-outline' },
+  { value: 'session', label: 'Séance du jour', sub: "Une session pour aujourd'hui", icon: 'flash-outline' },
 ]
 
 const GOAL_OPTIONS: StepOption[] = [
-  { value: 'bodybuilding', label: 'Bodybuilding', icon: '💪' },
-  { value: 'power',        label: 'Power',        icon: '🏋️' },
-  { value: 'renfo',        label: 'Renfo',        icon: '🔥' },
-  { value: 'cardio',       label: 'Cardio',       icon: '🏃' },
+  { value: 'bodybuilding', label: 'Bodybuilding', icon: 'body-outline' },
+  { value: 'power',        label: 'Power',        icon: 'barbell-outline' },
+  { value: 'renfo',        label: 'Renfo',        icon: 'flame-outline' },
+  { value: 'cardio',       label: 'Cardio',       icon: 'walk-outline' },
 ]
 
 const LEVEL_OPTIONS: StepOption[] = [
-  { value: 'débutant',      label: 'Débutant',      icon: '🌱' },
-  { value: 'intermédiaire', label: 'Intermédiaire', icon: '📈' },
-  { value: 'avancé',        label: 'Avancé',        icon: '🔝' },
+  { value: 'débutant',      label: 'Débutant',      icon: 'leaf-outline' },
+  { value: 'intermédiaire', label: 'Intermédiaire', icon: 'trending-up-outline' },
+  { value: 'avancé',        label: 'Avancé',        icon: 'rocket-outline' },
 ]
 
 const EQUIPMENT_OPTIONS = ['Poids du corps', 'Haltères', 'Barre & disques', 'Machines']
@@ -85,45 +86,45 @@ const MUSCLE_OPTIONS: StepOption[] = [
 ]
 
 const SPLIT_OPTIONS: StepOption[] = [
-  { value: 'auto',       label: 'Automatique',       sub: "L'IA choisit selon tes jours",              icon: '🔄' },
-  { value: 'fullbody',   label: 'Full Body',          sub: 'Tout le corps à chaque séance',             icon: '💪' },
-  { value: 'upperlower', label: 'Upper / Lower',      sub: 'Haut du corps / Bas du corps',              icon: '↕️' },
-  { value: 'ppl',        label: 'PPL',                sub: 'Push · Pull · Legs',                        icon: '🔁' },
-  { value: 'brosplit',   label: 'Bro Split',          sub: '1 groupe musculaire par séance',            icon: '🏋️' },
-  { value: 'arnold',     label: 'Arnold Split',       sub: 'Poitrine+Dos / Épaules+Bras / Jambes',      icon: '🦁' },
-  { value: 'phul',       label: 'PHUL',               sub: 'Force + Hypertrophie sur 4 jours',          icon: '⚡' },
-  { value: 'fiveday',    label: '5 Jours',            sub: 'Poitrine / Dos / Épaules / Jambes / Bras',  icon: '5️⃣' },
-  { value: 'pushpull',   label: 'Push / Pull',        sub: '2 jours alternés',                          icon: '↔️' },
-  { value: 'fullbodyhi', label: 'Full Body Intensif', sub: '3 séances haute intensité',                 icon: '🔥' },
+  { value: 'auto',       label: 'Automatique',       sub: "L'IA choisit selon tes jours",              icon: 'refresh-outline' },
+  { value: 'fullbody',   label: 'Full Body',          sub: 'Tout le corps à chaque séance',             icon: 'grid-outline' },
+  { value: 'upperlower', label: 'Upper / Lower',      sub: 'Haut du corps / Bas du corps',              icon: 'swap-vertical-outline' },
+  { value: 'ppl',        label: 'PPL',                sub: 'Push · Pull · Legs',                        icon: 'repeat-outline' },
+  { value: 'brosplit',   label: 'Bro Split',          sub: '1 groupe musculaire par séance',            icon: 'barbell-outline' },
+  { value: 'arnold',     label: 'Arnold Split',       sub: 'Poitrine+Dos / Épaules+Bras / Jambes',      icon: 'star-outline' },
+  { value: 'phul',       label: 'PHUL',               sub: 'Force + Hypertrophie sur 4 jours',          icon: 'flash-outline' },
+  { value: 'fiveday',    label: '5 Jours',            sub: 'Poitrine / Dos / Épaules / Jambes / Bras',  icon: 'calendar-outline' },
+  { value: 'pushpull',   label: 'Push / Pull',        sub: '2 jours alternés',                          icon: 'swap-horizontal-outline' },
+  { value: 'fullbodyhi', label: 'Full Body Intensif', sub: '3 séances haute intensité',                 icon: 'flame-outline' },
 ]
 
 const PHASE_OPTIONS: StepOption[] = [
-  { value: 'prise_masse',    label: 'Prise de masse 🍖', sub: 'Surplus calorique, volume élevé'    },
-  { value: 'seche',          label: 'Sèche 🔥',          sub: 'Déficit, maintien musculaire'        },
-  { value: 'recomposition',  label: 'Recomposition ⚖️',  sub: 'Maintien calorique, transformation' },
-  { value: 'maintien',       label: 'Maintien 🧘',       sub: 'Conserver les acquis'                },
+  { value: 'prise_masse',    label: 'Prise de masse', sub: 'Surplus calorique, volume élevé'    },
+  { value: 'seche',          label: 'Sèche',          sub: 'Déficit, maintien musculaire'        },
+  { value: 'recomposition',  label: 'Recomposition',  sub: 'Maintien calorique, transformation' },
+  { value: 'maintien',       label: 'Maintien',       sub: 'Conserver les acquis'                },
 ]
 
 const RECOVERY_OPTIONS: StepOption[] = [
-  { value: 'rapide',   label: 'Rapide ⚡',   sub: 'Prêt dès le lendemain'         },
-  { value: 'normale',  label: 'Normale 😊',  sub: '48h entre groupes musculaires' },
-  { value: 'lente',    label: 'Lente 🐢',    sub: 'Besoin de 72h+'               },
+  { value: 'rapide',   label: 'Rapide',   sub: 'Prêt dès le lendemain'         },
+  { value: 'normale',  label: 'Normale',  sub: '48h entre groupes musculaires' },
+  { value: 'lente',    label: 'Lente',    sub: 'Besoin de 72h+'               },
 ]
 
 const INJURIES_OPTIONS: StepOption[] = [
-  { value: 'none',     label: 'Aucune ✅'     },
-  { value: 'epaules',  label: 'Épaules 🦴'    },
-  { value: 'genoux',   label: 'Genoux 🦵'     },
-  { value: 'bas_dos',  label: 'Bas du dos 🔻' },
-  { value: 'poignets', label: 'Poignets ✋'   },
-  { value: 'nuque',    label: 'Nuque/Cou 🤕'  },
+  { value: 'none',     label: 'Aucune'     },
+  { value: 'epaules',  label: 'Épaules'    },
+  { value: 'genoux',   label: 'Genoux'     },
+  { value: 'bas_dos',  label: 'Bas du dos' },
+  { value: 'poignets', label: 'Poignets'   },
+  { value: 'nuque',    label: 'Nuque/Cou'  },
 ]
 
 const AGE_GROUP_OPTIONS: StepOption[] = [
-  { value: '18-25', label: '18–25 ans 🚀' },
-  { value: '26-35', label: '26–35 ans 💪' },
-  { value: '36-45', label: '36–45 ans 🧠' },
-  { value: '45+',   label: '45+ ans 🎖️'  },
+  { value: '18-25', label: '18–25 ans' },
+  { value: '26-35', label: '26–35 ans' },
+  { value: '36-45', label: '36–45 ans' },
+  { value: '45+',   label: '45+ ans'   },
 ]
 
 const SPLIT_VALID_DAYS: Record<AISplit, number[]> = {
@@ -583,7 +584,7 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
               onPress={() => handleSelect('targetProgramId', p.id)}
             >
               <View style={styles.optionRow}>
-                <Text style={styles.optionIcon}>📋</Text>
+                <Ionicons name="document-text-outline" size={24} color={colors.primary} />
                 <Text style={styles.optionLabel}>{p.name}</Text>
               </View>
             </TouchableOpacity>
@@ -606,7 +607,7 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
             >
               <View style={styles.optionRow}>
                 {opt.icon !== undefined && (
-                  <Text style={styles.optionIcon}>{opt.icon}</Text>
+                  <Ionicons name={opt.icon} size={24} color={colors.primary} />
                 )}
                 <View style={styles.optionTextWrap}>
                   <Text style={[styles.optionLabel, isSelected && styles.optionLabelActive]}>
@@ -653,10 +654,13 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
           <View style={styles.backBtnPlaceholder} />
         )}
         <Text style={styles.stepCounter}>{currentStep + 1} / {totalSteps}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {providerLabel === 'Offline' ? '🔌' : '⚡'} {providerLabel}
-          </Text>
+        <View style={[styles.badge, styles.badgeContent]}>
+          <Ionicons
+            name={providerLabel === 'Offline' ? 'cloud-offline-outline' : 'flash-outline'}
+            size={14}
+            color={colors.textSecondary}
+          />
+          <Text style={styles.badgeText}>{providerLabel}</Text>
         </View>
       </View>
 
@@ -781,6 +785,11 @@ function useStyles(colors: ThemeColors) {
       backgroundColor: colors.card,
       borderRadius: borderRadius.lg,
     },
+    badgeContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
     badgeText: {
       color: colors.text,
       fontSize: fontSize.sm,
@@ -829,9 +838,6 @@ function useStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-    },
-    optionIcon: {
-      fontSize: fontSize.xxxl,
     },
     optionTextWrap: {
       flex: 1,

@@ -327,7 +327,7 @@ describe('SettingsContent — section Apparence', () => {
 
   it('affiche le switch du mode sombre', () => {
     const { getByText, getAllByRole } = render(<SettingsContent user={null} />)
-    expect(getByText('🎨 Apparence')).toBeTruthy()
+    expect(getByText('Apparence')).toBeTruthy()
     expect(getByText('Mode sombre')).toBeTruthy()
     const switches = getAllByRole('switch')
     expect(switches.length).toBeGreaterThanOrEqual(1)

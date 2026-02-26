@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
 
@@ -180,12 +181,12 @@ export function StatsCalendarScreenBase({ histories }: Props) {
       {/* Streak badges */}
       <View style={styles.streakRow}>
         <View style={styles.streakCard}>
-          <Text style={styles.streakIcon}>🔥</Text>
+          <Ionicons name="flame-outline" size={24} color={colors.danger} />
           <Text style={styles.streakValue}>{currentStreak}</Text>
           <Text style={styles.streakLabel}>jours actuels</Text>
         </View>
         <View style={styles.streakCard}>
-          <Text style={styles.streakIcon}>🏆</Text>
+          <Ionicons name="trophy-outline" size={24} color={colors.warning} />
           <Text style={styles.streakValue}>{recordStreak}</Text>
           <Text style={styles.streakLabel}>record</Text>
         </View>
@@ -296,9 +297,6 @@ function useStyles(colors: ThemeColors) {
       borderRadius: borderRadius.md,
       padding: spacing.md,
       alignItems: 'center',
-    },
-    streakIcon: {
-      fontSize: fontSize.xxl,
     },
     streakValue: {
       fontSize: fontSize.xxl,

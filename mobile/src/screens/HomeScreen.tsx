@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
 import { useNavigation } from '@react-navigation/native'
@@ -38,7 +39,7 @@ type HomeNavigation = NativeStackNavigationProp<RootStackParamList, 'Home'>
 // ─── Sections & Tuiles ───────────────────────────────────────────────────────
 
 interface Tile {
-  icon: string
+  icon: keyof typeof Ionicons.glyphMap
   label: string
   route: string
 }
@@ -52,20 +53,20 @@ const SECTIONS: Section[] = [
   {
     title: 'Entraînement',
     tiles: [
-      { icon: '\uD83D\uDCDA', label: 'Programmes', route: 'Programs' },
-      { icon: '\uD83C\uDFCB\uFE0F', label: 'Exercices', route: 'Exercices' },
+      { icon: 'library-outline', label: 'Programmes', route: 'Programs' },
+      { icon: 'barbell-outline', label: 'Exercices', route: 'Exercices' },
     ],
   },
   {
     title: 'Statistiques',
     tiles: [
-      { icon: '\u23F1', label: 'Durée', route: 'StatsDuration' },
-      { icon: '\uD83C\uDFD7\uFE0F', label: 'Volume', route: 'StatsVolume' },
-      { icon: '\uD83D\uDCC5', label: 'Agenda', route: 'StatsCalendar' },
-      { icon: '\uD83D\uDCAA', label: 'Muscles', route: 'StatsRepartition' },
-      { icon: '\uD83C\uDFC6', label: 'Exercices & Records', route: 'StatsExercises' },
-      { icon: '\uD83D\uDCCF', label: 'Mesures', route: 'StatsMeasurements' },
-      { icon: '\uD83D\uDCCA', label: 'Historique', route: 'StatsHistory' },
+      { icon: 'time-outline',          label: 'Durée',               route: 'StatsDuration' },
+      { icon: 'barbell-outline',       label: 'Volume',              route: 'StatsVolume' },
+      { icon: 'calendar-outline',      label: 'Agenda',              route: 'StatsCalendar' },
+      { icon: 'body-outline',          label: 'Muscles',             route: 'StatsRepartition' },
+      { icon: 'trophy-outline',        label: 'Exercices & Records', route: 'StatsExercises' },
+      { icon: 'resize-outline',        label: 'Mesures',             route: 'StatsMeasurements' },
+      { icon: 'list-outline',          label: 'Historique',          route: 'StatsHistory' },
     ],
   },
 ]
@@ -149,7 +150,7 @@ function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
               navigation.navigate('Settings')
             }}
           >
-            <Text style={styles.settingsIcon}>{'\u2699\uFE0F'}</Text>
+            <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
@@ -185,7 +186,10 @@ function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
             navigation.navigate('Badges')
           }}
         >
-          <Text style={styles.badgesLabel}>{'\uD83C\uDFC5'} Mes Badges</Text>
+          <View style={styles.badgesLabelRow}>
+            <Ionicons name="medal-outline" size={16} color={colors.textSecondary} />
+            <Text style={styles.badgesLabel}>Mes Badges</Text>
+          </View>
           <Text style={styles.badgesCount}>
             {userBadges.length}/{BADGES_LIST.length} {'\u203A'}
           </Text>
@@ -210,7 +214,7 @@ function HomeScreenBase({ users, histories, sets, userBadges }: Props) {
                 onPress={() => handleTilePress(tile)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.btnIcon}>{tile.icon}</Text>
+                <Ionicons name={tile.icon} size={28} color={colors.primary} />
                 <Text style={styles.btnLabel}>{tile.label}</Text>
               </TouchableOpacity>
             ))}
@@ -255,9 +259,6 @@ function useStyles(colors: ThemeColors) {
       padding: spacing.sm,
       borderRadius: borderRadius.md,
       backgroundColor: colors.cardSecondary,
-    },
-    settingsIcon: {
-      fontSize: fontSize.xxl,
     },
     greeting: {
       fontSize: fontSize.xxl,
@@ -315,6 +316,11 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    badgesLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
     badgesLabel: {
       fontSize: fontSize.sm,
       color: colors.textSecondary,
@@ -355,9 +361,6 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       width: '31%',
-    },
-    btnIcon: {
-      fontSize: fontSize.xxxl,
     },
     btnLabel: {
       fontSize: fontSize.xs,

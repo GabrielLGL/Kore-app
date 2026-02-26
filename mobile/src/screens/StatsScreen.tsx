@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
 import { useNavigation } from '@react-navigation/native'
@@ -31,19 +32,19 @@ type StatsNavigation = NativeStackNavigationProp<RootStackParamList, 'Stats'>
 type StatRoute = keyof RootStackParamList
 
 interface StatButton {
-  icon: string
+  icon: keyof typeof Ionicons.glyphMap
   label: string
   route: StatRoute
 }
 
 const STAT_BUTTONS: StatButton[] = [
-  { icon: '⏱', label: 'Durée', route: 'StatsDuration' },
-  { icon: '🏋️', label: 'Volume', route: 'StatsVolume' },
-  { icon: '🗓', label: 'Agenda', route: 'StatsCalendar' },
-  { icon: '💪', label: 'Muscles', route: 'StatsRepartition' },
-  { icon: '📊', label: 'Exercices', route: 'StatsExercises' },
-  { icon: '📏', label: 'Mesures', route: 'StatsMeasurements' },
-  { icon: '📋', label: 'Historique', route: 'StatsHistory' },
+  { icon: 'time-outline',          label: 'Durée',      route: 'StatsDuration' },
+  { icon: 'barbell-outline',       label: 'Volume',     route: 'StatsVolume' },
+  { icon: 'calendar-outline',      label: 'Agenda',     route: 'StatsCalendar' },
+  { icon: 'body-outline',          label: 'Muscles',    route: 'StatsRepartition' },
+  { icon: 'stats-chart-outline',   label: 'Exercices',  route: 'StatsExercises' },
+  { icon: 'resize-outline',        label: 'Mesures',    route: 'StatsMeasurements' },
+  { icon: 'list-outline',          label: 'Historique', route: 'StatsHistory' },
 ]
 
 // ─── KPI Item ─────────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export function StatsScreenBase({ users, histories, sets }: Props) {
             onPress={() => handleNavigate(btn.route)}
             activeOpacity={0.7}
           >
-            <Text style={styles.btnIcon}>{btn.icon}</Text>
+            <Ionicons name={btn.icon} size={28} color={colors.primary} />
             <Text style={styles.btnLabel}>{btn.label}</Text>
           </TouchableOpacity>
         ))}
@@ -191,9 +192,6 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       width: '31%',
-    },
-    btnIcon: {
-      fontSize: fontSize.xxxl,
     },
     btnLabel: {
       fontSize: fontSize.xs,
