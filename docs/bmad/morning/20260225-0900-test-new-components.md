@@ -38,5 +38,8 @@ Les helpers sont bien testés mais les composants UI n'ont pas de tests dédiés
 - Coverage maintenue ≥ 85% lignes
 - 0 fail, tsc clean
 
+## Résolution
+Rapport do : docs/bmad/do/20260226-1730-test-new-components.md
+
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-1730
