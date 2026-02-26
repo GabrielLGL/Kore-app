@@ -187,4 +187,7 @@ Ce fallback garantit un rendu stable partout. NeuShadow pourra être retravaill�
 Aucune — modifie les fichiers déjà en place.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260226-2135
+
+## Résolution
+Rapport do : docs/bmad/do/20260226-2135-style-neushadow-fix.md

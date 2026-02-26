@@ -10,8 +10,7 @@ interface NeuShadowProps {
   /** Niveau d'élévation de l'ombre. Défaut : 'elevated' */
   level?: NeuShadowLevel
   children: React.ReactNode
-  /** Style appliqué au conteneur extérieur (layout : margin…).
-   * Correspond à `containerStyle` de react-native-shadow-2. */
+  /** Style appliqué au conteneur extérieur (layout : margin, alignSelf…). */
   style?: StyleProp<ViewStyle>
   /** Border radius de l'élément enveloppé. Doit correspondre au borderRadius de l'enfant. */
   radius?: number
@@ -22,16 +21,15 @@ interface NeuShadowProps {
 }
 
 /**
- * NeuShadow — Vrai neumorphisme via react-native-shadow-2
+ * NeuShadow — Neumorphisme via react-native-shadow-2
  *
- * Enveloppe les enfants dans deux Shadow SVG imbriqués :
- * - ombre sombre bas-droite (offset positif)
- * - ombre claire haut-gauche (offset négatif)
+ * Ombre sombre bas-droite (SVG) + bordure claire haut-gauche (borderColor).
+ * Pattern hybride : stable sur ScrollView, pas de double-couche SVG.
  *
  * Prérequis : backgroundColor de l'enfant === backgroundColor du fond.
  *
  * @example
- * <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: 16 }}>
+ * <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
  *   <View style={{ backgroundColor: colors.card, borderRadius: borderRadius.md }}>
  *     ...
  *   </View>
@@ -52,7 +50,6 @@ export const NeuShadow: React.FC<NeuShadowProps> = ({
   }
 
   const params = neuShadowParams[mode][level]
-  const cornerStyle: ViewStyle = { borderRadius: radius }
 
   return (
     <Shadow
@@ -60,21 +57,15 @@ export const NeuShadow: React.FC<NeuShadowProps> = ({
       offset={[params.offset, params.offset]}
       startColor={params.darkColor}
       endColor="transparent"
-      style={cornerStyle}
+      style={{
+        borderRadius: radius,
+        borderWidth: 1,
+        borderColor: params.lightColor,
+      }}
       containerStyle={style}
       stretch={stretch}
-      paintInside={false}
     >
-      <Shadow
-        distance={params.distance}
-        offset={[-params.offset, -params.offset]}
-        startColor={params.lightColor}
-        endColor="transparent"
-        style={cornerStyle}
-        paintInside={false}
-      >
-        {children}
-      </Shadow>
+      {children}
     </Shadow>
   )
 }

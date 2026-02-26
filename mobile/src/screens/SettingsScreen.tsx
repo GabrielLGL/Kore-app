@@ -361,7 +361,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         {/* Section Mon profil */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>👤 Mon profil</Text>
           <View style={styles.settingRow}>
@@ -446,7 +446,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Apparence */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🎨 Apparence</Text>
           <View style={styles.settingRow}>
@@ -470,7 +470,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Minuteur */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⏱️ Minuteur de repos</Text>
 
@@ -513,7 +513,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Gamification */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>⭐ Gamification</Text>
           <View style={styles.settingRow}>
@@ -561,7 +561,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Intelligence Artificielle */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>✨ Intelligence Artificielle</Text>
 
@@ -588,7 +588,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Données */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💾 Données</Text>
           <TouchableOpacity
@@ -617,7 +617,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         />
 
         {/* Section À propos */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>ℹ️ À propos</Text>
 
@@ -639,7 +639,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         </NeuShadow>
 
         {/* Section Aide */}
-        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg }}>
+        <NeuShadow level="elevatedSm" radius={borderRadius.md} style={{ marginBottom: spacing.lg, marginHorizontal: spacing.xs }}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>❓ Aide</Text>
 
