@@ -3,7 +3,7 @@
 interface SubscribeSectionProps {
   email: string;
   name: string;
-  status: "idle" | "loading" | "success" | "error";
+  status: "idle" | "loading" | "success" | "error" | "duplicate";
   setEmail: (value: string) => void;
   setName: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -69,6 +69,11 @@ export default function SubscribeSection({ email, name, status, setEmail, setNam
           {status === "success" && (
             <p role="alert" className="text-[var(--success)] text-sm font-semibold">
               Inscription reussie ! Verifie ta boite mail.
+            </p>
+          )}
+          {status === "duplicate" && (
+            <p role="alert" className="text-[var(--accent)] text-sm font-semibold">
+              Cet email est d&eacute;j&agrave; inscrit. &Agrave; bient&ocirc;t !
             </p>
           )}
           {status === "error" && (

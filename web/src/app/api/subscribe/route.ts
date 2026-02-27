@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const { email, name } = await request.json();
 
-    if (!email || !email.includes("@")) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json(
         { error: "Email invalide" },
         { status: 400 }
@@ -39,10 +39,16 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabase();
     const { error: dbError } = await supabase
       .from("subscribers")
-      .upsert({ email, name: name || null }, { onConflict: "email" });
+      .insert({ email, name: name || null });
 
     if (dbError) {
-      console.error("Supabase error:", dbError);
+      if (dbError.code === "23505") {
+        return NextResponse.json(
+          { error: "Cet email est déjà inscrit." },
+          { status: 409, headers: rateLimitHeaders }
+        );
+      }
+      if (process.env.NODE_ENV !== "production") console.error("Supabase error:", dbError);
       return NextResponse.json(
         { error: "Erreur lors de l'inscription" },
         { status: 500 }
@@ -59,7 +65,7 @@ export async function POST(request: NextRequest) {
         react: WelcomeEmail({ name: name || undefined }),
       });
     } catch (emailErr) {
-      console.error("Resend error:", emailErr);
+      if (process.env.NODE_ENV !== "production") console.error("Resend error:", emailErr);
       // Don't fail the request if email fails — user is still subscribed
     }
 

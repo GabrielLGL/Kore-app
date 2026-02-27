@@ -13,7 +13,7 @@ import FooterSection from "@/components/sections/FooterSection";
 export default function Home() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate">("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +32,8 @@ export default function Home() {
         setStatus("success");
         setEmail("");
         setName("");
+      } else if (res.status === 409) {
+        setStatus("duplicate");
       } else {
         setStatus("error");
       }

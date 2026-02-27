@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import KoreLogo from "@/components/KoreLogo";
 import SocialProof from "@/components/SocialProof";
 
 interface HeroSectionProps {
   email: string;
   name: string;
-  status: "idle" | "loading" | "success" | "error";
+  status: "idle" | "loading" | "success" | "error" | "duplicate";
   setEmail: (value: string) => void;
   setName: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
+const WORDS = ["BODY.", "LEGACY.", "STRENGTH.", "GAINS.", "POTENTIAL.", "PHYSIQUE."];
+
 export default function HeroSection({ email, name, status, setEmail, setName, onSubmit }: HeroSectionProps) {
   const [navVisible, setNavVisible] = useState(false);
+  const [wordIdx, setWordIdx] = useState(0);
+  const [phase, setPhase] = useState<"idle" | "out" | "in">("idle");
+  const t1Ref = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const raf1Ref = useRef<number>(0);
+  const raf2Ref = useRef<number>(0);
 
   useEffect(() => {
     function onScroll() {
@@ -22,6 +29,25 @@ export default function HeroSection({ email, name, status, setEmail, setName, on
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhase("out");
+      t1Ref.current = setTimeout(() => {
+        setWordIdx((i) => (i + 1) % WORDS.length);
+        setPhase("in");
+        raf1Ref.current = requestAnimationFrame(() => {
+          raf2Ref.current = requestAnimationFrame(() => setPhase("idle"));
+        });
+      }, 380);
+    }, 3200);
+    return () => {
+      clearInterval(timer);
+      if (t1Ref.current) clearTimeout(t1Ref.current);
+      cancelAnimationFrame(raf1Ref.current);
+      cancelAnimationFrame(raf2Ref.current);
+    };
   }, []);
 
   return (
@@ -67,7 +93,28 @@ export default function HeroSection({ email, name, status, setEmail, setName, on
 
         {/* Title */}
         <h1 className="hero-fade text-[clamp(2.5rem,8vw,5rem)] font-black leading-[1.1] tracking-tight mb-5">
-          <span className="shimmer-text">SCULPT YOUR BODY.</span>
+          <span className="shimmer-text">SCULPT YOUR </span>
+          <span
+            className="shimmer-text"
+            style={{
+              display: "inline-block",
+              opacity: phase === "idle" ? 1 : 0,
+              transform:
+                phase === "idle"
+                  ? "translateY(0px)"
+                  : phase === "out"
+                  ? "translateY(10px)"
+                  : "translateY(-10px)",
+              transition:
+                phase === "in"
+                  ? "none"
+                  : phase === "out"
+                  ? "opacity 0.35s cubic-bezier(0.4,0,1,1), transform 0.35s cubic-bezier(0.4,0,1,1)"
+                  : "opacity 0.45s cubic-bezier(0,0,0.2,1), transform 0.45s cubic-bezier(0,0,0.2,1)",
+            }}
+          >
+            {WORDS[wordIdx]}
+          </span>
           <span className="text-[var(--accent)] animate-[blink_0.7s_step-end_infinite]">|</span>
         </h1>
 
@@ -154,6 +201,11 @@ export default function HeroSection({ email, name, status, setEmail, setName, on
           {status === "success" && (
             <p role="alert" className="text-[var(--success)] text-xs font-semibold text-center">
               Inscription r\u00E9ussie ! V\u00E9rifie ta boite mail.
+            </p>
+          )}
+          {status === "duplicate" && (
+            <p role="alert" className="text-[var(--accent)] text-xs font-semibold text-center">
+              Cet email est d\u00E9j\u00E0 inscrit. \u00C0 bient\u00F4t !
             </p>
           )}
           {status === "error" && (

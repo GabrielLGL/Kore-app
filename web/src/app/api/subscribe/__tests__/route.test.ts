@@ -65,10 +65,10 @@ describe('POST /api/subscribe', () => {
   })
 
   it('retourne 200 et success:true pour email valide', async () => {
-    // Mock Supabase upsert OK
-    const mockUpsert = vi.fn().mockResolvedValue({ error: null })
+    // Mock Supabase insert OK
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
     vi.mocked(getSupabase).mockReturnValue({
-      from: vi.fn().mockReturnValue({ upsert: mockUpsert }),
+      from: vi.fn().mockReturnValue({ insert: mockInsert }),
     } as unknown as ReturnType<typeof getSupabase>)
 
     // Mock Resend OK
@@ -83,10 +83,23 @@ describe('POST /api/subscribe', () => {
     expect(json.success).toBe(true)
   })
 
-  it('retourne 500 si Supabase échoue', async () => {
-    const mockUpsert = vi.fn().mockResolvedValue({ error: { message: 'DB error' } })
+  it('retourne 409 si email déjà inscrit', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: { code: '23505', message: 'duplicate key' } })
     vi.mocked(getSupabase).mockReturnValue({
-      from: vi.fn().mockReturnValue({ upsert: mockUpsert }),
+      from: vi.fn().mockReturnValue({ insert: mockInsert }),
+    } as unknown as ReturnType<typeof getSupabase>)
+
+    const req = makeRequest({ email: 'test@example.com' })
+    const res = await POST(req)
+    expect(res.status).toBe(409)
+    const json = await res.json()
+    expect(json.error).toBe('Cet email est déjà inscrit.')
+  })
+
+  it('retourne 500 si Supabase échoue', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: { code: '42501', message: 'DB error' } })
+    vi.mocked(getSupabase).mockReturnValue({
+      from: vi.fn().mockReturnValue({ insert: mockInsert }),
     } as unknown as ReturnType<typeof getSupabase>)
 
     const req = makeRequest({ email: 'test@example.com' })
@@ -98,9 +111,9 @@ describe('POST /api/subscribe', () => {
 
   it('retourne 200 même si Resend échoue (échec silencieux)', async () => {
     // Supabase OK
-    const mockUpsert = vi.fn().mockResolvedValue({ error: null })
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
     vi.mocked(getSupabase).mockReturnValue({
-      from: vi.fn().mockReturnValue({ upsert: mockUpsert }),
+      from: vi.fn().mockReturnValue({ insert: mockInsert }),
     } as unknown as ReturnType<typeof getSupabase>)
 
     // Resend KO
@@ -150,7 +163,7 @@ describe('Rate limiting', () => {
   it('inclut les headers X-RateLimit-* sur une requête réussie', async () => {
     vi.mocked(getSupabase).mockReturnValue({
       from: vi.fn().mockReturnValue({
-        upsert: vi.fn().mockResolvedValue({ error: null }),
+        insert: vi.fn().mockResolvedValue({ error: null }),
       }),
     } as unknown as ReturnType<typeof getSupabase>)
 
