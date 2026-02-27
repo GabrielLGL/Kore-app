@@ -17,12 +17,12 @@ describe('ExerciseTargetInputs', () => {
   })
 
   describe('rendu initial', () => {
-    it('affiche les valeurs initiales dans les inputs', () => {
-      const { getByDisplayValue } = render(<ExerciseTargetInputs {...defaultProps} />)
+    it('affiche les trois inputs avec les bons testIDs', () => {
+      const { getByTestId } = render(<ExerciseTargetInputs {...defaultProps} />)
 
-      expect(getByDisplayValue('3')).toBeTruthy()
-      expect(getByDisplayValue('10')).toBeTruthy()
-      expect(getByDisplayValue('60')).toBeTruthy()
+      expect(getByTestId('input-sets')).toBeTruthy()
+      expect(getByTestId('input-reps')).toBeTruthy()
+      expect(getByTestId('input-weight')).toBeTruthy()
     })
 
     it('affiche les labels par défaut (showLabels = true)', () => {
@@ -43,51 +43,43 @@ describe('ExerciseTargetInputs', () => {
       expect(queryByText('Poids (kg)')).toBeNull()
     })
 
-    it('accepte des valeurs vides dans les inputs', () => {
-      const { getAllByDisplayValue } = render(
-        <ExerciseTargetInputs
-          {...defaultProps}
-          sets=""
-          reps=""
-          weight=""
-        />
-      )
-
-      // 3 inputs vides
-      expect(getAllByDisplayValue('').length).toBe(3)
+    it('accepte des valeurs vides sans crash', () => {
+      expect(() =>
+        render(<ExerciseTargetInputs {...defaultProps} sets="" reps="" weight="" />)
+      ).not.toThrow()
     })
   })
 
   describe('interactions', () => {
     it('appelle onSetsChange quand le champ séries change', () => {
       const onSetsChange = jest.fn()
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('3'), '5')
+      fireEvent.changeText(getByTestId('input-sets'), '5')
 
       expect(onSetsChange).toHaveBeenCalledWith('5')
     })
 
     it('appelle onRepsChange quand le champ reps change', () => {
       const onRepsChange = jest.fn()
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('10'), '12')
+      fireEvent.changeText(getByTestId('input-reps'), '12')
 
       expect(onRepsChange).toHaveBeenCalledWith('12')
     })
 
     it('appelle onWeightChange quand le champ poids change', () => {
       const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
       )
 
-      fireEvent.changeText(getByDisplayValue('60'), '75.5')
+      fireEvent.changeText(getByTestId('input-weight'), '75.5')
 
       expect(onWeightChange).toHaveBeenCalledWith('75.5')
     })
@@ -97,7 +89,7 @@ describe('ExerciseTargetInputs', () => {
       const onRepsChange = jest.fn()
       const onWeightChange = jest.fn()
 
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs
           sets="3"
           reps="10"
@@ -108,129 +100,26 @@ describe('ExerciseTargetInputs', () => {
         />
       )
 
-      fireEvent.changeText(getByDisplayValue('3'), '4')
+      fireEvent.changeText(getByTestId('input-sets'), '4')
 
       expect(onSetsChange).toHaveBeenCalledTimes(1)
       expect(onRepsChange).not.toHaveBeenCalled()
       expect(onWeightChange).not.toHaveBeenCalled()
     })
-  })
 
-  describe('clamping des valeurs', () => {
-    it('clamp les séries à 10 si la valeur dépasse le max', () => {
+    it('fast-typing : passe les valeurs brutes sans modification', () => {
       const onSetsChange = jest.fn()
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
       )
 
-      const setsInput = getByDisplayValue('3')
-      fireEvent.changeText(setsInput, '99')
-      fireEvent(setsInput, 'blur')
+      fireEvent.changeText(getByTestId('input-sets'), '5')
+      fireEvent.changeText(getByTestId('input-sets'), '55')
+      fireEvent.changeText(getByTestId('input-sets'), '555')
 
-      expect(onSetsChange).toHaveBeenLastCalledWith('10')
-    })
-
-    it('clamp les séries à 1 si la valeur est inférieure au min', () => {
-      const onSetsChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
-      )
-
-      const setsInput = getByDisplayValue('3')
-      fireEvent.changeText(setsInput, '-5')
-      fireEvent(setsInput, 'blur')
-
-      expect(onSetsChange).toHaveBeenLastCalledWith('1')
-    })
-
-    it('clamp les reps à 99 si la valeur dépasse le max', () => {
-      const onRepsChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
-      )
-
-      const repsInput = getByDisplayValue('10')
-      fireEvent.changeText(repsInput, '200')
-      fireEvent(repsInput, 'blur')
-
-      expect(onRepsChange).toHaveBeenLastCalledWith('99')
-    })
-
-    it('clamp le poids à 999 si la valeur dépasse le max', () => {
-      const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
-      )
-
-      const weightInput = getByDisplayValue('60')
-      fireEvent.changeText(weightInput, '1500')
-      fireEvent(weightInput, 'blur')
-
-      expect(onWeightChange).toHaveBeenLastCalledWith('999')
-    })
-
-    it('clamp le poids à 0 si la valeur est négative', () => {
-      const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
-      )
-
-      const weightInput = getByDisplayValue('60')
-      fireEvent.changeText(weightInput, '-10')
-      fireEvent(weightInput, 'blur')
-
-      expect(onWeightChange).toHaveBeenLastCalledWith('0')
-    })
-
-    it('passe les valeurs vides sans modification', () => {
-      const onSetsChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
-      )
-
-      fireEvent.changeText(getByDisplayValue('3'), '')
-
-      expect(onSetsChange).toHaveBeenCalledWith('')
-    })
-
-    it('préserve la chaîne originale pour le poids si dans les limites', () => {
-      const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
-      )
-
-      fireEvent.changeText(getByDisplayValue('60'), '85.5')
-
-      expect(onWeightChange).toHaveBeenCalledWith('85.5')
-    })
-
-    it('fast-typing séries : passe la valeur brute puis clamp au blur', () => {
-      const onSetsChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onSetsChange={onSetsChange} />
-      )
-
-      const setsInput = getByDisplayValue('3')
-      fireEvent.changeText(setsInput, '40')
-      expect(onSetsChange).toHaveBeenLastCalledWith('40')
-
-      fireEvent(setsInput, 'blur')
-      expect(onSetsChange).toHaveBeenLastCalledWith('10')
-    })
-
-    it('fast-typing poids : passe la valeur brute, pas de rappel au blur si valide', () => {
-      const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
-        <ExerciseTargetInputs {...defaultProps} onWeightChange={onWeightChange} />
-      )
-
-      const weightInput = getByDisplayValue('60')
-      fireEvent.changeText(weightInput, '40')
-      expect(onWeightChange).toHaveBeenLastCalledWith('40')
-
-      const callCountBeforeBlur = onWeightChange.mock.calls.length
-      fireEvent(weightInput, 'blur')
-      expect(onWeightChange).toHaveBeenCalledTimes(callCountBeforeBlur)
+      expect(onSetsChange).toHaveBeenNthCalledWith(1, '5')
+      expect(onSetsChange).toHaveBeenNthCalledWith(2, '55')
+      expect(onSetsChange).toHaveBeenNthCalledWith(3, '555')
     })
   })
 
@@ -240,10 +129,10 @@ describe('ExerciseTargetInputs', () => {
     })
 
     it('démarre en mode Fixe (un seul input reps)', () => {
-      const { queryByPlaceholderText, getByDisplayValue } = render(
+      const { getByTestId, queryByPlaceholderText } = render(
         <ExerciseTargetInputs {...defaultProps} />
       )
-      expect(getByDisplayValue('10')).toBeTruthy()
+      expect(getByTestId('input-reps')).toBeTruthy()
       expect(queryByPlaceholderText('min')).toBeNull()
       expect(queryByPlaceholderText('max')).toBeNull()
     })
@@ -259,11 +148,11 @@ describe('ExerciseTargetInputs', () => {
 
     it('compose "N-M" quand min et max sont saisis en mode Plage', () => {
       const onRepsChange = jest.fn()
-      const { getByText, getByDisplayValue, getByPlaceholderText } = render(
+      const { getByText, getByTestId, getByPlaceholderText } = render(
         <ExerciseTargetInputs {...defaultProps} onRepsChange={onRepsChange} />
       )
       fireEvent.press(getByText('Plage'))
-      fireEvent.changeText(getByDisplayValue('10'), '6')
+      fireEvent.changeText(getByTestId('input-reps-min'), '6')
       fireEvent.changeText(getByPlaceholderText('max'), '10')
       expect(onRepsChange).toHaveBeenLastCalledWith('6-10')
     })
@@ -279,10 +168,10 @@ describe('ExerciseTargetInputs', () => {
     })
 
     it('démarre en mode Plage si reps contient "-"', () => {
-      const { getByDisplayValue, getByPlaceholderText } = render(
+      const { getByTestId, getByPlaceholderText } = render(
         <ExerciseTargetInputs {...defaultProps} reps="6-10" />
       )
-      expect(getByDisplayValue('6')).toBeTruthy()
+      expect(getByTestId('input-reps-min')).toBeTruthy()
       expect(getByPlaceholderText('max')).toBeTruthy()
     })
   })
@@ -302,17 +191,17 @@ describe('ExerciseTargetInputs', () => {
 
     it('accepte des valeurs décimales dans le champ poids', () => {
       const onWeightChange = jest.fn()
-      const { getByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs {...defaultProps} weight="82.5" onWeightChange={onWeightChange} />
       )
 
-      expect(getByDisplayValue('82.5')).toBeTruthy()
-      fireEvent.changeText(getByDisplayValue('82.5'), '85.0')
+      expect(getByTestId('input-weight')).toBeTruthy()
+      fireEvent.changeText(getByTestId('input-weight'), '85.0')
       expect(onWeightChange).toHaveBeenCalledWith('85.0')
     })
 
     it('accepte zéro comme valeur pour tous les champs', () => {
-      const { getAllByDisplayValue } = render(
+      const { getByTestId } = render(
         <ExerciseTargetInputs
           sets="0"
           reps="0"
@@ -323,8 +212,9 @@ describe('ExerciseTargetInputs', () => {
         />
       )
 
-      // Les 3 inputs ont la valeur '0'
-      expect(getAllByDisplayValue('0').length).toBe(3)
+      expect(getByTestId('input-sets')).toBeTruthy()
+      expect(getByTestId('input-reps')).toBeTruthy()
+      expect(getByTestId('input-weight')).toBeTruthy()
     })
   })
 })

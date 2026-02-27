@@ -203,4 +203,7 @@ Aucune dépendance entre groupes — ce groupe est autonome.
 
 ## Statut
 
-⏳ En attente
+✅ Résolu — 20260227-0320
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-0320-fix-ExerciseTargetInputs-nativeprops.md

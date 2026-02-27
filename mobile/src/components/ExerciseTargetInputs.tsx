@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
@@ -23,9 +23,15 @@ interface ExerciseTargetInputsProps {
  * - Mode Fixe : un seul input numérique (ex: "8")
  * - Mode Plage : deux inputs [min] — [max] composant une range "6-10"
  *
- * @param sets - Valeur du champ séries
- * @param reps - Valeur du champ reps (entier OU range ex: '6-10')
- * @param weight - Valeur du champ poids
+ * Mode 100% natif (Option C) : aucun prop `value` ni `defaultValue` sur les TextInput.
+ * La valeur initiale est injectée via `setNativeProps({ text })` au mount uniquement.
+ * Après le mount, le natif gère le texte de façon totalement autonome — zéro interférence
+ * React Native → zéro perte de caractère à la frappe rapide.
+ * Le clamping des valeurs est délégué aux parents (au moment du DB write).
+ *
+ * @param sets - Valeur initiale du champ séries
+ * @param reps - Valeur initiale du champ reps (entier OU range ex: '6-10')
+ * @param weight - Valeur initiale du champ poids
  * @param onSetsChange - Callback appelé quand séries change
  * @param onRepsChange - Callback appelé quand reps change — la valeur peut être un entier ou une range 'N-M'
  * @param onWeightChange - Callback appelé quand poids change
@@ -60,105 +66,57 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
   const [repsMode, setRepsMode] = useState<'fixed' | 'range'>(() =>
     reps.includes('-') ? 'range' : 'fixed'
   )
-  const [repsMin, setRepsMin] = useState(() =>
-    reps.includes('-') ? reps.split('-')[0] : reps
-  )
-  const [repsMax, setRepsMax] = useState(() =>
-    reps.includes('-') ? (reps.split('-')[1] ?? '') : ''
-  )
-  const [localSets, setLocalSets] = useState(sets)
-  const [localWeight, setLocalWeight] = useState(weight)
-
-  // Refs pour value props — évite la race condition React Native controlled TextInput.
-  // `setLocalState(v)` est async → re-render applique une valeur stale → natif se reset.
-  // La ref est mise à jour synchroniquement dans onChangeText : au moment du re-render,
-  // ref.current contient la dernière valeur tapée → natif l'affiche déjà → pas de correction.
-  const localSetsRef = useRef(sets)
-  const localWeightRef = useRef(weight)
   const repsMinRef = useRef(reps.includes('-') ? reps.split('-')[0] : reps)
   const repsMaxRef = useRef(reps.includes('-') ? (reps.split('-')[1] ?? '') : '')
 
-  // --- Handlers ---
-  const handleSetsChange = (value: string) => {
-    localSetsRef.current = value
-    if (value === '') { setLocalSets(''); onSetsChange(''); return }
-    setLocalSets(value)
-    onSetsChange(value)
-  }
+  // Refs pour injecter la valeur initiale via setNativeProps (une seule fois au mount)
+  // Aucun prop value/defaultValue → React Native ne touche JAMAIS au texte natif après le mount
+  const setsInputRef = useRef<TextInput>(null)
+  const weightInputRef = useRef<TextInput>(null)
+  const repsFixedInputRef = useRef<TextInput>(null)
+  const repsMinInputRef = useRef<TextInput>(null)
+  const repsMaxInputRef = useRef<TextInput>(null)
 
-  const handleSetsBlur = () => {
-    const raw = localSetsRef.current
-    if (raw === '') return
-    const num = parseInt(raw, 10)
-    if (isNaN(num)) { localSetsRef.current = ''; setLocalSets(''); onSetsChange(''); return }
-    const v = String(Math.min(Math.max(num, 1), 10))
-    if (v !== raw) { localSetsRef.current = v; setLocalSets(v); onSetsChange(v) }
-  }
+  // Initialise les champs fixes (séries, poids, reps fixe) au premier mount
+  // Les deps vides sont intentionnelles : on n'initialise qu'une seule fois
+  useEffect(() => {
+    if (sets) setsInputRef.current?.setNativeProps({ text: sets })
+    if (weight) weightInputRef.current?.setNativeProps({ text: weight })
+    if (repsMinRef.current) repsFixedInputRef.current?.setNativeProps({ text: repsMinRef.current })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Initialise les inputs de plage quand on bascule en mode Range (inputs qui viennent de monter)
+  useEffect(() => {
+    if (repsMode === 'range') {
+      if (repsMinRef.current) repsMinInputRef.current?.setNativeProps({ text: repsMinRef.current })
+      if (repsMaxRef.current) repsMaxInputRef.current?.setNativeProps({ text: repsMaxRef.current })
+    }
+  }, [repsMode])
+
+  // --- Handlers (non-contrôlés : pas de clamp ici, délégué aux parents) ---
+  const handleSetsChange = (v: string) => onSetsChange(v)
+  const handleWeightChange = (v: string) => onWeightChange(v)
 
   const handleRepsMinChange = (value: string) => {
     repsMinRef.current = value
-    if (value === '') { setRepsMin(''); onRepsChange(''); return }
-    setRepsMin(value)
+    if (value === '') { onRepsChange(''); return }
     onRepsChange(repsMode === 'range' && repsMaxRef.current ? `${value}-${repsMaxRef.current}` : value)
-  }
-
-  const handleRepsMinBlur = () => {
-    const raw = repsMinRef.current
-    if (raw === '') return
-    const num = parseInt(raw, 10)
-    if (isNaN(num)) { repsMinRef.current = ''; setRepsMin(''); onRepsChange(''); return }
-    const v = String(Math.min(Math.max(num, 1), 99))
-    if (v !== raw) {
-      repsMinRef.current = v
-      setRepsMin(v)
-      onRepsChange(repsMode === 'range' && repsMaxRef.current ? `${v}-${repsMaxRef.current}` : v)
-    }
   }
 
   const handleRepsMaxChange = (value: string) => {
     repsMaxRef.current = value
-    if (value === '') { setRepsMax(''); onRepsChange(repsMinRef.current || ''); return }
-    setRepsMax(value)
+    if (value === '') { onRepsChange(repsMinRef.current || ''); return }
     onRepsChange(repsMinRef.current ? `${repsMinRef.current}-${value}` : value)
-  }
-
-  const handleRepsMaxBlur = () => {
-    const raw = repsMaxRef.current
-    if (raw === '') return
-    const num = parseInt(raw, 10)
-    if (isNaN(num)) { repsMaxRef.current = ''; setRepsMax(''); onRepsChange(repsMinRef.current || ''); return }
-    const v = String(Math.min(Math.max(num, 1), 99))
-    if (v !== raw) {
-      repsMaxRef.current = v
-      setRepsMax(v)
-      onRepsChange(repsMinRef.current ? `${repsMinRef.current}-${v}` : v)
-    }
   }
 
   const switchToFixed = () => {
     setRepsMode('fixed')
     repsMaxRef.current = ''
-    setRepsMax('')
     onRepsChange(repsMinRef.current)
   }
 
   const switchToRange = () => {
     setRepsMode('range')
-    // repsMin inchangé, repsMax reste vide → parent reçoit repsMin seul
-  }
-
-  const handleWeightChange = (value: string) => {
-    localWeightRef.current = value
-    setLocalWeight(value)
-    onWeightChange(value)
-  }
-
-  const handleWeightBlur = () => {
-    const raw = localWeightRef.current
-    if (raw === '' || raw === '.') return
-    const num = parseFloat(raw)
-    if (isNaN(num) || num < 0) { localWeightRef.current = '0'; setLocalWeight('0'); onWeightChange('0'); return }
-    if (num > 999) { localWeightRef.current = '999'; setLocalWeight('999'); onWeightChange('999'); return }
   }
 
   return (
@@ -168,11 +126,11 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
         <View style={styles.inputWrapper}>
           {showLabels && <Text style={styles.label}>Séries</Text>}
           <TextInput
+            ref={setsInputRef}
+            testID="input-sets"
             style={styles.input}
             keyboardType="numeric"
-            value={localSetsRef.current}
             onChangeText={handleSetsChange}
-            onBlur={handleSetsBlur}
             placeholder="0"
             placeholderTextColor={colors.placeholder}
             autoFocus={autoFocus}
@@ -181,11 +139,11 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
         <View style={styles.inputWrapperLast}>
           {showLabels && <Text style={styles.label}>Poids (kg)</Text>}
           <TextInput
+            ref={weightInputRef}
+            testID="input-weight"
             style={styles.input}
             keyboardType="numeric"
-            value={localWeightRef.current}
             onChangeText={handleWeightChange}
-            onBlur={handleWeightBlur}
             placeholder="0"
             placeholderTextColor={colors.placeholder}
           />
@@ -215,32 +173,32 @@ export const ExerciseTargetInputs: React.FC<ExerciseTargetInputsProps> = ({
         )}
         {repsMode === 'fixed' ? (
           <TextInput
+            ref={repsFixedInputRef}
+            testID="input-reps"
             style={styles.input}
             keyboardType="numeric"
-            value={repsMinRef.current}
             onChangeText={handleRepsMinChange}
-            onBlur={handleRepsMinBlur}
             placeholder="0"
             placeholderTextColor={colors.placeholder}
           />
         ) : (
           <View style={styles.repsRangeRow}>
             <TextInput
+              ref={repsMinInputRef}
+              testID="input-reps-min"
               style={[styles.input, styles.repsRangeInput]}
               keyboardType="numeric"
-              value={repsMin}
               onChangeText={handleRepsMinChange}
-              onBlur={handleRepsMinBlur}
               placeholder="min"
               placeholderTextColor={colors.placeholder}
             />
             <Text style={styles.rangeSeparator}>—</Text>
             <TextInput
+              ref={repsMaxInputRef}
+              testID="input-reps-max"
               style={[styles.input, styles.repsRangeInput]}
               keyboardType="numeric"
-              value={repsMaxRef.current}
               onChangeText={handleRepsMaxChange}
-              onBlur={handleRepsMaxBlur}
               placeholder="max"
               placeholderTextColor={colors.placeholder}
             />
