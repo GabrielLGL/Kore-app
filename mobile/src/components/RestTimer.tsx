@@ -43,6 +43,7 @@ const RestTimer: React.FC<Props> = ({
   const progressAnim = useRef(new Animated.Value(1)).current
   const notificationIdRef = useRef<string | null>(null)
   const soundRef = useRef<Audio.Sound | null>(null)
+  const progressAnimRef = useRef<Animated.CompositeAnimation | null>(null)
   // Refs pour éviter les stale closures dans finishTimer (appelé depuis setInterval)
   const vibrationEnabledRef = useRef(vibrationEnabled)
   const soundEnabledRef = useRef(soundEnabled)
@@ -81,7 +82,8 @@ const RestTimer: React.FC<Props> = ({
     Animated.spring(animValue, { toValue: 0, useNativeDriver: true }).start()
 
     // Barre de progression
-    Animated.timing(progressAnim, { toValue: 0, duration: duration * 1000, useNativeDriver: false }).start()
+    progressAnimRef.current = Animated.timing(progressAnim, { toValue: 0, duration: duration * 1000, useNativeDriver: false })
+    progressAnimRef.current.start()
 
     // Logique du décompte basée sur Date.now() pour éviter le drift
     const updateTimer = () => {
@@ -107,6 +109,7 @@ const RestTimer: React.FC<Props> = ({
       if (hapticTimer1Ref.current) clearTimeout(hapticTimer1Ref.current)
       if (hapticTimer2Ref.current) clearTimeout(hapticTimer2Ref.current)
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+      if (progressAnimRef.current) progressAnimRef.current.stop()
     }
   }, [])
 
