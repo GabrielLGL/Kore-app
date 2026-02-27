@@ -408,10 +408,12 @@ export default function Home() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={status === "loading"}
+              aria-busy={status === "loading"}
+              aria-disabled={status === "loading"}
+              tabIndex={status === "loading" ? -1 : 0}
               className="w-full btn-liquid text-white py-4 rounded-full font-extrabold text-base
                 uppercase tracking-widest border-none cursor-pointer
-                disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
             >
               {status === "loading" ? "Inscription..." : "S\u2019inscrire"}
             </button>

@@ -65,4 +65,7 @@ du variant `disabled:`.
 Aucune.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-0010
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-0010-refactor-aria-busy-button.md
