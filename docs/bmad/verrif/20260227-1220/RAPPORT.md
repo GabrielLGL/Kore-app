@@ -28,7 +28,7 @@
 
 | # | Problème | Fichier(s) | Effort | Groupe |
 |---|----------|-----------|--------|--------|
-| 1 | C2 — API key dans SQLite (migration à vérifier) | schema.ts + secureKeyStore.ts | 30min | A |
+| 1 | ~~C2 — API key dans SQLite (migration à vérifier)~~ | schema.ts + secureKeyStore.ts | — | ✅ Résolu — 20260227-1400 |
 | 2 | C3 — PerformanceLog sans null check exercice | useSessionManager.ts:96-101 | 15min | B |
 | 3 | B1 — handleSaveNote async sans try/catch | WorkoutExerciseCard.tsx:262 | 20min | C |
 | 4 | B4 — handleConfirmEnd gestion erreurs fragmentée | WorkoutScreen.tsx:202-333 | 45min | C |
@@ -38,7 +38,7 @@
 | 8 | Q1 — Couleurs hardcodées CSS keyframes | globals.css:128-193 | 20min | E |
 
 ## Parallélisation
-- **Groupe A** : `schema.ts` + `secureKeyStore.ts` (vérifier appel migrateKeyFromDB)
+- **Groupe A** : ~~`schema.ts` + `secureKeyStore.ts` (vérifier appel migrateKeyFromDB)~~ → ✅ Vérifié : `migrateKeyFromDB()` appelée dans `App.tsx:22`
 - **Groupe B** : `useSessionManager.ts` + `WorkoutExerciseCard.tsx` observable (non-overlapping)
 - **Groupe C** : `WorkoutExerciseCard.tsx:262` + `WorkoutScreen.tsx` + `useWorkoutState.ts` (même domaine workout — séquentiel)
 - **Groupe D** : `ExercisePickerModal.tsx` seul
@@ -58,4 +58,5 @@
 | TypeScript errors | 0 |
 
 ## Résolution
-Rapport do : docs/bmad/do/20260227-1330-fix-WorkoutExerciseCard-catchError.md
+Rapport do (H4) : docs/bmad/do/20260227-1330-fix-WorkoutExerciseCard-catchError.md
+Rapport do (C2) : docs/bmad/do/20260227-1400-fix-migrate-key-db.md
