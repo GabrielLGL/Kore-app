@@ -416,6 +416,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
             duration={user?.restDuration ?? 90}
             onClose={() => setShowRestTimer(false)}
             notificationEnabled={notificationPermissionRef.current}
+            vibrationEnabled={user?.vibrationEnabled ?? true}
+            soundEnabled={user?.timerSoundEnabled ?? true}
           />
         </View>
       )}

@@ -33,6 +33,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const { colors, isDark, toggleTheme, neuShadow } = useTheme()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
+  const [vibrationEnabled, setVibrationEnabled] = useState(user?.vibrationEnabled ?? true)
+  const [timerSoundEnabled, setTimerSoundEnabled] = useState(user?.timerSoundEnabled ?? true)
   const [userName, setUserName] = useState(user?.name ?? '')
   const [editingLevel, setEditingLevel] = useState(false)
   const [editingGoal, setEditingGoal] = useState(false)
@@ -259,6 +261,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     if (!user) return
     setRestDuration(user.restDuration?.toString() ?? '90')
     setTimerEnabled(user.timerEnabled ?? true)
+    setVibrationEnabled(user.vibrationEnabled ?? true)
+    setTimerSoundEnabled(user.timerSoundEnabled ?? true)
     setUserName(user.name ?? '')
   }, [user])
 
@@ -355,6 +359,34 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     } catch (error) {
       if (__DEV__) console.error('Failed to toggle timer:', error)
       setTimerEnabled(!enabled) // Revert on error
+    }
+  }
+
+  const handleToggleVibration = async (enabled: boolean) => {
+    if (!user) return
+    setVibrationEnabled(enabled)
+    try {
+      await database.write(async () => {
+        await user.update((u) => { u.vibrationEnabled = enabled })
+      })
+      haptics.onPress()
+    } catch (error) {
+      if (__DEV__) console.error('Failed to toggle vibration:', error)
+      setVibrationEnabled(!enabled)
+    }
+  }
+
+  const handleToggleTimerSound = async (enabled: boolean) => {
+    if (!user) return
+    setTimerSoundEnabled(enabled)
+    try {
+      await database.write(async () => {
+        await user.update((u) => { u.timerSoundEnabled = enabled })
+      })
+      haptics.onPress()
+    } catch (error) {
+      if (__DEV__) console.error('Failed to toggle timer sound:', error)
+      setTimerSoundEnabled(!enabled)
     }
   }
 
@@ -519,6 +551,36 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               />
               <Text style={styles.inputUnit}>sec</Text>
             </View>
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Vibration fin de repos</Text>
+              <Text style={styles.settingDescription}>
+                Vibration haptic à la fin du minuteur
+              </Text>
+            </View>
+            <Switch
+              value={vibrationEnabled}
+              onValueChange={handleToggleVibration}
+              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+              thumbColor={colors.text}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Son fin de repos</Text>
+              <Text style={styles.settingDescription}>
+                Bip sonore à la fin du minuteur
+              </Text>
+            </View>
+            <Switch
+              value={timerSoundEnabled}
+              onValueChange={handleToggleTimerSound}
+              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+              thumbColor={colors.text}
+            />
           </View>
         </View>
 
