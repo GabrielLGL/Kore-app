@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native'
+import { Audio } from 'expo-av'
 import { useHaptics } from '../hooks/useHaptics'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
@@ -8,18 +9,27 @@ import {
   scheduleRestEndNotification,
   cancelNotification,
 } from '../services/notificationService'
+import { createBeepSound } from '../utils/timerBeep'
 
 interface Props {
   duration: number // en secondes
   onClose: () => void
   notificationEnabled?: boolean
+  vibrationEnabled?: boolean // défaut true — triple vibration haptics à la fin
+  soundEnabled?: boolean     // défaut true — beep 440Hz à la fin
 }
 
 /**
  * Composant Timer de repos automatique.
  * Désormais intégré au flux de la page pour ne pas chevaucher la liste.
  */
-const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) => {
+const RestTimer: React.FC<Props> = ({
+  duration,
+  onClose,
+  notificationEnabled,
+  vibrationEnabled = true,
+  soundEnabled = true,
+}) => {
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
@@ -32,6 +42,13 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
   const animValue = useRef(new Animated.Value(50)).current // Animation de montée légère
   const progressAnim = useRef(new Animated.Value(1)).current
   const notificationIdRef = useRef<string | null>(null)
+  const soundRef = useRef<Audio.Sound | null>(null)
+  // Refs pour éviter les stale closures dans finishTimer (appelé depuis setInterval)
+  const vibrationEnabledRef = useRef(vibrationEnabled)
+  const soundEnabledRef = useRef(soundEnabled)
+
+  useEffect(() => { vibrationEnabledRef.current = vibrationEnabled }, [vibrationEnabled])
+  useEffect(() => { soundEnabledRef.current = soundEnabled }, [soundEnabled])
 
   useEffect(() => {
     if (notificationEnabled) {
@@ -48,6 +65,16 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
       }
     }
   }, [duration, notificationEnabled])
+
+  // Cleanup son
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync()
+        soundRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     // Animation d'entrée
@@ -89,10 +116,22 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
       notificationIdRef.current = null
     }
 
-    // Triple vibration forte pour alerter la fin du repos
-    haptics.onDelete()
-    hapticTimer1Ref.current = setTimeout(() => haptics.onDelete(), 400)
-    hapticTimer2Ref.current = setTimeout(() => haptics.onDelete(), 800)
+    // Triple vibration forte (conditionnelle)
+    if (vibrationEnabledRef.current) {
+      haptics.onDelete()
+      hapticTimer1Ref.current = setTimeout(() => haptics.onDelete(), 400)
+      hapticTimer2Ref.current = setTimeout(() => haptics.onDelete(), 800)
+    }
+
+    // Son beep (conditionnel)
+    if (soundEnabledRef.current) {
+      createBeepSound()
+        .then(sound => {
+          soundRef.current = sound
+          return sound.playAsync()
+        })
+        .catch(e => { if (__DEV__) console.warn('[RestTimer] sound playback error:', e) })
+    }
 
     // Fermeture automatique après 1 secondes
     closeTimerRef.current = setTimeout(closeTimer, 1000)
@@ -119,19 +158,6 @@ const RestTimer: React.FC<Props> = ({ duration, onClose, notificationEnabled }) 
 
   return (
     <Animated.View style={[styles.container, { transform: [{ translateY: animValue }] }]}>
-      <View style={styles.progressBarWrapper}>
-        <Animated.View
-          style={[
-            styles.progressBarFill,
-            {
-              width: progressAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0%', '100%'],
-              }),
-            },
-          ]}
-        />
-      </View>
       <TouchableOpacity style={styles.content} onPress={closeTimer} activeOpacity={0.9}>
         <View style={styles.left}>
           <Text style={styles.label}>REPOS EN COURS</Text>
@@ -155,15 +181,14 @@ function useStyles(colors: ThemeColors) {
       marginTop: spacing.xs,
       backgroundColor: colors.card,
       borderRadius: borderRadius.md,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
       elevation: 8,
-      borderLeftWidth: 4,
-      borderLeftColor: colors.primary,
+      overflow: 'hidden',
     },
     progressBarWrapper: {
-      height: 3,
+      height: 4,
       backgroundColor: colors.cardSecondary,
-      borderRadius: 2,
-      marginBottom: spacing.sm,
       overflow: 'hidden',
     },
     progressBarFill: {

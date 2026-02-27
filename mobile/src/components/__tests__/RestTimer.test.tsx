@@ -17,6 +17,29 @@ jest.mock('expo-haptics', () => ({
   },
 }))
 
+// Mock expo-av
+const mockPlayAsync = jest.fn().mockResolvedValue(undefined)
+const mockUnloadAsync = jest.fn().mockResolvedValue(undefined)
+const mockCreateAsync = jest.fn().mockResolvedValue({
+  sound: { playAsync: mockPlayAsync, unloadAsync: mockUnloadAsync },
+})
+jest.mock('expo-av', () => ({
+  Audio: {
+    Sound: {
+      createAsync: (...args: unknown[]) => mockCreateAsync(...args),
+    },
+  },
+}))
+
+// Mock timerBeep (évite la génération WAV en environnement test)
+const mockCreateBeepSound = jest.fn().mockResolvedValue({
+  playAsync: mockPlayAsync,
+  unloadAsync: mockUnloadAsync,
+})
+jest.mock('../../utils/timerBeep', () => ({
+  createBeepSound: (...args: unknown[]) => mockCreateBeepSound(...args),
+}))
+
 // Mock notificationService
 jest.mock('../../services/notificationService', () => ({
   scheduleRestEndNotification: jest.fn().mockResolvedValue('notif-id-123'),
@@ -224,6 +247,46 @@ describe('RestTimer', () => {
       // clearTimeout peut être appelé pour les haptic timers
       clearIntervalSpy.mockRestore()
       clearTimeoutSpy.mockRestore()
+    })
+  })
+
+  describe('vibrationEnabled / soundEnabled', () => {
+    beforeEach(() => {
+      mockCreateBeepSound.mockClear()
+      mockPlayAsync.mockClear()
+    })
+
+    it('should jouer le son par défaut à la fin du timer', async () => {
+      render(<RestTimer duration={1} onClose={jest.fn()} />)
+
+      await act(async () => {
+        jest.advanceTimersByTime(1200)
+      })
+
+      expect(mockCreateBeepSound).toHaveBeenCalled()
+    })
+
+    it('should ne pas jouer le son quand soundEnabled=false', async () => {
+      render(<RestTimer duration={1} onClose={jest.fn()} soundEnabled={false} />)
+
+      await act(async () => {
+        jest.advanceTimersByTime(1200)
+      })
+
+      expect(mockCreateBeepSound).not.toHaveBeenCalled()
+    })
+
+    it('should rendre sans erreur avec vibrationEnabled=false et soundEnabled=false', () => {
+      expect(() =>
+        render(
+          <RestTimer
+            duration={60}
+            onClose={jest.fn()}
+            vibrationEnabled={false}
+            soundEnabled={false}
+          />
+        )
+      ).not.toThrow()
     })
   })
 })
