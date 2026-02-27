@@ -127,4 +127,7 @@ export default function PricingSection() {
 Aucune dépendance inter-groupes — peut s'exécuter en parallèle avec Groupe B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-0300
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-0300-refactor-page-A.md
