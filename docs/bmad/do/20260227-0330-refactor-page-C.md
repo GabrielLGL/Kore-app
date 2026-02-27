@@ -36,4 +36,5 @@ aucune
 ✅ Résolu — 20260227-0330
 
 ## Commit
-[sera rempli]
+ccd862e docs(do): supabase-globalthis — confirm singleton implémenté
+(nos fichiers ont été inclus par un commit concurrent)
