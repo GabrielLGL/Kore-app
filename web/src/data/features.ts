@@ -9,36 +9,36 @@ export const FEATURES: Feature[] = [
     icon: "\uD83C\uDFCB\uFE0F",
     title: "Programmes sur mesure",
     description:
-      "Cree tes propres programmes et seances. Organise tes exercices par muscle, equipement et objectif.",
+      "Crée tes propres programmes et séances. Organise tes exercices par muscle, équipement et objectif.",
   },
   {
     icon: "\uD83D\uDCCA",
     title: "Suivi de performance",
     description:
-      "Enregistre chaque serie, chaque rep. Visualise ta progression avec des graphiques detailles.",
+      "Enregistre chaque série, chaque rep. Visualise ta progression avec des graphiques détaillés.",
   },
   {
     icon: "\u26A1",
     title: "100% Offline",
     description:
-      "Pas besoin de wifi a la salle. Tout fonctionne en local sur ton telephone, instantanement.",
+      "Pas besoin de wifi à la salle. Tout fonctionne en local sur ton téléphone, instantanément.",
   },
   {
     icon: "\uD83D\uDCF1",
     title: "Interface intuitive",
     description:
-      "Pensee pour la salle de sport. Navigation rapide, saisie facile, mode sombre qui repose les yeux.",
+      "Pensée pour la salle de sport. Navigation rapide, saisie facile, mode sombre qui repose les yeux.",
   },
   {
     icon: "\uD83D\uDCC8",
     title: "Historique complet",
     description:
-      "Retrouve toutes tes seances passees. Analyse tes records et tes tendances sur la duree.",
+      "Retrouve toutes tes séances passées. Analyse tes records et tes tendances sur la durée.",
   },
   {
     icon: "\uD83C\uDFAF",
     title: "Objectifs clairs",
     description:
-      "Definis tes objectifs et suis ta progression. L\u2019app s\u2019adapte a ton niveau.",
+      "Définis tes objectifs et suis ta progression. L\u2019app s\u2019adapte à ton niveau.",
   },
 ];

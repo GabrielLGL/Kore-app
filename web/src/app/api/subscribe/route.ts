@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
 
     const { email, name } = await request.json();
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const trimmedEmail = typeof email === "string" ? email.trim() : "";
+    const trimmedName = typeof name === "string" ? name.trim() || null : null;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
       return NextResponse.json(
         { error: "Email invalide" },
         { status: 400 }
@@ -39,7 +42,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabase();
     const { error: dbError } = await supabase
       .from("subscribers")
-      .insert({ email, name: name || null });
+      .insert({ email: trimmedEmail, name: trimmedName });
 
     if (dbError) {
       if (dbError.code === "23505") {
@@ -59,10 +62,10 @@ export async function POST(request: NextRequest) {
     try {
       const resend = getResend();
       await resend.emails.send({
-        from: "Kore <onboarding@resend.dev>",
-        to: email,
+        from: process.env.RESEND_FROM_EMAIL ?? "Kore <contact@kore-app.com>",
+        to: trimmedEmail,
         subject: "Bienvenue sur Kore !",
-        react: WelcomeEmail({ name: name || undefined }),
+        react: WelcomeEmail({ name: trimmedName ?? undefined }),
       });
     } catch (emailErr) {
       if (process.env.NODE_ENV !== "production") console.error("Resend error:", emailErr);

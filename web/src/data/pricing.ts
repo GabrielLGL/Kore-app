@@ -2,6 +2,7 @@ export interface PricingPlan {
   name: string;
   price: string;
   period: string;
+  badge?: string;
   features: string[];
   cta: string;
   highlighted: boolean;
@@ -10,7 +11,7 @@ export interface PricingPlan {
 export const PRICING: PricingPlan[] = [
   {
     name: "Gratuit",
-    price: "0\u20AC",
+    price: "0€",
     period: "",
     features: [
       "3 programmes",
@@ -23,15 +24,15 @@ export const PRICING: PricingPlan[] = [
   },
   {
     name: "Pro",
-    price: "2,50\u20AC",
+    price: "2,50€",
     period: "/mois",
     features: [
-      "Programmes illimites",
+      "Programmes illimités",
       "Suivi des performances",
-      "Historique illimite",
+      "Historique illimité",
       "Mode offline",
-      "Statistiques avancees",
-      "Export de donnees",
+      "Statistiques avancées",
+      "Export de données",
       "Support prioritaire",
     ],
     cta: "Essai gratuit 7 jours",
@@ -39,14 +40,15 @@ export const PRICING: PricingPlan[] = [
   },
   {
     name: "Pro Annuel",
-    price: "19.99\u20AC",
+    price: "19,99€",
     period: "/an",
+    badge: "soit 1,67€/mois",
     features: [
       "Tout le plan Pro",
       "2 mois offerts",
-      "Acces aux nouveautes en avant-premiere",
+      "Accès aux nouveautés en avant-première",
     ],
-    cta: "Economiser 33%",
+    cta: "Économiser 33%",
     highlighted: false,
   },
 ];
