@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
-    const trimmedName = typeof name === "string" ? name.trim() || null : null;
-    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+    const trimmedName = typeof name === "string" ? name.trim().slice(0, 100) || null : null;
+    if (!trimmedEmail || trimmedEmail.length > 254 || !emailRegex.test(trimmedEmail)) {
       return NextResponse.json(
         { error: "Email invalide" },
         { status: 400 }
