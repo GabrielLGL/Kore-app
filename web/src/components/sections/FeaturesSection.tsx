@@ -21,7 +21,7 @@ export default function FeaturesSection() {
               style={{ perspective: "1000px" }}
             >
               {/* Icon box inset */}
-              <div className="w-[70px] h-[70px] rounded-[20px] bg-[var(--bg)] shadow-neu-in flex items-center justify-center text-3xl mb-6" role="img" aria-label={feature.title}>
+              <div className="w-[70px] h-[70px] rounded-[20px] bg-[var(--bg)] shadow-neu-in flex items-center justify-center text-3xl mb-6" aria-hidden="true">
                 {feature.icon}
               </div>
               <h3 className="text-xl font-bold mb-2">{feature.title}</h3>

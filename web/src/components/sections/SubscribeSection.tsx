@@ -1,33 +1,59 @@
 "use client";
 
-interface SubscribeSectionProps {
-  email: string;
-  name: string;
-  status: "idle" | "loading" | "success" | "error" | "duplicate";
-  setEmail: (value: string) => void;
-  setName: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
-}
+import { useState } from "react";
 
-export default function SubscribeSection({ email, name, status, setEmail, setName, onSubmit }: SubscribeSectionProps) {
+export default function SubscribeSection() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error" | "duplicate" | "ratelimit">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name }),
+      });
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+        setName("");
+      } else if (res.status === 429) {
+        setStatus("ratelimit");
+      } else if (res.status === 409) {
+        setStatus("duplicate");
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    }
+  }
+
   return (
     <section id="download" className="relative z-[2] py-20 sm:py-28 px-6">
       <div className="max-w-[600px] mx-auto text-center">
         <h2 className="reveal text-3xl sm:text-4xl font-black tracking-tight mb-4">
-          Pret a progresser ?
+          Prêt à progresser ?
         </h2>
         <p className="reveal text-[var(--text-muted)] text-lg mb-10 font-light">
-          Inscris-toi pour etre informe du lancement et recevoir un acces anticipe.
+          Inscris-toi pour être informé du lancement et recevoir un accès anticipé.
         </p>
 
-        <form onSubmit={onSubmit} className="reveal space-y-4 max-w-md mx-auto" aria-label="Formulaire d'inscription">
+        <form onSubmit={handleSubmit} aria-busy={status === "loading"} className="reveal space-y-4 max-w-md mx-auto" aria-label="Formulaire d'inscription">
           {/* Name input */}
           <div className="bg-[var(--bg)] rounded-full shadow-neu-out p-2.5">
-            <label htmlFor="subscribe-name" className="sr-only">Prenom (optionnel)</label>
+            <label htmlFor="subscribe-name" className="sr-only">Prénom (optionnel)</label>
             <input
               id="subscribe-name"
               type="text"
-              placeholder="Ton prenom (optionnel)"
+              placeholder="Ton prénom (optionnel)"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full bg-transparent border-none py-3 px-6 rounded-full shadow-neu-in
@@ -56,7 +82,6 @@ export default function SubscribeSection({ email, name, status, setEmail, setNam
           {/* Submit */}
           <button
             type="submit"
-            aria-busy={status === "loading"}
             aria-disabled={status === "loading"}
             tabIndex={status === "loading" ? -1 : 0}
             className="w-full btn-liquid text-white py-4 rounded-full font-extrabold text-base
@@ -68,25 +93,30 @@ export default function SubscribeSection({ email, name, status, setEmail, setNam
 
           {status === "success" && (
             <p role="alert" className="text-[var(--success)] text-sm font-semibold">
-              Inscription reussie ! Verifie ta boite mail.
+              Inscription réussie ! Vérifie ta boite mail.
+            </p>
+          )}
+          {status === "ratelimit" && (
+            <p role="alert" className="text-[var(--accent)] text-sm font-semibold">
+              Trop de tentatives. Réessaie dans une heure.
             </p>
           )}
           {status === "duplicate" && (
             <p role="alert" className="text-[var(--accent)] text-sm font-semibold">
-              Cet email est d&eacute;j&agrave; inscrit. &Agrave; bient&ocirc;t !
+              Cet email est déjà inscrit. À bientôt !
             </p>
           )}
           {status === "error" && (
             <p role="alert" className="text-[var(--danger)] text-sm font-semibold">
-              Une erreur est survenue. Reessaie.
+              Une erreur est survenue. Réessaie.
             </p>
           )}
         </form>
 
         <p className="reveal text-[var(--text-muted)] text-xs mt-8 opacity-80">
-          Pas de spam. Desabonnement en un clic.{" "}
+          Pas de spam. Désabonnement en un clic.{" "}
           <a href="/privacy" className="underline hover:text-[var(--accent)] transition-colors">
-            Politique de confidentialite
+            Politique de confidentialité
           </a>
         </p>
       </div>

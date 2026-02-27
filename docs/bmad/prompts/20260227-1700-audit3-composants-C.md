@@ -157,4 +157,7 @@ Supprimer `role="img"` et `aria-label`. La `<h3>` qui suit décrit déjà la car
 Aucune dépendance — peut tourner en parallèle avec Groupes A et B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-1730
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-1730-fix-composants-ui.md
