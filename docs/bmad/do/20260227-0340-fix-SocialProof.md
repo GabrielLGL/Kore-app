@@ -33,4 +33,5 @@ aucune
 ✅ Résolu — 20260227-0340
 
 ## Commit
-[sera rempli après le commit]
+0daf877 refactor(rate-limit): make in-memory store serverless-safe via globalThis
+(inclus dans ce commit par un agent parallèle)
