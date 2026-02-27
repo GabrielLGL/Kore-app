@@ -19,6 +19,8 @@ import {
   toDateKey,
   labelToPeriod,
   PERIOD_LABELS,
+  computeWeeklySetsChart,
+  computeMonthlySetsChart,
 } from '../statsHelpers'
 import type History from '../../models/History'
 import type WorkoutSet from '../../models/Set'
@@ -279,6 +281,7 @@ describe('computeDurationStats', () => {
       minMin: 0,
       maxMin: 0,
       perSession: [],
+      historyAll: [],
     })
   })
 
@@ -665,5 +668,163 @@ describe('buildHeatmapData', () => {
     const today = new Date()
     const expectedDow = (today.getDay() + 6) % 7
     expect(result[364].dayOfWeek).toBe(expectedDow)
+  })
+})
+
+// ─── computeWeeklySetsChart ───────────────────────────────────────────────────
+
+describe('computeWeeklySetsChart', () => {
+  it('retourne 4 semaines avec data tous à 0 si aucun set', () => {
+    const result = computeWeeklySetsChart([], [], [], {
+      muscleFilter: null,
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    expect(result.labels).toHaveLength(4)
+    expect(result.data).toHaveLength(4)
+    expect(result.data.every(v => v === 0)).toBe(true)
+  })
+
+  it('compte les sets de la semaine courante (offset=0, dernière semaine = data[3])', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const exercise = ex('e1', 'Squat')
+    const set = s('s1', 'h1', 'e1', 100, 10)
+    const result = computeWeeklySetsChart([set], [exercise], [history], {
+      muscleFilter: null,
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    // data[3] correspond à la semaine courante (windowStartMonday + 3*WEEK = currentMonday)
+    expect(result.data[3]).toBe(1)
+  })
+
+  it('filtre par muscle et compte seulement les sets dont le muscle correspond', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const exercise = ex('e1', 'Soulevé de terre', ['Dos'])
+    const set = s('s1', 'h1', 'e1', 100, 10)
+    const result = computeWeeklySetsChart([set], [exercise], [history], {
+      muscleFilter: 'Dos',
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    expect(result.data[3]).toBe(1)
+  })
+
+  it('filtre par muscle — exclut les sets hors muscle', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const exercise = ex('e1', 'Développé couché', ['Pecs'])
+    const set = s('s1', 'h1', 'e1', 80, 10)
+    const result = computeWeeklySetsChart([set], [exercise], [history], {
+      muscleFilter: 'Dos',
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    expect(result.data.every(v => v === 0)).toBe(true)
+  })
+
+  it('hasNext=false quand weekOffset=0, hasNext=true quand weekOffset=-1', () => {
+    const resultCurrent = computeWeeklySetsChart([], [], [], {
+      muscleFilter: null,
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    expect(resultCurrent.hasNext).toBe(false)
+
+    const resultPrev = computeWeeklySetsChart([], [], [], {
+      muscleFilter: null,
+      weekOffset: -1,
+      weeksToShow: 4,
+    })
+    expect(resultPrev.hasNext).toBe(true)
+  })
+
+  it('ignore les histories avec deletedAt != null', () => {
+    const now = new Date()
+    const history = h('h1', now, { deletedAt: new Date() })
+    const exercise = ex('e1', 'Squat')
+    const set = s('s1', 'h1', 'e1', 100, 10)
+    const result = computeWeeklySetsChart([set], [exercise], [history], {
+      muscleFilter: null,
+      weekOffset: 0,
+      weeksToShow: 4,
+    })
+    expect(result.data.every(v => v === 0)).toBe(true)
+  })
+})
+
+// ─── computeMonthlySetsChart ──────────────────────────────────────────────────
+
+describe('computeMonthlySetsChart', () => {
+  it('retourne labels=[] data=[] si aucun set actif', () => {
+    expect(computeMonthlySetsChart([], [], [], null)).toEqual({ labels: [], data: [] })
+  })
+
+  it('retourne 1 entrée pour un seul mois de données', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const set = s('s1', 'h1', 'e1', 100, 10)
+    const result = computeMonthlySetsChart([set], [], [history], null)
+    expect(result.labels).toHaveLength(1)
+    expect(result.data[0]).toBe(1)
+  })
+
+  it('regroupe les sets par mois sur 3 mois distincts', () => {
+    const now = new Date()
+    const h1 = h('h1', new Date(now.getFullYear(), now.getMonth(), 1))
+    const h2 = h('h2', new Date(now.getFullYear(), now.getMonth() - 1, 1))
+    const h3 = h('h3', new Date(now.getFullYear(), now.getMonth() - 2, 1))
+    const sets = [
+      s('s1', 'h1', 'e1', 100, 10),
+      s('s2', 'h2', 'e1', 100, 10),
+      s('s3', 'h3', 'e1', 100, 10),
+    ]
+    const result = computeMonthlySetsChart(sets, [], [h1, h2, h3], null)
+    expect(result.labels).toHaveLength(3)
+    expect(result.data.every(v => v === 1)).toBe(true)
+  })
+
+  it('tronque à 12 mois si historique > 12 mois', () => {
+    const now = new Date()
+    const histories: ReturnType<typeof h>[] = []
+    const sets: ReturnType<typeof s>[] = []
+    for (let i = 0; i < 15; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 15)
+      const id = `h${i}`
+      histories.push(h(id, date))
+      sets.push(s(`s${i}`, id, 'e1', 100, 10))
+    }
+    const result = computeMonthlySetsChart(sets, [], histories, null)
+    expect(result.labels.length).toBeLessThanOrEqual(12)
+  })
+
+  it('filtre par muscle quand muscleFilter est défini', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const exercise = ex('e1', 'Pull-up', ['Dos'])
+    const set = s('s1', 'h1', 'e1', 0, 10)
+    const resultDos = computeMonthlySetsChart([set], [exercise], [history], 'Dos')
+    const resultPecs = computeMonthlySetsChart([set], [exercise], [history], 'Pecs')
+    expect(resultDos.data[resultDos.data.length - 1]).toBe(1)
+    expect(resultPecs.data[resultPecs.data.length - 1]).toBe(0)
+  })
+
+  it('muscleFilter=null compte tous les muscles sans filtrage', () => {
+    const now = new Date()
+    const history = h('h1', now)
+    const exercise = ex('e1', 'Curl', ['Biceps'])
+    const set = s('s1', 'h1', 'e1', 20, 12)
+    const result = computeMonthlySetsChart([set], [exercise], [history], null)
+    expect(result.data[result.data.length - 1]).toBe(1)
+  })
+
+  it('ignore les histories avec deletedAt != null', () => {
+    const now = new Date()
+    const history = h('h1', now, { deletedAt: new Date() })
+    const set = s('s1', 'h1', 'e1', 100, 10)
+    const result = computeMonthlySetsChart([set], [], [history], null)
+    expect(result).toEqual({ labels: [], data: [] })
   })
 })

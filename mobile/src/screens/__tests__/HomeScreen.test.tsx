@@ -48,7 +48,16 @@ jest.mock('../../model/utils/statsHelpers', () => ({
   }),
   computeMotivationalPhrase: jest.fn().mockReturnValue('Continue comme ça !'),
   formatVolume: jest.fn((v: number) => `${v} kg`),
-  buildHeatmapData: jest.fn().mockReturnValue([]),
+  buildWeeklyActivity: jest.fn().mockReturnValue(
+    Array.from({ length: 7 }, (_, i) => ({
+      dateKey: `2026-02-${String(i + 24).padStart(2, '0')}`,
+      dayLabel: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'][i],
+      dayNumber: i + 24,
+      isToday: false,
+      isPast: true,
+      sessions: [],
+    }))
+  ),
 }))
 
 import React from 'react'
@@ -57,6 +66,7 @@ import { HomeContent } from '../HomeScreen'
 import type User from '../../model/models/User'
 import type History from '../../model/models/History'
 import type WorkoutSet from '../../model/models/Set'
+import type Session from '../../model/models/Session'
 
 const makeUser = (overrides: Partial<User> = {}): User => ({
   id: 'user-1',
@@ -77,6 +87,7 @@ describe('HomeScreen Dashboard', () => {
           users={[]}
           histories={[] as unknown as History[]}
           sets={[] as unknown as WorkoutSet[]}
+          sessions={[] as unknown as Session[]}
           userBadges={[]}
         />
       )
@@ -136,7 +147,7 @@ describe('HomeScreen Dashboard', () => {
   })
 
   it('affiche toutes les tuiles', () => {
-    const { getByText, getAllByText } = render(
+    const { getByText, getAllByText, queryByText } = render(
       <HomeContent
         users={[]}
         histories={[] as unknown as History[]}
@@ -149,7 +160,7 @@ describe('HomeScreen Dashboard', () => {
     expect(getByText('Dur\u00e9e')).toBeTruthy()
     expect(getAllByText('Volume').length).toBeGreaterThanOrEqual(2)
     expect(getByText('Agenda')).toBeTruthy()
-    expect(getByText('Muscles')).toBeTruthy()
+    expect(queryByText('Muscles')).toBeNull()
     expect(getByText('Exercices & Records')).toBeTruthy()
     expect(getByText('Mesures')).toBeTruthy()
     expect(getByText('Historique')).toBeTruthy()

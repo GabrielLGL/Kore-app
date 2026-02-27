@@ -13,7 +13,6 @@ jest.mock('../../model/index', () => ({
 }))
 
 jest.mock('react-native-chart-kit', () => ({
-  BarChart: 'BarChart',
   LineChart: 'LineChart',
 }))
 
@@ -38,12 +37,12 @@ const makeSet = (id: string, historyId: string, exerciseId: string, weight: numb
     createdAt: new Date(),
   }) as never
 
-const makeExercise = (id: string, name: string) =>
+const makeExercise = (id: string, name: string, muscles: string[] = ['Pecs']) =>
   ({
     id,
     name,
-    primaryMuscle: 'Pecs',
-    muscles: ['Pecs'],
+    primaryMuscle: muscles[0] ?? 'Pecs',
+    muscles,
   }) as never
 
 describe('StatsVolumeScreenBase', () => {
@@ -51,32 +50,86 @@ describe('StatsVolumeScreenBase', () => {
     const { getByText } = render(
       <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
     )
-    expect(getByText('Volume total')).toBeTruthy()
+    expect(getByText('Total')).toBeTruthy()
   })
 
-  it('affiche le message vide quand aucun volume', () => {
+  it('affiche le message vide quand aucune donnée', () => {
     const { getByText } = render(
       <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
     )
-    expect(getByText('Aucun volume enregistré sur cette période.')).toBeTruthy()
+    expect(getByText('Aucune donnée pour cette période.')).toBeTruthy()
   })
 
-  it('affiche le label "Volume par semaine" en français', () => {
-    const { getByText } = render(
+  it('affiche les chips de période', () => {
+    const { getAllByText, getByText } = render(
       <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
     )
-    expect(getByText(/Volume par semaine/)).toBeTruthy()
+    // '1 mois' et '3 mois' apparaissent dans les 2 ChipSelectors (chart + bars)
+    expect(getAllByText('1 mois').length).toBeGreaterThanOrEqual(1)
+    expect(getAllByText('3 mois').length).toBeGreaterThanOrEqual(1)
+    expect(getAllByText('Tout').length).toBeGreaterThanOrEqual(1)
+    // Chip exclusif aux bars
+    expect(getByText('Semaine')).toBeTruthy()
   })
 
   it('rend avec des données sans crash', () => {
     const now = Date.now()
     const histories = [makeHistory('h1', now - 86400000)]
-    const exercises = [makeExercise('e1', 'Développé couché')]
+    const exercises = [makeExercise('e1', 'Développé couché', ['Pecs'])]
     const sets = [makeSet('s1', 'h1', 'e1', 80, 10)]
 
     const { getByText } = render(
       <StatsVolumeScreenBase sets={sets} exercises={exercises} histories={histories} />
     )
-    expect(getByText('Volume total')).toBeTruthy()
+    expect(getByText('Total')).toBeTruthy()
+  })
+
+  it('affiche le filtre muscle quand des exercices sont entraînés', () => {
+    const now = Date.now()
+    const histories = [makeHistory('h1', now - 86400000)]
+    const exercises = [makeExercise('e1', 'Développé couché', ['Pecs'])]
+    const sets = [makeSet('s1', 'h1', 'e1', 80, 10)]
+
+    const { getAllByText } = render(
+      <StatsVolumeScreenBase sets={sets} exercises={exercises} histories={histories} />
+    )
+    // "Pecs" apparaît dans le chip muscle ET dans la barre de progression
+    expect(getAllByText('Pecs').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('affiche les progress bars avec le nom du muscle et le compteur de sets', () => {
+    const now = Date.now()
+    const histories = [makeHistory('h1', now)]
+    const exercises = [makeExercise('e1', 'Squat', ['Quadriceps'])]
+    const sets = [makeSet('s1', 'h1', 'e1', 100, 5)]
+
+    const { getAllByText, getByText } = render(
+      <StatsVolumeScreenBase sets={sets} exercises={exercises} histories={histories} />
+    )
+    // 'Quadriceps' apparaît dans le chip muscle ET dans la barre de progression
+    expect(getAllByText('Quadriceps').length).toBeGreaterThanOrEqual(1)
+    expect(getByText('1 set')).toBeTruthy()
+  })
+
+  it('affiche "Aucun set enregistré" dans les bars quand aucune donnée', () => {
+    const { getByText } = render(
+      <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
+    )
+    expect(getByText('Aucun set enregistré sur cette période.')).toBeTruthy()
+  })
+
+  it('affiche le label de fenêtre au format DD/MM – DD/MM pour la semaine courante', () => {
+    const { getByText } = render(
+      <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
+    )
+    // Le chip 'Semaine' est sélectionné par défaut → windowLabel = "DD/MM – DD/MM"
+    expect(getByText(/\d{2}\/\d{2} – \d{2}\/\d{2}/)).toBeTruthy()
+  })
+
+  it('affiche le chip Semaine sélectionné par défaut dans les bars', () => {
+    const { getByText } = render(
+      <StatsVolumeScreenBase sets={[]} exercises={[]} histories={[]} />
+    )
+    expect(getByText('Semaine')).toBeTruthy()
   })
 })

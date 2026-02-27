@@ -80,16 +80,16 @@ describe('StatsScreenBase', () => {
     expect(getByText('Records')).toBeTruthy()
   })
 
-  it('affiche les 7 boutons de navigation', () => {
-    const { getByText } = render(
+  it('affiche les 6 boutons de navigation', () => {
+    const { getByText, queryByText } = render(
       <StatsScreenBase users={[makeUser()]} histories={[]} sets={[]} />
     )
     expect(getByText('Durée')).toBeTruthy()
     expect(getByText('Agenda')).toBeTruthy()
-    expect(getByText('Muscles')).toBeTruthy()
     expect(getByText('Exercices')).toBeTruthy()
     expect(getByText('Mesures')).toBeTruthy()
     expect(getByText('Historique')).toBeTruthy()
+    expect(queryByText('Muscles')).toBeNull()
   })
 
   it('navigue au tap sur un bouton', () => {

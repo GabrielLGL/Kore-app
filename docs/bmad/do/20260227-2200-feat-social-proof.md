@@ -30,4 +30,4 @@ aucune
 ✅ Résolu — 20260227-2200
 
 ## Commit
-[à remplir]
+d5a74c7 feat(social-proof): show "Rejoins les premiers inscrits" when < 50 subscribers

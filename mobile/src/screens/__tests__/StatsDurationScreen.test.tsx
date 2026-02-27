@@ -1,6 +1,12 @@
 import React from 'react'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
+jest.mock('@gorhom/portal', () => ({
+  Portal: ({ children }: { children: React.ReactNode }) => children,
+  PortalProvider: ({ children }: { children: React.ReactNode }) => children,
+  PortalHost: () => null,
+}))
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),
   notificationAsync: jest.fn(),
@@ -9,7 +15,7 @@ jest.mock('expo-haptics', () => ({
 }))
 
 jest.mock('../../model/index', () => ({
-  database: { write: jest.fn(), get: jest.fn() },
+  database: { write: jest.fn(async (fn: () => Promise<void>) => fn()), get: jest.fn() },
 }))
 
 jest.mock('react-native-chart-kit', () => {
@@ -47,6 +53,7 @@ jest.mock('../../theme/chartConfig', () => ({
 }))
 
 import { StatsDurationScreenBase } from '../StatsDurationScreen'
+import { database } from '../../model/index'
 
 const makeHistory = (id: string, startMs: number, endMs: number) =>
   ({
@@ -54,6 +61,9 @@ const makeHistory = (id: string, startMs: number, endMs: number) =>
     startTime: new Date(startMs),
     endTime: new Date(endMs),
     deletedAt: null,
+    update: jest.fn(async (fn: (h: { deletedAt: Date | null }) => void) => {
+      fn({ deletedAt: null })
+    }),
   }) as never
 
 describe('StatsDurationScreenBase', () => {
@@ -192,5 +202,105 @@ describe('StatsDurationScreenBase', () => {
     expect(getByText('Durée moyenne')).toBeTruthy()
     expect(getByText('Plus courte')).toBeTruthy()
     expect(getByText('Plus longue')).toBeTruthy()
+  })
+
+  it('exclut les séances < 5 min des stats', () => {
+    const now = Date.now()
+    // 4 min session — should be excluded
+    const shortHistory = makeHistory('h-short', now - 86400000, now - 86400000 + 240000)
+    // 60 min session — valid
+    const validHistory = makeHistory('h-valid', now - 172800000, now - 172800000 + 3600000)
+    const { getByText, getAllByText } = render(
+      <StatsDurationScreenBase histories={[shortHistory, validHistory]} />
+    )
+    // Only 1 valid session → no chart (< 2 sessions)
+    expect(getByText(/Enregistrez au moins 2 séances/)).toBeTruthy()
+    // KPI avg should be 60 min (not averaged with 4 min)
+    expect(getAllByText('1h').length).toBeGreaterThanOrEqual(1)
+    // History should show only 1 entry
+    expect(getByText(/Historique \(1 séances\)/)).toBeTruthy()
+  })
+
+  it('affiche la liste historique quand des séances valides existent', () => {
+    const now = Date.now()
+    const histories = [
+      makeHistory('h1', now - 7200000, now - 7200000 + 3600000),    // 60 min
+      makeHistory('h2', now - 172800000, now - 172800000 + 5400000), // 90 min
+    ]
+    const { getByText, getAllByText } = render(
+      <StatsDurationScreenBase histories={histories} />
+    )
+    expect(getByText(/Historique \(2 séances\)/)).toBeTruthy()
+    // Both sessions should appear in the history (formatDuration)
+    // Note: getAllByText because values also appear in KPI cards
+    expect(getAllByText('1h 30min').length).toBeGreaterThanOrEqual(1)
+    expect(getAllByText('1h').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('affiche empty state historique quand aucune séance valide', () => {
+    const { getByText } = render(
+      <StatsDurationScreenBase histories={[]} />
+    )
+    expect(getByText(/Historique \(0 séances\)/)).toBeTruthy()
+    expect(getByText('Aucune séance valide enregistrée.')).toBeTruthy()
+  })
+
+  it('affiche seulement 5 séances par page', () => {
+    const now = Date.now()
+    const histories = Array.from({ length: 7 }, (_, i) =>
+      makeHistory(`h${i + 1}`, now - (i + 1) * 86400000, now - (i + 1) * 86400000 + 3600000)
+    )
+    const { queryAllByLabelText } = render(
+      <StatsDurationScreenBase histories={histories} />
+    )
+    const trashButtons = queryAllByLabelText('Supprimer cette séance')
+    expect(trashButtons.length).toBe(5)
+  })
+
+  it('affiche les boutons de pagination quand > 5 séances', () => {
+    const now = Date.now()
+    const histories = Array.from({ length: 7 }, (_, i) =>
+      makeHistory(`h${i + 1}`, now - (i + 1) * 86400000, now - (i + 1) * 86400000 + 3600000)
+    )
+    const { getByLabelText } = render(
+      <StatsDurationScreenBase histories={histories} />
+    )
+    expect(getByLabelText('Page suivante')).toBeTruthy()
+  })
+
+  it('affiche la dialog de confirmation quand on clique poubelle', async () => {
+    const now = Date.now()
+    const histories = [
+      makeHistory('h1', now - 7200000, now - 7200000 + 3600000),
+      makeHistory('h2', now - 172800000, now - 172800000 + 3600000),
+    ]
+    const { getAllByLabelText, getByText } = render(
+      <StatsDurationScreenBase histories={histories} />
+    )
+    const trashButtons = getAllByLabelText('Supprimer cette séance')
+    fireEvent.press(trashButtons[0])
+    await waitFor(() => {
+      expect(getByText('Supprimer cette séance ?')).toBeTruthy()
+    })
+  })
+
+  it('supprime une séance et appelle database.write', async () => {
+    const now = Date.now()
+    const histories = [
+      makeHistory('h1', now - 7200000, now - 7200000 + 3600000),
+      makeHistory('h2', now - 172800000, now - 172800000 + 3600000),
+    ]
+    const { getAllByLabelText, getByText } = render(
+      <StatsDurationScreenBase histories={histories} />
+    )
+    // Open dialog
+    const trashButtons = getAllByLabelText('Supprimer cette séance')
+    fireEvent.press(trashButtons[0])
+    // Confirm deletion
+    await waitFor(() => getByText('Supprimer cette séance ?'))
+    fireEvent.press(getByText('Supprimer'))
+    await waitFor(() => {
+      expect(database.write).toHaveBeenCalled()
+    })
   })
 })
