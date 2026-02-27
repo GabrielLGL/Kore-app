@@ -213,6 +213,36 @@ html.no-transition body {
   box-shadow: 0 5px 10px var(--accent-glow);
 }
 
+/* === FOCUS VISIBLE — navigation clavier === */
+
+/* Supprimer l'outline par défaut sur focus souris/touch */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Focus clavier uniquement — visible et accessible */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Inputs et textareas : adapter au border-radius rounded-full */
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+/* Boutons et liens : border-radius cohérent */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
 /* === REDUCED MOTION === */
 @media (prefers-reduced-motion: reduce) {
   *,
