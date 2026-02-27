@@ -49,7 +49,7 @@ function BulletList({ items }: { items: string[] }) {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative overflow-hidden">
       <BackgroundBlobs />
       <ThemeToggle />
 
