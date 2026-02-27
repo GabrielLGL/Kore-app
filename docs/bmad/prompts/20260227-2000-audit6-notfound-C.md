@@ -64,4 +64,7 @@ Tout le contenu interne de `<main>` reste strictement identique — seule la bal
 Aucune dépendance — peut tourner en parallèle avec Groupes A et B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-2030
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-2030-fix-notfound-skip-link.md

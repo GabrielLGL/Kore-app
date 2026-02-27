@@ -3,7 +3,15 @@ import KoreLogo from "@/components/KoreLogo";
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
+    <>
+      {/* Skip link — navigation clavier */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:bg-[var(--accent)] focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        Aller au contenu principal
+      </a>
+      <main id="main-content" className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
       <div className="inline-flex items-center gap-3 mb-8 px-6 py-2.5 rounded-full bg-[var(--glass)] border border-[var(--glass-border)] backdrop-blur-[10px] shadow-neu-out">
         <KoreLogo size={36} gradientId="notFoundGrad" />
         <span className="gradient-text font-black text-lg tracking-widest">KORE</span>
@@ -26,6 +34,7 @@ export default function NotFound() {
           Retour à l&apos;accueil
         </Link>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
