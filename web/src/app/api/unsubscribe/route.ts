@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 function computeToken(email: string): string {
   const secret = process.env.RESEND_API_KEY ?? "";
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
     const { error } = await supabase
       .from("subscribers")
       .delete()
