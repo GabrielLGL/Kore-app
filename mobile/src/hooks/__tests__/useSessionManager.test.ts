@@ -143,6 +143,18 @@ describe('useSessionManager', () => {
       expect(mockWrite).not.toHaveBeenCalled()
     })
 
+    it('should return false when exercise is null or undefined', async () => {
+      const { result } = renderHook(() => useSessionManager(mockSession as any))
+
+      let success: boolean
+      await act(async () => {
+        success = await result.current.addExercise('exo-1', '3', '10', '60', null as any)
+      })
+
+      expect(success!).toBe(false)
+      expect(mockWrite).not.toHaveBeenCalled()
+    })
+
     it('should create session_exercise and performance_log on success', async () => {
       const { result } = renderHook(() => useSessionManager(mockSession as any))
       const mockExercise = { id: 'exo-1' }
@@ -310,6 +322,51 @@ describe('useSessionManager', () => {
       })
 
       expect(success!).toBe(false)
+    })
+
+    it('clamp les séries à 10 si la valeur dépasse le max', async () => {
+      mockParseIntegerInput.mockReturnValue(99)
+      const captured: Record<string, unknown> = { setsTarget: 0, setsTargetMax: 0, repsTarget: '', weightTarget: 0 }
+      const mockSE = createMockSessionExercise()
+      ;(mockSE.update as jest.Mock).mockImplementationOnce(
+        async (fn: (se: Record<string, unknown>) => void) => { fn(captured) }
+      )
+      const { result } = renderHook(() => useSessionManager(mockSession as any))
+
+      await act(async () => {
+        result.current.setSelectedSessionExercise(mockSE as any)
+        result.current.setTargetSets('99')
+        result.current.setTargetReps('10')
+      })
+
+      await act(async () => {
+        await result.current.updateTargets()
+      })
+
+      expect(captured.setsTarget).toBe(10)
+    })
+
+    it('clamp le poids à 999 si la valeur dépasse le max', async () => {
+      mockParseNumericInput.mockReturnValue(1500)
+      const captured: Record<string, unknown> = { setsTarget: 0, setsTargetMax: 0, repsTarget: '', weightTarget: 0 }
+      const mockSE = createMockSessionExercise()
+      ;(mockSE.update as jest.Mock).mockImplementationOnce(
+        async (fn: (se: Record<string, unknown>) => void) => { fn(captured) }
+      )
+      const { result } = renderHook(() => useSessionManager(mockSession as any))
+
+      await act(async () => {
+        result.current.setSelectedSessionExercise(mockSE as any)
+        result.current.setTargetSets('3')
+        result.current.setTargetReps('10')
+        result.current.setTargetWeight('1500')
+      })
+
+      await act(async () => {
+        await result.current.updateTargets()
+      })
+
+      expect(captured.weightTarget).toBe(999)
     })
   })
 

@@ -77,6 +77,7 @@ export function useSessionManager(
   ): Promise<boolean> => {
     const validation = validateWorkoutInput(sets, reps, weight)
     if (!validation.valid) return false
+    if (!exercise) return false
 
     try {
       const position = await getNextPosition(
@@ -120,8 +121,8 @@ export function useSessionManager(
       const exo = await selectedSessionExercise.exercise.fetch()
       if (!exo) return false
 
-      const setsVal = parseIntegerInput(targetSets)
-      const weightVal = parseNumericInput(targetWeight)
+      const setsVal = Math.min(Math.max(parseIntegerInput(targetSets), 1), 10)
+      const weightVal = Math.min(Math.max(parseNumericInput(targetWeight), 0), 999)
       const repsVal = parseIntegerInput(targetReps)
 
       await database.write(async () => {

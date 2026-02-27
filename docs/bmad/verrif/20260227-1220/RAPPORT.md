@@ -33,7 +33,7 @@
 | 3 | B1 — handleSaveNote async sans try/catch | WorkoutExerciseCard.tsx:262 | 20min | C |
 | 4 | B4 — handleConfirmEnd gestion erreurs fragmentée | WorkoutScreen.tsx:202-333 | 45min | C |
 | 5 | B5 — validateSet échec DB invisible user | useWorkoutState.ts:103-154 | 30min | C |
-| 6 | H4 — catchError retourne null silencieux | WorkoutExerciseCard.tsx:337-347 | 10min | B |
+| 6 | ~~H4 — catchError retourne null silencieux~~ | WorkoutExerciseCard.tsx:337-347 | — | ✅ Résolu — 20260227-1330 |
 | 7 | H5 — ExercisePickerModal useEffect deps larges | ExercisePickerModal.tsx:77-87 | 20min | D |
 | 8 | Q1 — Couleurs hardcodées CSS keyframes | globals.css:128-193 | 20min | E |
 
@@ -56,3 +56,6 @@
 | Tests avant | 1267 |
 | Tests après | 1275 (+8 subscribe duplicate) |
 | TypeScript errors | 0 |
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-1330-fix-WorkoutExerciseCard-catchError.md
