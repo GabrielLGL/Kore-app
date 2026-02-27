@@ -45,16 +45,26 @@ interface WeekRow {
   days: DayCell[]
 }
 
-interface SessionDetail {
-  name: string
-  durationMin: number | null
+interface SetDetail {
+  setOrder: number
+  weight: number
+  reps: number
+  isPr: boolean
 }
 
-interface TooltipInfo {
+interface ExerciseDetail {
+  exerciseName: string
+  sets: SetDetail[]
+}
+
+interface DayDetail {
   dateKey: string
   label: string
   count: number
-  sessions: SessionDetail[]
+  programName: string
+  sessionName: string
+  durationMin: number | null
+  exercises: ExerciseDetail[]
 }
 
 // ─── Génération de la grille mensuelle ────────────────────────────────────────
@@ -137,7 +147,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   const today = useMemo(() => new Date(), [])
   const [viewYear, setViewYear] = useState(() => new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
-  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null)
+  const [detail, setDetail] = useState<DayDetail | null>(null)
 
   const isCurrentMonth =
     viewYear === today.getFullYear() && viewMonth === today.getMonth()
@@ -180,7 +190,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   }, [monthStats])
 
   const goToPrevMonth = () => {
-    setTooltip(null)
+    setDetail(null)
     if (viewMonth === 0) {
       setViewYear(y => y - 1)
       setViewMonth(11)
@@ -191,7 +201,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
 
   const goToNextMonth = () => {
     if (isCurrentMonth) return
-    setTooltip(null)
+    setDetail(null)
     if (viewMonth === 11) {
       setViewYear(y => y + 1)
       setViewMonth(0)
@@ -201,7 +211,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   }
 
   const goToToday = () => {
-    setTooltip(null)
+    setDetail(null)
     setViewYear(today.getFullYear())
     setViewMonth(today.getMonth())
   }
@@ -227,8 +237,8 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   const handleDayPress = async (day: DayCell) => {
     if (day.isFuture || !day.isCurrentMonth) return
 
-    if (tooltip?.dateKey === day.dateKey) {
-      setTooltip(null)
+    if (detail?.dateKey === day.dateKey) {
+      setDetail(null)
       return
     }
 
@@ -239,7 +249,15 @@ export function StatsCalendarScreenBase({ histories }: Props) {
     })
 
     if (day.count === 0) {
-      setTooltip({ dateKey: day.dateKey, label, count: 0, sessions: [] })
+      setDetail({
+        dateKey: day.dateKey,
+        label,
+        count: 0,
+        programName: '',
+        sessionName: '',
+        durationMin: null,
+        exercises: [],
+      })
       return
     }
 
@@ -247,25 +265,82 @@ export function StatsCalendarScreenBase({ histories }: Props) {
       h => h.deletedAt === null && toDateKey(h.startTime) === day.dateKey
     )
 
-    const sessions: SessionDetail[] = await Promise.all(
+    const allExercises: ExerciseDetail[] = []
+    let programName = ''
+    let sessionName = ''
+    let totalDurationMin = 0
+
+    await Promise.all(
       dayHistories.map(async h => {
-        let name = 'Séance'
+        // Session + Programme
         try {
           const session = await h.session.fetch()
-          if (session?.name) name = session.name
+          if (session) {
+            if (!sessionName && session.name) sessionName = session.name
+            try {
+              const program = await session.program.fetch()
+              if (program?.name && !programName) programName = program.name
+            } catch {
+              // programme supprimé
+            }
+          }
         } catch {
-          // la séance a peut-être été supprimée
+          // session supprimée
         }
-        const durationMin = h.endTime
-          ? Math.round(
-              (h.endTime.getTime() - h.startTime.getTime()) / 60000
-            )
-          : null
-        return { name, durationMin }
+
+        // Durée
+        if (h.endTime) {
+          totalDurationMin += Math.round(
+            (h.endTime.getTime() - h.startTime.getTime()) / 60000
+          )
+        }
+
+        // Sets → regrouper par exercice
+        try {
+          const sets = await h.sets.fetch()
+          const exerciseMap = new Map<string, ExerciseDetail>()
+
+          await Promise.all(
+            sets.map(async s => {
+              let exName = 'Exercice inconnu'
+              try {
+                const ex = await s.exercise.fetch()
+                if (ex?.name) exName = ex.name
+              } catch {
+                // exercice supprimé
+              }
+
+              if (!exerciseMap.has(exName)) {
+                exerciseMap.set(exName, { exerciseName: exName, sets: [] })
+              }
+              exerciseMap.get(exName)!.sets.push({
+                setOrder: s.setOrder,
+                weight: s.weight,
+                reps: s.reps,
+                isPr: s.isPr,
+              })
+            })
+          )
+
+          exerciseMap.forEach(exDetail => {
+            exDetail.sets.sort((a, b) => a.setOrder - b.setOrder)
+            allExercises.push(exDetail)
+          })
+        } catch {
+          // sets inaccessibles
+        }
       })
     )
 
-    setTooltip({ dateKey: day.dateKey, label, count: day.count, sessions })
+    setDetail({
+      dateKey: day.dateKey,
+      label,
+      count: day.count,
+      programName,
+      sessionName,
+      durationMin: totalDurationMin > 0 ? totalDurationMin : null,
+      exercises: allExercises,
+    })
   }
 
   const todayKey = toDateKey(today)
@@ -326,25 +401,51 @@ export function StatsCalendarScreenBase({ histories }: Props) {
         </TouchableOpacity>
       )}
 
-      {/* Tooltip */}
-      {tooltip && (
-        <View style={styles.tooltip}>
-          <Text style={styles.tooltipDate}>{tooltip.label}</Text>
-          {tooltip.count === 0 ? (
-            <Text style={styles.tooltipRest}>Repos</Text>
+      {/* Carte de détail */}
+      {detail && (
+        <View style={styles.detailCard}>
+          <Text style={styles.detailDate}>{detail.label}</Text>
+
+          {detail.count === 0 ? (
+            <Text style={styles.detailRest}>Repos</Text>
           ) : (
-            tooltip.sessions.map((s, i) => (
-              <View key={i} style={styles.tooltipSession}>
-                <Text style={styles.tooltipSessionName} numberOfLines={1}>
-                  {s.name}
+            <>
+              <View style={styles.detailHeader}>
+                <Text style={styles.detailProgramName} numberOfLines={1}>
+                  {detail.programName || detail.sessionName || 'Séance'}
                 </Text>
-                {s.durationMin != null && s.durationMin > 0 && (
-                  <Text style={styles.tooltipSessionDuration}>
-                    {formatDuration(s.durationMin)}
+                {detail.durationMin != null && detail.durationMin > 0 && (
+                  <Text style={styles.detailDuration}>
+                    {formatDuration(detail.durationMin)}
                   </Text>
                 )}
               </View>
-            ))
+
+              {detail.sessionName && detail.sessionName !== detail.programName && (
+                <Text style={styles.detailSessionName}>{detail.sessionName}</Text>
+              )}
+
+              {detail.exercises.map((ex, ei) => (
+                <View key={ei} style={styles.detailExercise}>
+                  <Text style={styles.detailExerciseName}>{ex.exerciseName}</Text>
+                  <View style={styles.detailSetsRow}>
+                    {ex.sets.map((s, si) => (
+                      <View key={si} style={styles.detailSetChip}>
+                        <Text
+                          style={[
+                            styles.detailSetText,
+                            s.isPr && styles.detailSetPr,
+                          ]}
+                        >
+                          {s.weight > 0 ? `${s.weight} kg` : 'PC'} × {s.reps}
+                          {s.isPr ? ' 🏅' : ''}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </>
           )}
         </View>
       )}
@@ -364,18 +465,19 @@ export function StatsCalendarScreenBase({ histories }: Props) {
         {weeks.map((week, wi) => (
           <View key={wi} style={styles.weekRow}>
             {week.days.map((day, di) => {
+              // Jours hors mois : spacer transparent, non interactif
+              if (!day.isCurrentMonth) {
+                return <View key={di} style={styles.daySpacer} />
+              }
+
               const isToday = day.dateKey === todayKey
-              const isActive =
-                day.isCurrentMonth && !day.isFuture && day.count > 0
-              const isSelected = tooltip?.dateKey === day.dateKey
+              const isActive = !day.isFuture && day.count > 0
+              const isSelected = detail?.dateKey === day.dateKey
 
               let bgColor = 'transparent'
               let textColor: string = colors.border
 
-              if (!day.isCurrentMonth) {
-                bgColor = intensityColors[0]
-                textColor = colors.border
-              } else if (day.isFuture) {
+              if (day.isFuture) {
                 bgColor = 'transparent'
                 textColor = colors.border
               } else if (isActive) {
@@ -397,9 +499,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
                   key={di}
                   testID={`day-cell-${day.dateKey}`}
                   onPress={() => handleDayPress(day)}
-                  activeOpacity={
-                    day.isFuture || !day.isCurrentMonth ? 1 : 0.7
-                  }
+                  activeOpacity={day.isFuture ? 1 : 0.7}
                 >
                   <View
                     style={[
@@ -518,39 +618,72 @@ function useStyles(colors: ThemeColors) {
       fontSize: fontSize.xs,
       color: colors.primary,
     },
-    tooltip: {
+    detailCard: {
       backgroundColor: colors.card,
-      borderRadius: borderRadius.sm,
-      padding: spacing.sm,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
       marginBottom: spacing.sm,
     },
-    tooltipDate: {
-      fontSize: fontSize.sm,
+    detailDate: {
+      fontSize: fontSize.xs,
       color: colors.textSecondary,
       textAlign: 'center',
       textTransform: 'capitalize',
       marginBottom: spacing.xs,
     },
-    tooltipRest: {
+    detailRest: {
       fontSize: fontSize.sm,
       color: colors.textSecondary,
       textAlign: 'center',
     },
-    tooltipSession: {
+    detailHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: 2,
+      marginBottom: 2,
     },
-    tooltipSessionName: {
-      fontSize: fontSize.sm,
+    detailProgramName: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
       color: colors.text,
       flex: 1,
     },
-    tooltipSessionDuration: {
+    detailDuration: {
       fontSize: fontSize.xs,
       color: colors.textSecondary,
       marginLeft: spacing.sm,
+    },
+    detailSessionName: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    detailExercise: {
+      marginTop: spacing.sm,
+    },
+    detailExerciseName: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    detailSetsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+    },
+    detailSetChip: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    detailSetText: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+    },
+    detailSetPr: {
+      color: colors.warning,
     },
     calendarContainer: {
       marginBottom: spacing.md,
@@ -571,6 +704,10 @@ function useStyles(colors: ThemeColors) {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: DAY_GAP,
+    },
+    daySpacer: {
+      width: DAY_SIZE,
+      height: DAY_SIZE,
     },
     dayBox: {
       width: DAY_SIZE,

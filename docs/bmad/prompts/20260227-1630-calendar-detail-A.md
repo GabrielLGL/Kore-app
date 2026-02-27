@@ -391,4 +391,7 @@ Vérification visuelle :
 Aucune dépendance externe — groupe unique.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-1630
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-1630-feat-calendar-detail.md

@@ -20,7 +20,13 @@ const makeHistory = (id: string, date: number, overrides = {}) =>
     startTime: new Date(date),
     endTime: new Date(date + 3600000),
     deletedAt: null,
-    session: { fetch: jest.fn().mockResolvedValue({ name: 'Push Day' }) },
+    session: {
+      fetch: jest.fn().mockResolvedValue({
+        name: 'Push Day',
+        program: { fetch: jest.fn().mockResolvedValue({ name: 'PPL Push' }) },
+      }),
+    },
+    sets: { fetch: jest.fn().mockResolvedValue([]) },
     ...overrides,
   }) as never
 
@@ -108,7 +114,7 @@ describe('StatsCalendarScreenBase', () => {
     expect(getByText(currentTitle)).toBeTruthy()
   })
 
-  it('affiche le bouton Aujourd\'hui quand pas sur le mois courant', () => {
+  it("affiche le bouton Aujourd'hui quand pas sur le mois courant", () => {
     const { getByText, queryByText } = render(
       <StatsCalendarScreenBase histories={[]} />
     )
@@ -119,7 +125,7 @@ describe('StatsCalendarScreenBase', () => {
     expect(getByText("Aujourd'hui")).toBeTruthy()
   })
 
-  it('le bouton Aujourd\'hui revient au mois courant', () => {
+  it("le bouton Aujourd'hui revient au mois courant", () => {
     const { getByText } = render(
       <StatsCalendarScreenBase histories={[]} />
     )
@@ -130,6 +136,19 @@ describe('StatsCalendarScreenBase', () => {
     fireEvent.press(getByText("Aujourd'hui"))
 
     expect(getByText(currentTitle)).toBeTruthy()
+  })
+
+  it('les jours hors mois ne sont pas pressables (pas de testID)', () => {
+    const today = new Date()
+    // Le dernier jour du mois précédent n'est jamais dans le mois courant
+    const lastDayPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0)
+    const prevKey = toKey(lastDayPrevMonth)
+
+    const { queryByTestId } = render(
+      <StatsCalendarScreenBase histories={[]} />
+    )
+    // Pas de testID day-cell sur un jour hors mois (spacer transparent)
+    expect(queryByTestId(`day-cell-${prevKey}`)).toBeNull()
   })
 
   it('rend avec des données sans crash', () => {
@@ -157,16 +176,12 @@ describe('StatsCalendarScreenBase', () => {
     expect(getByText('record')).toBeTruthy()
   })
 
-  it('affiche le tooltip au clic sur un jour de repos du calendrier', async () => {
+  it('affiche la carte Repos au clic sur un jour sans séance', async () => {
     const today = new Date()
     today.setHours(12, 0, 0, 0)
-    // Trouver un jour passé dans le mois courant (pas aujourd'hui)
     const targetDate = new Date(today)
     if (today.getDate() > 1) {
-      targetDate.setDate(1) // le 1er du mois, toujours dans le passé si pas aujourd'hui
-    } else {
-      // aujourd'hui est le 1er, on utilise hier (même mois si mois > 1 jour)
-      // skip: on utilise today dans ce cas
+      targetDate.setDate(1)
     }
     const targetKey = toKey(targetDate)
 
@@ -178,12 +193,12 @@ describe('StatsCalendarScreenBase', () => {
     fireEvent.press(cell)
 
     await waitFor(() => {
-      // "Repos" apparaît dans la légende + dans le tooltip
+      // "Repos" apparaît dans la légende + dans la carte détail
       expect(getAllByText('Repos').length).toBeGreaterThanOrEqual(2)
     })
   })
 
-  it('affiche le tooltip avec les détails quand un jour a des séances', async () => {
+  it('affiche la carte détail avec le nom de la séance', async () => {
     const now = todayMs()
     const histories = [makeHistory('h1', now)]
 
@@ -198,11 +213,13 @@ describe('StatsCalendarScreenBase', () => {
     fireEvent.press(getByTestId(`day-cell-${todayKey}`))
 
     await waitFor(() => {
+      // programName = 'PPL Push', sessionName = 'Push Day'
+      expect(queryByText('PPL Push')).toBeTruthy()
       expect(queryByText('Push Day')).toBeTruthy()
     })
   })
 
-  it('toggle le tooltip au second clic sur le même jour', async () => {
+  it('toggle la carte au second clic sur le même jour', async () => {
     const today = new Date()
     today.setHours(12, 0, 0, 0)
     const targetDate = new Date(today)
@@ -215,20 +232,20 @@ describe('StatsCalendarScreenBase', () => {
 
     const cell = getByTestId(`day-cell-${targetKey}`)
 
-    // Premier clic — tooltip apparaît
+    // Premier clic — carte apparaît
     fireEvent.press(cell)
     await waitFor(() => {
       expect(getAllByText('Repos').length).toBeGreaterThanOrEqual(2)
     })
 
-    // Deuxième clic — tooltip disparaît
+    // Deuxième clic — carte disparaît
     fireEvent.press(cell)
     await waitFor(() => {
       expect(getAllByText('Repos').length).toBe(1)
     })
   })
 
-  it('affiche la durée dans le tooltip pour une séance avec endTime', async () => {
+  it('affiche la durée dans la carte pour une séance avec endTime', async () => {
     const now = todayMs()
     const histories = [
       makeHistory('h1', now, { endTime: new Date(now + 3600000) }),
@@ -245,7 +262,7 @@ describe('StatsCalendarScreenBase', () => {
     fireEvent.press(getByTestId(`day-cell-${todayKey}`))
 
     await waitFor(() => {
-      expect(queryByText('Push Day')).toBeTruthy()
+      expect(queryByText('PPL Push')).toBeTruthy()
       // 1h = 60 min → formatDuration devrait afficher "1h"
       expect(queryByText('1h')).toBeTruthy()
     })
