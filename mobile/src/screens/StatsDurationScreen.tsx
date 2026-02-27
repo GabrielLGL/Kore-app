@@ -95,8 +95,8 @@ export function StatsDurationScreenBase({ histories }: Props) {
   const totalPages = Math.max(1, Math.ceil(stats.historyAll.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const pageEntries = stats.historyAll.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
-  const hasPrev = safePage > 0
-  const hasNext = safePage < totalPages - 1
+  const hasPrev = safePage < totalPages - 1  // ← vers les plus anciennes (page+1)
+  const hasNext = safePage > 0               // → vers les plus récentes (page-1)
 
   const handleDeletePress = useCallback(
     (id: string) => {
@@ -217,7 +217,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
                 onPress={() => {
                   if (hasPrev) {
                     haptics.onPress()
-                    setPage(safePage - 1)
+                    setPage(safePage + 1)
                   }
                 }}
                 disabled={!hasPrev}
@@ -237,7 +237,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
                 onPress={() => {
                   if (hasNext) {
                     haptics.onPress()
-                    setPage(safePage + 1)
+                    setPage(safePage - 1)
                   }
                 }}
                 disabled={!hasNext}
