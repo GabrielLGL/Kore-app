@@ -94,4 +94,7 @@ Ajouter uniquement les attributs `autoComplete` — ne toucher à rien d'autre d
 Aucune dépendance — peut tourner en parallèle avec Groupe B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-1810
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-1810-fix-socialproof-autocomplete.md

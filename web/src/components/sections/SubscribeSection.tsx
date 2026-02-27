@@ -53,6 +53,7 @@ export default function SubscribeSection() {
             <input
               id="subscribe-name"
               type="text"
+              autoComplete="given-name"
               placeholder="Ton prénom (optionnel)"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -68,6 +69,7 @@ export default function SubscribeSection() {
             <input
               id="subscribe-email"
               type="email"
+              autoComplete="email"
               placeholder="Ton email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
