@@ -38,4 +38,7 @@ Corriger les redirections post-validation dans AssistantScreen :
 Aucune dépendance — groupe indépendant, peut tourner en parallèle avec Groupe B.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260228-0050
+
+## Résolution
+Rapport do : docs/bmad/do/20260228-0050-feat-assistant-navigation.md

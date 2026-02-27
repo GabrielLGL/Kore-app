@@ -421,17 +421,17 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
         setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
         setGeneratedPlan(null)
         contentAnim.setValue(1)
-        navigation.navigate('Home')
+        navigation.navigate('Programs')
       } else {
         if (!currentTargetProgramId) return
         if (!plan.sessions.length) { previewModal.close(); return }
-        const session = await importGeneratedSession(plan.sessions[0], currentTargetProgramId)
+        await importGeneratedSession(plan.sessions[0], currentTargetProgramId)
         previewModal.close()
         setCurrentStep(0)
         setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
         setGeneratedPlan(null)
         contentAnim.setValue(1)
-        navigation.navigate('SessionDetail', { sessionId: session.id })
+        navigation.navigate('ProgramDetail', { programId: currentTargetProgramId })
       }
     } catch {
       previewModal.close()
