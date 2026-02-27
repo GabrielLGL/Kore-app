@@ -57,14 +57,19 @@ interface ExerciseDetail {
   sets: SetDetail[]
 }
 
-interface DayDetail {
-  dateKey: string
-  label: string
-  count: number
+interface SessionBlock {
+  historyId: string
   programName: string
   sessionName: string
   durationMin: number | null
   exercises: ExerciseDetail[]
+}
+
+interface DayDetail {
+  dateKey: string
+  label: string
+  count: number
+  sessions: SessionBlock[]
 }
 
 // ─── Génération de la grille mensuelle ────────────────────────────────────────
@@ -148,6 +153,19 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   const [viewYear, setViewYear] = useState(() => new Date().getFullYear())
   const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
   const [detail, setDetail] = useState<DayDetail | null>(null)
+  const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set())
+
+  const toggleBlock = (historyId: string) => {
+    setExpandedBlocks(prev => {
+      const next = new Set(prev)
+      if (next.has(historyId)) {
+        next.delete(historyId)
+      } else {
+        next.add(historyId)
+      }
+      return next
+    })
+  }
 
   const isCurrentMonth =
     viewYear === today.getFullYear() && viewMonth === today.getMonth()
@@ -249,14 +267,12 @@ export function StatsCalendarScreenBase({ histories }: Props) {
     })
 
     if (day.count === 0) {
+      setExpandedBlocks(new Set())
       setDetail({
         dateKey: day.dateKey,
         label,
         count: 0,
-        programName: '',
-        sessionName: '',
-        durationMin: null,
-        exercises: [],
+        sessions: [],
       })
       return
     }
@@ -265,81 +281,82 @@ export function StatsCalendarScreenBase({ histories }: Props) {
       h => h.deletedAt === null && toDateKey(h.startTime) === day.dateKey
     )
 
-    const allExercises: ExerciseDetail[] = []
-    let programName = ''
-    let sessionName = ''
-    let totalDurationMin = 0
+    const sessionBlocks: SessionBlock[] = []
 
-    await Promise.all(
-      dayHistories.map(async h => {
-        // Session + Programme
-        try {
-          const session = await h.session.fetch()
-          if (session) {
-            if (!sessionName && session.name) sessionName = session.name
-            try {
-              const program = await session.program.fetch()
-              if (program?.name && !programName) programName = program.name
-            } catch {
-              // programme supprimé
-            }
+    for (const h of dayHistories) {
+      let programName = ''
+      let sessionName = ''
+
+      // Session + Programme
+      try {
+        const session = await h.session.fetch()
+        if (session) {
+          if (session.name) sessionName = session.name
+          try {
+            const program = await session.program.fetch()
+            if (program?.name) programName = program.name
+          } catch {
+            // programme supprimé
           }
-        } catch {
-          // session supprimée
         }
+      } catch {
+        // session supprimée
+      }
 
-        // Durée
-        if (h.endTime) {
-          totalDurationMin += Math.round(
-            (h.endTime.getTime() - h.startTime.getTime()) / 60000
-          )
-        }
+      // Durée
+      let durationMin: number | null = null
+      if (h.endTime) {
+        const mins = Math.round(
+          (h.endTime.getTime() - h.startTime.getTime()) / 60000
+        )
+        if (mins > 0) durationMin = mins
+      }
 
-        // Sets → regrouper par exercice
-        try {
-          const sets = await h.sets.fetch()
-          const exerciseMap = new Map<string, ExerciseDetail>()
+      // Sets → regrouper par exercice
+      const exercises: ExerciseDetail[] = []
+      try {
+        const sets = await h.sets.fetch()
+        const exerciseMap = new Map<string, ExerciseDetail>()
 
-          await Promise.all(
-            sets.map(async s => {
-              let exName = 'Exercice inconnu'
-              try {
-                const ex = await s.exercise.fetch()
-                if (ex?.name) exName = ex.name
-              } catch {
-                // exercice supprimé
-              }
+        await Promise.all(
+          sets.map(async s => {
+            let exName = 'Exercice inconnu'
+            try {
+              const ex = await s.exercise.fetch()
+              if (ex?.name) exName = ex.name
+            } catch {
+              // exercice supprimé
+            }
 
-              if (!exerciseMap.has(exName)) {
-                exerciseMap.set(exName, { exerciseName: exName, sets: [] })
-              }
-              exerciseMap.get(exName)!.sets.push({
-                setOrder: s.setOrder,
-                weight: s.weight,
-                reps: s.reps,
-                isPr: s.isPr,
-              })
+            if (!exerciseMap.has(exName)) {
+              exerciseMap.set(exName, { exerciseName: exName, sets: [] })
+            }
+            exerciseMap.get(exName)!.sets.push({
+              setOrder: s.setOrder,
+              weight: s.weight,
+              reps: s.reps,
+              isPr: s.isPr,
             })
-          )
-
-          exerciseMap.forEach(exDetail => {
-            exDetail.sets.sort((a, b) => a.setOrder - b.setOrder)
-            allExercises.push(exDetail)
           })
-        } catch {
-          // sets inaccessibles
-        }
-      })
-    )
+        )
 
+        exerciseMap.forEach(exDetail => {
+          exDetail.sets.sort((a, b) => a.setOrder - b.setOrder)
+          exercises.push(exDetail)
+        })
+      } catch {
+        // sets inaccessibles
+      }
+
+      sessionBlocks.push({ historyId: h.id, programName, sessionName, durationMin, exercises })
+    }
+
+    setExpandedBlocks(new Set())
     setDetail({
       dateKey: day.dateKey,
       label,
       count: day.count,
-      programName,
-      sessionName,
-      durationMin: totalDurationMin > 0 ? totalDurationMin : null,
-      exercises: allExercises,
+      sessions: sessionBlocks,
     })
   }
 
@@ -401,55 +418,6 @@ export function StatsCalendarScreenBase({ histories }: Props) {
         </TouchableOpacity>
       )}
 
-      {/* Carte de détail */}
-      {detail && (
-        <View style={styles.detailCard}>
-          <Text style={styles.detailDate}>{detail.label}</Text>
-
-          {detail.count === 0 ? (
-            <Text style={styles.detailRest}>Repos</Text>
-          ) : (
-            <>
-              <View style={styles.detailHeader}>
-                <Text style={styles.detailProgramName} numberOfLines={1}>
-                  {detail.programName || detail.sessionName || 'Séance'}
-                </Text>
-                {detail.durationMin != null && detail.durationMin > 0 && (
-                  <Text style={styles.detailDuration}>
-                    {formatDuration(detail.durationMin)}
-                  </Text>
-                )}
-              </View>
-
-              {detail.sessionName && detail.sessionName !== detail.programName && (
-                <Text style={styles.detailSessionName}>{detail.sessionName}</Text>
-              )}
-
-              {detail.exercises.map((ex, ei) => (
-                <View key={ei} style={styles.detailExercise}>
-                  <Text style={styles.detailExerciseName}>{ex.exerciseName}</Text>
-                  <View style={styles.detailSetsRow}>
-                    {ex.sets.map((s, si) => (
-                      <View key={si} style={styles.detailSetChip}>
-                        <Text
-                          style={[
-                            styles.detailSetText,
-                            s.isPr && styles.detailSetPr,
-                          ]}
-                        >
-                          {s.weight > 0 ? `${s.weight} kg` : 'PC'} × {s.reps}
-                          {s.isPr ? ' 🏅' : ''}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              ))}
-            </>
-          )}
-        </View>
-      )}
-
       {/* Grille calendrier */}
       <View {...panResponder.panHandlers} style={styles.calendarContainer}>
         {/* Header jours */}
@@ -480,6 +448,9 @@ export function StatsCalendarScreenBase({ histories }: Props) {
               if (day.isFuture) {
                 bgColor = 'transparent'
                 textColor = colors.border
+              } else if (isToday) {
+                bgColor = colors.primary
+                textColor = '#000'
               } else if (isActive) {
                 bgColor = colors.primaryBg
                 textColor = colors.primary
@@ -488,11 +459,9 @@ export function StatsCalendarScreenBase({ histories }: Props) {
                 textColor = colors.textSecondary
               }
 
-              const borderStyle = isToday
-                ? { borderWidth: 2, borderColor: colors.primary }
-                : isSelected
-                  ? { borderWidth: 1, borderColor: colors.primary }
-                  : {}
+              const borderStyle = isSelected
+                ? { borderWidth: 2, borderColor: colors.text }
+                : {}
 
               return (
                 <TouchableOpacity
@@ -537,6 +506,78 @@ export function StatsCalendarScreenBase({ histories }: Props) {
         />
         <Text style={styles.legendText}>Actif</Text>
       </View>
+
+      {/* Carte de détail */}
+      {detail && (
+        <View style={styles.detailCard}>
+          <Text style={styles.detailDate}>{detail.label}</Text>
+
+          {detail.count === 0 ? (
+            <Text style={styles.detailRest}>Repos</Text>
+          ) : (
+            detail.sessions.map((block, blockIndex) => {
+              const isExpanded = expandedBlocks.has(block.historyId)
+              return (
+                <React.Fragment key={block.historyId}>
+                  {blockIndex > 0 && <View style={styles.sessionDivider} />}
+
+                  <TouchableOpacity
+                    style={styles.detailHeader}
+                    onPress={() => toggleBlock(block.historyId)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.detailProgramName} numberOfLines={1}>
+                      {block.programName || block.sessionName || 'Séance'}
+                    </Text>
+                    <View style={styles.detailHeaderRight}>
+                      {block.durationMin != null && (
+                        <Text style={styles.detailDuration}>
+                          {formatDuration(block.durationMin)}
+                        </Text>
+                      )}
+                      <Ionicons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color={colors.textSecondary}
+                        style={styles.detailChevron}
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  {block.sessionName && block.sessionName !== block.programName && (
+                    <Text style={styles.detailSessionName}>{block.sessionName}</Text>
+                  )}
+
+                  {isExpanded && (
+                    <>
+                      {block.exercises.map((ex, ei) => (
+                        <View key={ei} style={styles.detailExercise}>
+                          <Text style={styles.detailExerciseName}>{ex.exerciseName}</Text>
+                          <View style={styles.detailSetsRow}>
+                            {ex.sets.map((s, si) => (
+                              <View key={si} style={styles.detailSetChip}>
+                                <Text
+                                  style={[
+                                    styles.detailSetText,
+                                    s.isPr && styles.detailSetPr,
+                                  ]}
+                                >
+                                  {s.weight > 0 ? `${s.weight} kg` : 'PC'} × {s.reps}
+                                  {s.isPr ? ' 🏅' : ''}
+                                </Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
+                    </>
+                  )}
+                </React.Fragment>
+              )
+            })
+          )}
+        </View>
+      )}
     </ScrollView>
   )
 }
@@ -622,7 +663,7 @@ function useStyles(colors: ThemeColors) {
       backgroundColor: colors.card,
       borderRadius: borderRadius.md,
       padding: spacing.md,
-      marginBottom: spacing.sm,
+      marginTop: spacing.sm,
     },
     detailDate: {
       fontSize: fontSize.xs,
@@ -647,6 +688,13 @@ function useStyles(colors: ThemeColors) {
       fontWeight: '700',
       color: colors.text,
       flex: 1,
+    },
+    detailHeaderRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    detailChevron: {
+      marginLeft: spacing.xs,
     },
     detailDuration: {
       fontSize: fontSize.xs,
@@ -684,6 +732,11 @@ function useStyles(colors: ThemeColors) {
     },
     detailSetPr: {
       color: colors.warning,
+    },
+    sessionDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: spacing.sm,
     },
     calendarContainer: {
       marginBottom: spacing.md,
