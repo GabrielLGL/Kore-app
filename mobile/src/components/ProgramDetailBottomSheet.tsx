@@ -170,6 +170,7 @@ const ProgramDetailBottomSheet: React.FC<ProgramDetailBottomSheetProps> = ({
 }
 
 export default ProgramDetailBottomSheet
+export { SessionPreviewRow }
 
 // --- Styles ---
 

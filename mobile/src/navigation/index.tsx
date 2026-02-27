@@ -26,6 +26,7 @@ import StatsMeasurementsScreen from '../screens/StatsMeasurementsScreen'
 import { ErrorBoundary } from '../components/ErrorBoundary'
 import OnboardingScreen from '../screens/OnboardingScreen'
 import BadgesScreen from '../screens/BadgesScreen'
+import ProgramDetailScreen from '../screens/ProgramDetailScreen'
 import { database } from '../model'
 import User from '../model/models/User'
 
@@ -37,6 +38,7 @@ export type RootStackParamList = {
   Exercices: undefined;
   Assistant: undefined;
   Stats: undefined;
+  ProgramDetail: { programId: string };
   SessionDetail: { sessionId: string };
   Settings: undefined;
   Workout: { sessionId: string };
@@ -163,6 +165,7 @@ function AppContent() {
         <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: 'Assistant IA' }} />
         <Stack.Screen name="Stats" component={StatsScreen} options={{ title: 'Statistiques' }} />
         {/* Écrans de détail */}
+        <Stack.Screen name="ProgramDetail" component={ProgramDetailScreen} options={{ title: '' }} />
         <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: 'Gestion de la séance' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Paramètres' }} />
         <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />

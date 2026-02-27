@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Animated, ScrollView, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Animated, BackHandler } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { database } from '../model/index'
 import withObservables from '@nozbe/with-observables'
@@ -15,10 +15,8 @@ import { BottomSheet } from '../components/BottomSheet'
 import { AlertDialog } from '../components/AlertDialog'
 import { OnboardingSheet } from '../components/OnboardingSheet'
 import Program from '../model/models/Program'
-import Session from '../model/models/Session'
 import User from '../model/models/User'
 import ProgramSection from '../components/ProgramSection'
-import ProgramDetailBottomSheet from '../components/ProgramDetailBottomSheet'
 import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
 import { useHaptics } from '../hooks/useHaptics'
 import { useProgramManager } from '../hooks/useProgramManager'
@@ -50,57 +48,35 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     setIsRenamingProgram,
     selectedProgram,
     setSelectedProgram,
-    // Session states
-    sessionNameInput,
-    setSessionNameInput,
-    isRenamingSession,
-    setIsRenamingSession,
-    selectedSession,
-    setSelectedSession,
-    targetProgram,
-    setTargetProgram,
     // Operations
     saveProgram,
     duplicateProgram,
     deleteProgram,
-    saveSession,
-    duplicateSession,
-    deleteSession,
-    moveSession,
     prepareRenameProgram,
-    prepareRenameSession,
   } = useProgramManager(haptics.onSuccess)
 
   // --- ÉTATS LOCAUX ---
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(false)
   const [isProgramModalVisible, setIsProgramModalVisible] = useState(false)
-  const [isSessionModalVisible, setIsSessionModalVisible] = useState(false)
   const [isOptionsVisible, setIsOptionsVisible] = useState(false)
-  const [isSessionOptionsVisible, setIsSessionOptionsVisible] = useState(false)
-  const [selectedSessionProgramId, setSelectedSessionProgramId] = useState<string | null>(null)
   const [isCreateChoiceVisible, setIsCreateChoiceVisible] = useState(false)
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [alertConfig, setAlertConfig] = useState({ title: '', message: '', onConfirm: async () => {} })
   const [errorAlertVisible, setErrorAlertVisible] = useState(false)
   const [errorAlertMessage, setErrorAlertMessage] = useState('')
-  const [selectedProgramForDetail, setSelectedProgramForDetail] = useState<Program | null>(null)
-  const [isDetailVisible, setIsDetailVisible] = useState(false)
 
   const renameTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const renameSessionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Ref pour lire l'état courant dans le BackHandler sans le re-enregistrer
   const backHandlerVisibilityRef = useRef({
     isCreateChoiceVisible: false,
-    isDetailVisible: false,
     isOptionsVisible: false,
-    isSessionOptionsVisible: false,
   })
 
   // Sync du ref avec l'état courant
   useEffect(() => {
-    backHandlerVisibilityRef.current = { isCreateChoiceVisible, isDetailVisible, isOptionsVisible, isSessionOptionsVisible }
-  }, [isCreateChoiceVisible, isDetailVisible, isOptionsVisible, isSessionOptionsVisible])
+    backHandlerVisibilityRef.current = { isCreateChoiceVisible, isOptionsVisible }
+  }, [isCreateChoiceVisible, isOptionsVisible])
 
   // --- GESTION BOUTON RETOUR ANDROID ---
   // Enregistré une seule fois (deps vides) — élimine la race condition
@@ -112,16 +88,8 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
         setIsCreateChoiceVisible(false)
         return true
       }
-      if (v.isDetailVisible) {
-        setIsDetailVisible(false)
-        return true
-      }
       if (v.isOptionsVisible) {
         setIsOptionsVisible(false)
-        return true
-      }
-      if (v.isSessionOptionsVisible) {
-        setIsSessionOptionsVisible(false)
         return true
       }
       return false
@@ -131,11 +99,10 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     return () => backHandler.remove()
   }, []) // Enregistré une seule fois — lit depuis la ref
 
-  // --- CLEANUP TIMERS RENOMMAGE ---
+  // --- CLEANUP TIMER RENOMMAGE ---
   useEffect(() => {
     return () => {
       if (renameTimerRef.current) clearTimeout(renameTimerRef.current)
-      if (renameSessionTimerRef.current) clearTimeout(renameSessionTimerRef.current)
     }
   }, [])
 
@@ -179,33 +146,15 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
     }
   }
 
-  const handleSaveSession = async () => {
-    const success = await saveSession()
-    if (success) {
-      setIsSessionModalVisible(false)
-    }
-  }
-
   const handleDuplicateProgram = async () => {
     setIsOptionsVisible(false)
     await duplicateProgram()
   }
 
-  const handleDuplicateSession = async () => {
-    setIsSessionOptionsVisible(false)
-    await duplicateSession()
-  }
-
-  const handleMoveSession = async (targetProg: Program) => {
-    await moveSession(targetProg)
-    setIsSessionOptionsVisible(false)
-  }
-
   const handleProgramPress = useCallback((program: Program) => {
     haptics.onPress()
-    setSelectedProgramForDetail(program)
-    setIsDetailVisible(true)
-  }, [haptics])
+    navigation.navigate('ProgramDetail', { programId: program.id })
+  }, [haptics, navigation])
 
   const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<Program>) => (
     <ScaleDecorator>
@@ -326,21 +275,6 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           />
         </CustomModal>
 
-        {/* Session Modal (Création / Renommage) */}
-        <CustomModal
-            visible={isSessionModalVisible}
-            title={isRenamingSession ? "Renommer la séance" : "Ajouter une séance"}
-            onClose={() => setIsSessionModalVisible(false)}
-            buttons={
-                <>
-                <TouchableOpacity style={[styles.modalButton, {backgroundColor: colors.secondaryButton}]} onPress={() => setIsSessionModalVisible(false)}><Text style={styles.buttonText}>Annuler</Text></TouchableOpacity>
-                <TouchableOpacity style={[styles.modalButton, {backgroundColor: colors.primary}]} onPress={handleSaveSession}><Text style={styles.buttonText}>Valider</Text></TouchableOpacity>
-                </>
-            }
-        >
-            <TextInput style={styles.input} value={sessionNameInput} onChangeText={setSessionNameInput} autoFocus placeholderTextColor={colors.textSecondary} placeholder="ex : Push ou Pull" />
-        </CustomModal>
-
         {/* Options Programme BottomSheet */}
         <BottomSheet
           visible={isOptionsVisible}
@@ -357,58 +291,6 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: 20, width: 30 }} /><Text style={[styles.sheetOptionText, { color: colors.danger }]}>Supprimer le Programme</Text>
           </TouchableOpacity>
         </BottomSheet>
-
-        {/* Options Session BottomSheet */}
-        <BottomSheet
-          visible={isSessionOptionsVisible}
-          onClose={() => setIsSessionOptionsVisible(false)}
-          title={selectedSession?.name}
-        >
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedSession) prepareRenameSession(selectedSession); setIsSessionOptionsVisible(false); if (renameSessionTimerRef.current) clearTimeout(renameSessionTimerRef.current); renameSessionTimerRef.current = setTimeout(() => { setIsSessionModalVisible(true); renameSessionTimerRef.current = null }, 300) }}>
-            <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>Renommer la Séance</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateSession}>
-            <Ionicons name="copy-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>Dupliquer la Séance</Text>
-          </TouchableOpacity>
-          {programs.length > 1 && (
-            <>
-              <Text style={styles.sectionLabel}>Déplacer vers :</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moveRow}>
-                {programs.filter(p => p.id !== selectedSessionProgramId).map(p => (
-                  <TouchableOpacity key={p.id} style={styles.moveChip} onPress={() => handleMoveSession(p)}>
-                    <Text style={styles.moveChipText}>{p.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </>
-          )}
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsSessionOptionsVisible(false); setAlertConfig({ title: `Supprimer ${selectedSession?.name} ?`, message: "Supprimer cette séance ?", onConfirm: async () => { await deleteSession() } }); setIsAlertVisible(true); }}>
-            <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: 20, width: 30 }} /><Text style={[styles.sheetOptionText, { color: colors.danger }]}>Supprimer la Séance</Text>
-          </TouchableOpacity>
-        </BottomSheet>
-
-        {/* Détail Programme BottomSheet */}
-        <ProgramDetailBottomSheet
-          program={selectedProgramForDetail}
-          visible={isDetailVisible}
-          onClose={() => setIsDetailVisible(false)}
-          onOpenSession={(s: Session) => {
-            setIsDetailVisible(false)
-            navigation.navigate('SessionDetail', { sessionId: s.id })
-          }}
-          onAddSession={() => {
-            setIsDetailVisible(false)
-            if (selectedProgramForDetail) setTargetProgram(selectedProgramForDetail)
-            setIsSessionModalVisible(true)
-          }}
-          onSessionOptions={(session: Session) => {
-            setIsDetailVisible(false)
-            haptics.onSelect()
-            setSelectedSession(session)
-            setSelectedSessionProgramId(selectedProgramForDetail?.id ?? null)
-            setIsSessionOptionsVisible(true)
-          }}
-        />
 
         {/* Alerte Suppression Générique */}
         <AlertDialog

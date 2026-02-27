@@ -42,15 +42,8 @@ jest.mock('@gorhom/portal', () => ({
 const mockSaveProgram = jest.fn().mockResolvedValue(true)
 const mockDuplicateProgram = jest.fn().mockResolvedValue(undefined)
 const mockDeleteProgram = jest.fn().mockResolvedValue(undefined)
-const mockSaveSession = jest.fn().mockResolvedValue(true)
-const mockDuplicateSession = jest.fn().mockResolvedValue(undefined)
-const mockDeleteSession = jest.fn().mockResolvedValue(undefined)
-const mockMoveSession = jest.fn().mockResolvedValue(undefined)
 const mockPrepareRenameProgram = jest.fn()
-const mockPrepareRenameSession = jest.fn()
 const mockSetSelectedProgram = jest.fn()
-const mockSetSelectedSession = jest.fn()
-const mockSetTargetProgram = jest.fn()
 const mockSetIsRenamingProgram = jest.fn()
 const mockSetProgramNameInput = jest.fn()
 
@@ -62,23 +55,10 @@ jest.mock('../../hooks/useProgramManager', () => ({
     setIsRenamingProgram: mockSetIsRenamingProgram,
     selectedProgram: null,
     setSelectedProgram: mockSetSelectedProgram,
-    sessionNameInput: '',
-    setSessionNameInput: jest.fn(),
-    isRenamingSession: false,
-    setIsRenamingSession: jest.fn(),
-    selectedSession: null,
-    setSelectedSession: mockSetSelectedSession,
-    targetProgram: null,
-    setTargetProgram: mockSetTargetProgram,
     saveProgram: mockSaveProgram,
     duplicateProgram: mockDuplicateProgram,
     deleteProgram: mockDeleteProgram,
-    saveSession: mockSaveSession,
-    duplicateSession: mockDuplicateSession,
-    deleteSession: mockDeleteSession,
-    moveSession: mockMoveSession,
     prepareRenameProgram: mockPrepareRenameProgram,
-    prepareRenameSession: mockPrepareRenameSession,
   }),
 }))
 
@@ -118,29 +98,6 @@ jest.mock('../../components/ProgramSection', () => {
           <Text>Options-{program.name}</Text>
         </TouchableOpacity>
       </>
-    )
-  }
-})
-
-jest.mock('../../components/ProgramDetailBottomSheet', () => {
-  const { View, Text, TouchableOpacity } = require('react-native')
-  return ({ visible, onClose, onAddSession, onOpenSession, onSessionOptions, program }: {
-    visible: boolean
-    onClose: () => void
-    onAddSession: () => void
-    onOpenSession: (s: { id: string }) => void
-    onSessionOptions: (s: { id: string; name: string }) => void
-    program: { name: string } | null
-  }) => {
-    if (!visible) return null
-    return (
-      <View>
-        <Text>Detail-{program?.name}</Text>
-        <TouchableOpacity onPress={onClose}><Text>Fermer détail</Text></TouchableOpacity>
-        <TouchableOpacity onPress={onAddSession}><Text>Ajouter séance détail</Text></TouchableOpacity>
-        <TouchableOpacity onPress={() => onOpenSession({ id: 'sess-1' })}><Text>Ouvrir séance</Text></TouchableOpacity>
-        <TouchableOpacity onPress={() => onSessionOptions({ id: 'sess-1', name: 'Push' })}><Text>Options séance</Text></TouchableOpacity>
-      </View>
     )
   }
 })
@@ -290,18 +247,9 @@ describe('ProgramsContent', () => {
     // Note: CustomModal might not be mocked to hide, but the Annuler handler calls setIsProgramModalVisible(false)
   })
 
-  // --- Détail programme ---
+  // --- Détail programme (navigation) ---
 
-  it('cliquer sur un programme ouvre le détail BottomSheet', () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    expect(getByText('Detail-PPL 3j')).toBeTruthy()
-  })
-
-  it('ouvrir une session depuis le détail navigue', () => {
+  it('taper un programme navigue vers ProgramDetail', () => {
     const navMock = {
       navigate: jest.fn(),
       goBack: jest.fn(),
@@ -309,38 +257,11 @@ describe('ProgramsContent', () => {
       addListener: jest.fn().mockReturnValue(jest.fn()),
     } as never
     const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
+    const { getByTestId } = render(
       <ProgramsContent programs={programs} user={mockUser()} navigation={navMock} />
     )
     fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Ouvrir séance'))
-    expect((navMock as { navigate: jest.Mock }).navigate).toHaveBeenCalledWith('SessionDetail', { sessionId: 'sess-1' })
-  })
-
-  it('ajouter une séance depuis le détail ouvre la modale session', () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Ajouter séance détail'))
-    expect(getByText('Ajouter une séance')).toBeTruthy()
-  })
-
-  it('valider l\'ajout de séance appelle saveSession', async () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId, getAllByText } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Ajouter séance détail'))
-
-    const validBtns = getAllByText('Valider')
-    fireEvent.press(validBtns[validBtns.length - 1])
-
-    await waitFor(() => {
-      expect(mockSaveSession).toHaveBeenCalled()
-    })
+    expect((navMock as { navigate: jest.Mock }).navigate).toHaveBeenCalledWith('ProgramDetail', { programId: 'p1' })
   })
 
   // --- Options programme ---
@@ -394,97 +315,6 @@ describe('ProgramsContent', () => {
     })
   })
 
-  // --- Options session ---
-
-  it('options session depuis le détail ouvre le BottomSheet session', () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    // Session options BottomSheet should show with session options
-    expect(getByText('Renommer la Séance')).toBeTruthy()
-    expect(getByText('Dupliquer la Séance')).toBeTruthy()
-    expect(getByText('Supprimer la Séance')).toBeTruthy()
-  })
-
-  it('dupliquer une session appelle duplicateSession', async () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    fireEvent.press(getByText('Dupliquer la Séance'))
-
-    await waitFor(() => {
-      expect(mockDuplicateSession).toHaveBeenCalled()
-    })
-  })
-
-  it('supprimer une session ouvre l\'AlertDialog', () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    fireEvent.press(getByText('Supprimer la Séance'))
-    expect(getByText(/Supprimer cette séance/)).toBeTruthy()
-  })
-
-  it('confirmer suppression session appelle deleteSession', async () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getAllByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    fireEvent.press(getByText('Supprimer la Séance'))
-    const suppressBtns = getAllByText('Supprimer')
-    fireEvent.press(suppressBtns[suppressBtns.length - 1])
-
-    await waitFor(() => {
-      expect(mockDeleteSession).toHaveBeenCalled()
-    })
-  })
-
-  it('déplacer session affiche la section Déplacer vers avec 2+ programmes', () => {
-    const programs = [
-      mockProgram('p1', 'PPL 3j', 0),
-      mockProgram('p2', 'Upper Lower', 1),
-    ]
-    const { getByText, getAllByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    // "Déplacer vers :" section with other programs
-    expect(getByText('Déplacer vers :')).toBeTruthy()
-    // "Upper Lower" appears both in main list and move chip
-    expect(getAllByText('Upper Lower').length).toBeGreaterThanOrEqual(2)
-  })
-
-  it('cliquer sur un programme cible appelle moveSession', async () => {
-    const programs = [
-      mockProgram('p1', 'PPL 3j', 0),
-      mockProgram('p2', 'Upper Lower', 1),
-    ]
-    const { getByText, getAllByText, getByTestId } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    fireEvent.press(getByText('Options séance'))
-    // Click on the move chip (last occurrence of "Upper Lower" in the session options BottomSheet)
-    const upperLowerElements = getAllByText('Upper Lower')
-    fireEvent.press(upperLowerElements[upperLowerElements.length - 1])
-
-    await waitFor(() => {
-      expect(mockMoveSession).toHaveBeenCalled()
-    })
-  })
-
   // --- Onboarding ---
 
   it('affiche l\'onboarding quand 0 programmes et user non onboarded', () => {
@@ -532,17 +362,4 @@ describe('ProgramsContent', () => {
     })
   })
 
-  // --- Fermer détail ---
-
-  it('fermer le détail depuis le BottomSheet détail', () => {
-    const programs = [mockProgram('p1', 'PPL 3j', 0)]
-    const { getByText, getByTestId, queryByText } = render(
-      <ProgramsContent programs={programs} user={mockUser()} navigation={mockNavigation} />
-    )
-    fireEvent.press(getByTestId('program-PPL 3j'))
-    expect(getByText('Detail-PPL 3j')).toBeTruthy()
-
-    fireEvent.press(getByText('Fermer détail'))
-    expect(queryByText('Detail-PPL 3j')).toBeNull()
-  })
 })
