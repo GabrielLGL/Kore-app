@@ -68,11 +68,12 @@ describe('StatsRepartitionScreenBase', () => {
       makeSet('s2', 'h1', 'e2', 60, 10),
     ]
 
-    const { getByText } = render(
+    const { getAllByText } = render(
       <StatsRepartitionScreenBase sets={sets} exercises={exercises} histories={histories} />
     )
-    expect(getByText('Pecs')).toBeTruthy()
-    expect(getByText('Dos')).toBeTruthy()
+    // Les muscles apparaissent dans la répartition ET dans le filtre du chart (ChipSelector)
+    expect(getAllByText('Pecs').length).toBeGreaterThanOrEqual(1)
+    expect(getAllByText('Dos').length).toBeGreaterThanOrEqual(1)
   })
 
   it('affiche le volume analysé avec données', () => {

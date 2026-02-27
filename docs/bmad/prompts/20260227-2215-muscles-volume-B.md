@@ -209,4 +209,7 @@ setsFill: { height: 6, backgroundColor: colors.primary, borderRadius: 3 },
 Ce groupe dépend de **Groupe A** (le helper `computeWeeklySetsChart` et le type `WeeklySetsChartResult` doivent exister dans `statsHelpers.ts` avant de commencer ce groupe).
 
 ## Statut
-⏳ En attente (attendre Groupe A)
+✅ Résolu — 20260227-2230
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-2230-feat-muscles-screen-volume-chart.md

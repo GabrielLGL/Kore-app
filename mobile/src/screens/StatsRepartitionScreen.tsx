@@ -4,9 +4,12 @@ import {
   Text,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
+import { BarChart } from 'react-native-chart-kit'
 
 import { database } from '../model'
 import History from '../model/models/History'
@@ -14,6 +17,8 @@ import WorkoutSet from '../model/models/Set'
 import Exercise from '../model/models/Exercise'
 import {
   computeMuscleRepartition,
+  computeWeeklySetsChart,
+  computeSetsPerMuscleWeek,
   formatVolume,
   PERIOD_LABELS,
   labelToPeriod,
@@ -21,7 +26,11 @@ import {
 import { ChipSelector } from '../components/ChipSelector'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useHaptics } from '../hooks/useHaptics'
 import type { ThemeColors } from '../theme'
+import { createChartConfig } from '../theme/chartConfig'
+
+const chartConfig = createChartConfig()
 
 interface Props {
   sets: WorkoutSet[]
@@ -32,9 +41,16 @@ interface Props {
 export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
+  const haptics = useHaptics()
+  const { width: screenWidth } = useWindowDimensions()
+
   const [periodLabel, setPeriodLabel] = useState<string>('1 mois')
+  const [weekOffset, setWeekOffset] = useState<number>(0)
+  const [muscleChartFilter, setMuscleChartFilter] = useState<string | null>(null)
+
   const period = labelToPeriod(periodLabel)
 
+  // ── Répartition musculaire (existant) ─────────────────────────────────────
   const repartition = useMemo(
     () => computeMuscleRepartition(sets, exercises, histories, period),
     [sets, exercises, histories, period]
@@ -45,12 +61,52 @@ export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props
     [repartition]
   )
 
+  // ── Chart séries par semaine ──────────────────────────────────────────────
+  const availableMuscles = useMemo(() => {
+    const muscleSet = new Set<string>()
+    exercises.forEach(e => e.muscles.forEach(m => { if (m.trim()) muscleSet.add(m.trim()) }))
+    return Array.from(muscleSet).sort()
+  }, [exercises])
+
+  const muscleChartItems = useMemo(
+    () => ['Global', ...availableMuscles],
+    [availableMuscles]
+  )
+
+  const weeklySetsChart = useMemo(
+    () => computeWeeklySetsChart(sets, exercises, histories, {
+      muscleFilter: muscleChartFilter,
+      weekOffset,
+    }),
+    [sets, exercises, histories, muscleChartFilter, weekOffset]
+  )
+
+  const setsBarChartData = useMemo(() => ({
+    labels: weeklySetsChart.labels,
+    datasets: [{ data: weeklySetsChart.data.map(v => Math.max(v, 0)) }],
+  }), [weeklySetsChart])
+
+  const hasChartData = weeklySetsChart.data.some(v => v > 0)
+
+  // ── Sets par muscle cette semaine ─────────────────────────────────────────
+  const setsPerMuscle = useMemo(
+    () => computeSetsPerMuscleWeek(sets, exercises, histories),
+    [sets, exercises, histories]
+  )
+  const maxSetsThisWeek = setsPerMuscle[0]?.sets ?? 1
+
+  function handleMuscleChartChange(label: string | null) {
+    setMuscleChartFilter(!label || label === 'Global' ? null : label)
+    setWeekOffset(0)
+  }
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
+      {/* Filtre période */}
       <ChipSelector
         items={PERIOD_LABELS}
         selectedValue={periodLabel}
@@ -59,6 +115,7 @@ export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props
         noneLabel=""
       />
 
+      {/* ── Répartition musculaire ── */}
       {repartition.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
@@ -89,6 +146,91 @@ export function StatsRepartitionScreenBase({ sets, exercises, histories }: Props
           <Text style={styles.totalText}>
             Volume analysé : {formatVolume(totalVolume)}
           </Text>
+        </>
+      )}
+
+      {/* ── Séries par semaine ── */}
+      <Text style={styles.sectionTitle}>Séries par semaine</Text>
+
+      <ChipSelector
+        items={muscleChartItems}
+        selectedValue={muscleChartFilter ?? 'Global'}
+        onChange={handleMuscleChartChange}
+        allowNone={false}
+        noneLabel=""
+      />
+
+      {hasChartData ? (
+        <View style={styles.chartWrapper}>
+          <BarChart
+            data={setsBarChartData}
+            width={screenWidth - spacing.md * 2}
+            height={180}
+            chartConfig={chartConfig}
+            style={styles.chart}
+            fromZero
+            showValuesOnTopOfBars={false}
+            yAxisLabel=""
+            yAxisSuffix=""
+            withInnerLines={false}
+          />
+        </View>
+      ) : (
+        <View style={styles.emptyChart}>
+          <Text style={styles.emptyText}>Aucune série enregistrée sur cette période.</Text>
+        </View>
+      )}
+
+      <View style={styles.weekNavRow}>
+        <TouchableOpacity
+          style={styles.weekNavBtn}
+          onPress={() => {
+            haptics.onPress()
+            setWeekOffset(prev => prev - 1)
+          }}
+        >
+          <Text style={styles.weekNavBtnText}>← Précédent</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.weekRangeLabel}>{weeklySetsChart.weekRangeLabel}</Text>
+
+        <TouchableOpacity
+          style={[styles.weekNavBtn, !weeklySetsChart.hasNext && styles.weekNavBtnDisabled]}
+          onPress={() => {
+            if (!weeklySetsChart.hasNext) return
+            haptics.onPress()
+            setWeekOffset(prev => prev + 1)
+          }}
+          disabled={!weeklySetsChart.hasNext}
+        >
+          <Text style={[styles.weekNavBtnText, !weeklySetsChart.hasNext && styles.weekNavBtnTextDisabled]}>
+            Suivant →
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Sets par muscle cette semaine ── */}
+      {setsPerMuscle.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Sets par muscle cette semaine</Text>
+          <View style={styles.setsMuscleCard}>
+            {setsPerMuscle.map(item => (
+              <View key={item.muscle} style={styles.setsMuscleRow}>
+                <View style={styles.setsMuscleLabel}>
+                  <Text style={styles.setsMuscleText}>{item.muscle}</Text>
+                  <Text style={styles.setsMuscleCnt}>{item.sets} sets</Text>
+                </View>
+                <View style={styles.setsTrack}>
+                  <View
+                    style={[
+                      styles.setsFill,
+                      { width: `${Math.round((item.sets / maxSetsThisWeek) * 100)}%` },
+                    ]}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
         </>
       )}
     </ScrollView>
@@ -157,6 +299,90 @@ function useStyles(colors: ThemeColors) {
       fontSize: fontSize.sm,
       color: colors.textSecondary,
       textAlign: 'center',
+    },
+    sectionTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
+    },
+    chartWrapper: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+      marginTop: spacing.sm,
+    },
+    chart: {
+      borderRadius: borderRadius.md,
+    },
+    emptyChart: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.lg,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+    },
+    weekNavRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.xs,
+    },
+    weekNavBtn: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    weekNavBtnText: {
+      fontSize: fontSize.sm,
+      color: colors.primary,
+      fontWeight: '500',
+    },
+    weekNavBtnDisabled: {
+      opacity: 0.3,
+    },
+    weekNavBtnTextDisabled: {
+      color: colors.textSecondary,
+    },
+    weekRangeLabel: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+    },
+    setsMuscleCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+      gap: spacing.md,
+    },
+    setsMuscleRow: {
+      gap: spacing.xs,
+    },
+    setsMuscleLabel: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    setsMuscleText: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    setsMuscleCnt: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+    },
+    setsTrack: {
+      height: 6,
+      backgroundColor: colors.cardSecondary,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    setsFill: {
+      height: 6,
+      backgroundColor: colors.primary,
+      borderRadius: 3,
     },
   })
 }
