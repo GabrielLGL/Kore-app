@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react'
+import React, { useMemo, useState, useRef, useCallback } from 'react'
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
 
 import { database } from '../model'
+import { AlertDialog } from '../components/AlertDialog'
+import { useHaptics } from '../hooks/useHaptics'
 import History from '../model/models/History'
 import {
   computeCalendarData,
@@ -154,6 +156,8 @@ export function StatsCalendarScreenBase({ histories }: Props) {
   const [viewMonth, setViewMonth] = useState(() => new Date().getMonth())
   const [detail, setDetail] = useState<DayDetail | null>(null)
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set())
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const haptics = useHaptics()
 
   const toggleBlock = (historyId: string) => {
     setExpandedBlocks(prev => {
@@ -166,6 +170,20 @@ export function StatsCalendarScreenBase({ histories }: Props) {
       return next
     })
   }
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!pendingDeleteId) return
+    const target = histories.find(h => h.id === pendingDeleteId)
+    if (target) {
+      await database.write(async () => {
+        await target.update(h => {
+          h.deletedAt = new Date()
+        })
+      })
+    }
+    setPendingDeleteId(null)
+    setDetail(null)
+  }, [pendingDeleteId, histories])
 
   const isCurrentMonth =
     viewYear === today.getFullYear() && viewMonth === today.getMonth()
@@ -507,6 +525,16 @@ export function StatsCalendarScreenBase({ histories }: Props) {
         <Text style={styles.legendText}>Actif</Text>
       </View>
 
+      <AlertDialog
+        visible={pendingDeleteId !== null}
+        title="Supprimer cette séance ?"
+        message="Cette action est irréversible."
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+        confirmText="Supprimer"
+        cancelText="Annuler"
+      />
+
       {/* Carte de détail */}
       {detail && (
         <View style={styles.detailCard}>
@@ -521,28 +549,37 @@ export function StatsCalendarScreenBase({ histories }: Props) {
                 <React.Fragment key={block.historyId}>
                   {blockIndex > 0 && <View style={styles.sessionDivider} />}
 
-                  <TouchableOpacity
-                    style={styles.detailHeader}
-                    onPress={() => toggleBlock(block.historyId)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.detailProgramName} numberOfLines={1}>
-                      {block.programName || block.sessionName || 'Séance'}
-                    </Text>
-                    <View style={styles.detailHeaderRight}>
-                      {block.durationMin != null && (
-                        <Text style={styles.detailDuration}>
-                          {formatDuration(block.durationMin)}
-                        </Text>
-                      )}
-                      <Ionicons
-                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={16}
-                        color={colors.textSecondary}
-                        style={styles.detailChevron}
-                      />
-                    </View>
-                  </TouchableOpacity>
+                  <View style={styles.sessionBlockHeader}>
+                    <TouchableOpacity
+                      style={[styles.detailHeader, { flex: 1 }]}
+                      onPress={() => toggleBlock(block.historyId)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.detailProgramName} numberOfLines={1}>
+                        {block.programName || block.sessionName || 'Séance'}
+                      </Text>
+                      <View style={styles.detailHeaderRight}>
+                        {block.durationMin != null && (
+                          <Text style={styles.detailDuration}>
+                            {formatDuration(block.durationMin)}
+                          </Text>
+                        )}
+                        <Ionicons
+                          name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                          size={16}
+                          color={colors.textSecondary}
+                          style={styles.detailChevron}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteSessionBtn}
+                      onPress={() => { haptics.onDelete(); setPendingDeleteId(block.historyId) }}
+                      accessibilityLabel="Supprimer cette séance"
+                    >
+                      <Ionicons name="trash-outline" size={18} color={colors.danger} />
+                    </TouchableOpacity>
+                  </View>
 
                   {block.sessionName && block.sessionName !== block.programName && (
                     <Text style={styles.detailSessionName}>{block.sessionName}</Text>
@@ -737,6 +774,13 @@ function useStyles(colors: ThemeColors) {
       height: 1,
       backgroundColor: colors.border,
       marginVertical: spacing.sm,
+    },
+    sessionBlockHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    deleteSessionBtn: {
+      padding: spacing.sm,
     },
     calendarContainer: {
       marginBottom: spacing.md,

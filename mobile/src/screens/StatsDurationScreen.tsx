@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react'
+import React, { useMemo, useState, useCallback, useEffect } from 'react'
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
-import { AlertDialog } from '../components/AlertDialog'
 import { useHaptics } from '../hooks/useHaptics'
 
 const chartConfig = createChartConfig({ showDots: true })
@@ -46,6 +45,12 @@ interface SelectedPoint {
   y: number
 }
 
+interface SessionExDetail {
+  name: string
+  setsCount: number
+  reps: number | null
+}
+
 export function StatsDurationScreenBase({ histories }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
@@ -53,8 +58,14 @@ export function StatsDurationScreenBase({ histories }: Props) {
   const stats = useMemo(() => computeDurationStats(histories), [histories])
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
   const [page, setPage] = useState(0)
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const haptics = useHaptics()
+
+  // Session names (fetched for current page)
+  const [sessionNames, setSessionNames] = useState<Record<string, string>>({})
+
+  // Accordion state
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const [exerciseDetails, setExerciseDetails] = useState<Record<string, SessionExDetail[]>>({})
 
   const chartData = useMemo(() => {
     if (stats.perSession.length < 2) return null
@@ -95,29 +106,72 @@ export function StatsDurationScreenBase({ histories }: Props) {
   const totalPages = Math.max(1, Math.ceil(stats.historyAll.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const pageEntries = stats.historyAll.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
-  const hasPrev = safePage < totalPages - 1  // ← vers les plus anciennes (page+1)
-  const hasNext = safePage > 0               // → vers les plus récentes (page-1)
+  const hasPrev = safePage < totalPages - 1
+  const hasNext = safePage > 0
 
-  const handleDeletePress = useCallback(
-    (id: string) => {
-      haptics.onDelete()
-      setPendingDeleteId(id)
-    },
-    [haptics]
-  )
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!pendingDeleteId) return
-    const target = histories.find(h => h.id === pendingDeleteId)
-    if (target) {
-      await database.write(async () => {
-        await target.update(h => {
-          h.deletedAt = new Date()
-        })
-      })
+  // Fetch session names for current page
+  const pageKey = pageEntries.map(e => e.id).join(',')
+  useEffect(() => {
+    let cancelled = false
+    const fetchNames = async () => {
+      const names: Record<string, string> = {}
+      for (const entry of pageEntries) {
+        const h = histories.find(hh => hh.id === entry.id)
+        if (!h) continue
+        try {
+          const session = await h.session.fetch()
+          names[entry.id] = session?.name || 'Séance'
+        } catch {
+          names[entry.id] = 'Séance'
+        }
+      }
+      if (!cancelled) setSessionNames(names)
     }
-    setPendingDeleteId(null)
-  }, [pendingDeleteId, histories])
+    fetchNames()
+    return () => { cancelled = true }
+  }, [pageKey, histories]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Toggle accordion + lazy load exercise details
+  const toggleExpand = useCallback(async (historyId: string) => {
+    if (expandedIds.has(historyId)) {
+      setExpandedIds(prev => {
+        const n = new Set(prev)
+        n.delete(historyId)
+        return n
+      })
+      return
+    }
+    setExpandedIds(prev => new Set([...prev, historyId]))
+    if (exerciseDetails[historyId]) return // already loaded
+
+    const h = histories.find(hh => hh.id === historyId)
+    if (!h) return
+    try {
+      const sets = await h.sets.fetch()
+      const exMap = new Map<string, { name: string; repsList: number[] }>()
+      await Promise.all(
+        sets.map(async s => {
+          let exName = 'Exercice inconnu'
+          try {
+            const ex = await s.exercise.fetch()
+            if (ex?.name) exName = ex.name
+          } catch {
+            // exercice supprimé
+          }
+          if (!exMap.has(exName)) exMap.set(exName, { name: exName, repsList: [] })
+          exMap.get(exName)!.repsList.push(s.reps)
+        })
+      )
+      const details: SessionExDetail[] = []
+      exMap.forEach(({ name, repsList }) => {
+        const allSame = repsList.every(r => r === repsList[0])
+        details.push({ name, setsCount: repsList.length, reps: allSame ? repsList[0] : null })
+      })
+      setExerciseDetails(prev => ({ ...prev, [historyId]: details }))
+    } catch {
+      // sets inaccessibles
+    }
+  }, [expandedIds, exerciseDetails, histories])
 
   return (
     <ScrollView
@@ -187,28 +241,56 @@ export function StatsDurationScreenBase({ histories }: Props) {
         </View>
       ) : (
         <View style={styles.historyCard}>
-          {pageEntries.map((entry, index) => (
-            <View key={entry.id}>
-              {index > 0 && <View style={styles.separator} />}
-              <View style={styles.historyRowActions}>
-                <Text style={styles.historyDate}>
-                  {new Date(entry.date).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </Text>
-                <Text style={styles.historyDuration}>{formatDuration(entry.durationMin)}</Text>
+          {pageEntries.map((entry, index) => {
+            const isExpanded = expandedIds.has(entry.id)
+            const details = exerciseDetails[entry.id]
+            return (
+              <View key={entry.id}>
+                {index > 0 && <View style={styles.separator} />}
                 <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDeletePress(entry.id)}
-                  accessibilityLabel="Supprimer cette séance"
+                  style={styles.historyRowActions}
+                  onPress={() => toggleExpand(entry.id)}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                  <Text style={styles.historyDate}>
+                    {new Date(entry.date).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </Text>
+                  <Text style={styles.historySessionName} numberOfLines={1}>
+                    {sessionNames[entry.id] ?? '…'}
+                  </Text>
+                  <Text style={styles.historyDuration}>{formatDuration(entry.durationMin)}</Text>
+                  <Ionicons
+                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={colors.textSecondary}
+                  />
                 </TouchableOpacity>
+                {isExpanded && (
+                  <View style={styles.accordionContent}>
+                    {details ? (
+                      details.length === 0 ? (
+                        <Text style={styles.exerciseDetailText}>Aucun exercice enregistré.</Text>
+                      ) : (
+                        details.map((d, i) => (
+                          <Text key={i} style={styles.exerciseDetailText}>
+                            {d.name}
+                            {' — '}
+                            {d.setsCount}×{d.reps !== null ? d.reps : '?'}
+                          </Text>
+                        ))
+                      )
+                    ) : (
+                      <Text style={styles.exerciseDetailText}>Chargement…</Text>
+                    )}
+                  </View>
+                )}
               </View>
-            </View>
-          ))}
+            )
+          })}
 
           {totalPages > 1 && (
             <View style={styles.paginationBar}>
@@ -251,16 +333,6 @@ export function StatsDurationScreenBase({ histories }: Props) {
           )}
         </View>
       )}
-
-      <AlertDialog
-        visible={pendingDeleteId !== null}
-        title="Supprimer cette séance ?"
-        message="Cette action est irréversible."
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setPendingDeleteId(null)}
-        confirmText="Supprimer"
-        cancelText="Annuler"
-      />
     </ScrollView>
   )
 }
@@ -361,9 +433,15 @@ function useStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.md,
     },
     historyDate: {
+      flex: 1,
       fontSize: fontSize.sm,
       color: colors.text,
+    },
+    historySessionName: {
       flex: 1,
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      textAlign: 'center',
     },
     historyDuration: {
       fontSize: fontSize.sm,
@@ -371,8 +449,14 @@ function useStyles(colors: ThemeColors) {
       color: colors.primary,
       marginRight: spacing.sm,
     },
-    deleteButton: {
-      padding: spacing.sm,
+    accordionContent: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    exerciseDetailText: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      paddingVertical: 2,
     },
     separator: {
       height: 1,

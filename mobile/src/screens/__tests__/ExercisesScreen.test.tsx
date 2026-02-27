@@ -211,9 +211,33 @@ describe('ExercisesContent', () => {
 
   it('ouvre le BottomSheet options au clic sur •••', () => {
     const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
-    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
     fireEvent.press(getByText('•••'))
     expect(getByText('Modifier l\'exercice')).toBeTruthy()
+    // Exercice non-custom : supprimer masqué
+    expect(queryByText('Supprimer l\'exercice')).toBeNull()
+  })
+
+  it('affiche supprimer uniquement pour un exercice custom', () => {
+    ;(useExerciseManager as jest.Mock).mockReturnValue({
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true }),
+      setSelectedExercise: mockSetSelectedExercise,
+      newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
+      updateNewExerciseName: jest.fn(),
+      updateNewExerciseMuscles: jest.fn(),
+      updateNewExerciseEquipment: jest.fn(),
+      editExerciseData: { name: 'Squat', muscles: ['Quadriceps'], equipment: 'Poids libre' },
+      updateEditExerciseName: jest.fn(),
+      updateEditExerciseMuscles: jest.fn(),
+      updateEditExerciseEquipment: jest.fn(),
+      createExercise: mockCreateExercise,
+      updateExercise: mockUpdateExercise,
+      deleteExercise: mockDeleteExercise,
+      loadExerciseForEdit: mockLoadExerciseForEdit,
+    })
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true })]
+    const { getByText } = render(<ExercisesContent exercises={exercises} />)
+    fireEvent.press(getByText('•••'))
     expect(getByText('Supprimer l\'exercice')).toBeTruthy()
   })
 
@@ -245,7 +269,7 @@ describe('ExercisesContent', () => {
   it('ouvre l\'AlertDialog de suppression depuis le BottomSheet', () => {
     // Need selectedExercise to be set for the AlertDialog title
     ;(useExerciseManager as jest.Mock).mockReturnValue({
-      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true }),
       setSelectedExercise: mockSetSelectedExercise,
       newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
       updateNewExerciseName: jest.fn(),
@@ -269,7 +293,7 @@ describe('ExercisesContent', () => {
 
   it('confirme la suppression et appelle deleteExercise', async () => {
     ;(useExerciseManager as jest.Mock).mockReturnValue({
-      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true }),
       setSelectedExercise: mockSetSelectedExercise,
       newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
       updateNewExerciseName: jest.fn(),
@@ -284,7 +308,7 @@ describe('ExercisesContent', () => {
       deleteExercise: mockDeleteExercise,
       loadExerciseForEdit: mockLoadExerciseForEdit,
     })
-    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true })]
     const { getByText } = render(<ExercisesContent exercises={exercises} />)
     fireEvent.press(getByText('•••'))
     fireEvent.press(getByText('Supprimer l\'exercice'))
@@ -296,7 +320,7 @@ describe('ExercisesContent', () => {
 
   it('annuler la suppression ferme l\'AlertDialog', () => {
     ;(useExerciseManager as jest.Mock).mockReturnValue({
-      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat' }),
+      selectedExercise: makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true }),
       setSelectedExercise: mockSetSelectedExercise,
       newExerciseData: { name: '', muscles: [], equipment: 'Poids libre' },
       updateNewExerciseName: jest.fn(),
@@ -311,7 +335,7 @@ describe('ExercisesContent', () => {
       deleteExercise: mockDeleteExercise,
       loadExerciseForEdit: mockLoadExerciseForEdit,
     })
-    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat' })]
+    const exercises = [makeExercise({ id: 'ex-1', name: 'Squat', isCustom: true })]
     const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
     fireEvent.press(getByText('•••'))
     fireEvent.press(getByText('Supprimer l\'exercice'))

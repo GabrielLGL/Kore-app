@@ -28,6 +28,7 @@ import BadgesScreen from '../screens/BadgesScreen'
 import ProgramDetailScreen from '../screens/ProgramDetailScreen'
 import { database } from '../model'
 import User from '../model/models/User'
+import ExerciseHistoryScreen from '../screens/ExerciseHistoryScreen'
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -47,6 +48,7 @@ export type RootStackParamList = {
   StatsExercises: undefined;
   StatsMeasurements: undefined;
   StatsHistory: undefined;
+  ExerciseHistory: { exerciseId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -174,6 +176,7 @@ function AppContent() {
         <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: 'Mesures corporelles' }} />
         <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: 'Historique' }} />
         <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: 'Mes Badges' }} />
+        <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} options={{ title: '' }} />
       </Stack.Navigator>
     </NavigationContainer>
   )

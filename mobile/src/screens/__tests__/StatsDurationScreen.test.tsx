@@ -245,16 +245,16 @@ describe('StatsDurationScreenBase', () => {
     expect(getByText('Aucune séance valide enregistrée.')).toBeTruthy()
   })
 
-  it('affiche seulement 5 séances par page', () => {
+  it('affiche seulement 5 séances par page (pagination visible)', () => {
     const now = Date.now()
     const histories = Array.from({ length: 7 }, (_, i) =>
       makeHistory(`h${i + 1}`, now - (i + 1) * 86400000, now - (i + 1) * 86400000 + 3600000)
     )
-    const { queryAllByLabelText } = render(
+    const { getByLabelText } = render(
       <StatsDurationScreenBase histories={histories} />
     )
-    const trashButtons = queryAllByLabelText('Supprimer cette séance')
-    expect(trashButtons.length).toBe(5)
+    // With 7 sessions and 5 per page, pagination bar must appear
+    expect(getByLabelText('Page suivante')).toBeTruthy()
   })
 
   it('affiche les boutons de pagination quand > 5 séances', () => {
@@ -268,39 +268,16 @@ describe('StatsDurationScreenBase', () => {
     expect(getByLabelText('Page suivante')).toBeTruthy()
   })
 
-  it('affiche la dialog de confirmation quand on clique poubelle', async () => {
+  it('le bouton poubelle n\'existe plus dans l\'historique', () => {
     const now = Date.now()
     const histories = [
       makeHistory('h1', now - 7200000, now - 7200000 + 3600000),
       makeHistory('h2', now - 172800000, now - 172800000 + 3600000),
     ]
-    const { getAllByLabelText, getByText } = render(
+    const { queryAllByLabelText } = render(
       <StatsDurationScreenBase histories={histories} />
     )
-    const trashButtons = getAllByLabelText('Supprimer cette séance')
-    fireEvent.press(trashButtons[0])
-    await waitFor(() => {
-      expect(getByText('Supprimer cette séance ?')).toBeTruthy()
-    })
-  })
-
-  it('supprime une séance et appelle database.write', async () => {
-    const now = Date.now()
-    const histories = [
-      makeHistory('h1', now - 7200000, now - 7200000 + 3600000),
-      makeHistory('h2', now - 172800000, now - 172800000 + 3600000),
-    ]
-    const { getAllByLabelText, getByText } = render(
-      <StatsDurationScreenBase histories={histories} />
-    )
-    // Open dialog
-    const trashButtons = getAllByLabelText('Supprimer cette séance')
-    fireEvent.press(trashButtons[0])
-    // Confirm deletion
-    await waitFor(() => getByText('Supprimer cette séance ?'))
-    fireEvent.press(getByText('Supprimer'))
-    await waitFor(() => {
-      expect(database.write).toHaveBeenCalled()
-    })
+    const trashButtons = queryAllByLabelText('Supprimer cette séance')
+    expect(trashButtons.length).toBe(0)
   })
 })

@@ -7,6 +7,10 @@ import { Q } from '@nozbe/watermelondb'
 import Exercise from '../model/models/Exercise'
 import { MUSCLES_LIST, EQUIPMENT_LIST } from '../model/constants'
 import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RootStackParamList } from '../navigation'
+
+type ExercisesNavigation = NativeStackNavigationProp<RootStackParamList>
 import { CustomModal } from '../components/CustomModal'
 import { BottomSheet } from '../components/BottomSheet'
 import { AlertDialog } from '../components/AlertDialog'
@@ -28,14 +32,15 @@ interface Props { exercises: Exercise[] }
 interface ExerciseItemProps {
   item: Exercise
   onOptionsPress: (item: Exercise) => void
+  onPress: (item: Exercise) => void
   colors: ThemeColors
 }
 
 const ExerciseItem = memo<ExerciseItemProps>(
-  ({ item, onOptionsPress, colors }) => {
+  ({ item, onOptionsPress, onPress, colors }) => {
     const styles = useExerciseItemStyles(colors)
     return (
-      <View style={styles.exoItem}>
+      <TouchableOpacity style={styles.exoItem} onPress={() => onPress(item)} activeOpacity={0.7}>
         <View style={styles.exoInfo}>
           <Text style={styles.exoTitle}>{item.name}</Text>
           <Text style={styles.exoSubtitle}>{item.muscles?.join(', ')} • {item.equipment}</Text>
@@ -46,7 +51,7 @@ const ExerciseItem = memo<ExerciseItemProps>(
         >
           <Text style={styles.moreIcon}>•••</Text>
         </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     )
   },
   // Comparateur custom : WatermelonDB mute les instances en place — on vérifie aussi les champs
@@ -56,13 +61,14 @@ const ExerciseItem = memo<ExerciseItemProps>(
     prev.item.equipment === next.item.equipment &&
     JSON.stringify(prev.item.muscles) === JSON.stringify(next.item.muscles) &&
     prev.onOptionsPress === next.onOptionsPress &&
+    prev.onPress === next.onPress &&
     prev.colors === next.colors,
 )
 
 const ExercisesContent: React.FC<Props> = ({ exercises }) => {
   const colors = useColors()
   const styles = useStyles(colors)
-  const navigation = useNavigation()
+  const navigation = useNavigation<ExercisesNavigation>()
   const haptics = useHaptics()
   const slideAnim = useKeyboardAnimation(-200)
   const [keyboardVisible, setKeyboardVisible] = useState(false)
@@ -160,9 +166,14 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
     setIsOptionsVisible(true)
   }, [haptics, setSelectedExercise, setIsOptionsVisible])
 
+  const handleRowPress = useCallback((item: Exercise) => {
+    haptics.onSelect()
+    navigation.navigate('ExerciseHistory', { exerciseId: item.id })
+  }, [haptics, navigation])
+
   const renderExerciseItem = useCallback(({ item }: { item: Exercise }) => (
-    <ExerciseItem item={item} onOptionsPress={handleOptionsPress} colors={colors} />
-  ), [handleOptionsPress, colors])
+    <ExerciseItem item={item} onOptionsPress={handleOptionsPress} onPress={handleRowPress} colors={colors} />
+  ), [handleOptionsPress, handleRowPress, colors])
 
   const renderSeparator = useCallback(() => <View style={styles.separator} />, [styles])
 
@@ -255,9 +266,11 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
             <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); if (selectedExercise) loadExerciseForEdit(selectedExercise); setIsEditModalVisible(true); }}>
               <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: spacing.ms }} /><Text style={styles.sheetText}>Modifier l'exercice</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); setIsAlertVisible(true); }}>
-              <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: spacing.ms }} /><Text style={[styles.sheetText, { color: colors.danger }]}>Supprimer l'exercice</Text>
-            </TouchableOpacity>
+            {selectedExercise?.isCustom && (
+              <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); setIsAlertVisible(true); }}>
+                <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: spacing.ms }} /><Text style={[styles.sheetText, { color: colors.danger }]}>Supprimer l'exercice</Text>
+              </TouchableOpacity>
+            )}
           </BottomSheet>
 
           <CustomModal visible={isEditModalVisible} title="Renommer l'exercice" onClose={() => setIsEditModalVisible(false)}
