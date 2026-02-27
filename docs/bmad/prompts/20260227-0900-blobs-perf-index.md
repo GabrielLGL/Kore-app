@@ -11,8 +11,8 @@ Teste que le rendu visuel reste cohérent en light et dark mode.
 
 | Groupe | Rapport | Fichiers | Vague | Statut |
 |--------|---------|----------|-------|--------|
-| A | `docs/bmad/prompts/20260227-0900-blobs-perf-A.md` | `BackgroundBlobs.tsx` | 1 | ⏳ |
-| B | `docs/bmad/prompts/20260227-0900-blobs-perf-B.md` | `page.tsx` + `privacy/page.tsx` | 1 | ⏳ |
+| A | `docs/bmad/prompts/20260227-0900-blobs-perf-A.md` | `BackgroundBlobs.tsx` | 1 | ✅ ad1641b |
+| B | `docs/bmad/prompts/20260227-0900-blobs-perf-B.md` | `page.tsx` + `privacy/page.tsx` | 1 | ✅ 86bf186 |
 
 ## Ordre d'exécution
 Groupes A et B **indépendants** — lancer en parallèle dans la même vague.
