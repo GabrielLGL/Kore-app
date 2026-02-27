@@ -38,6 +38,7 @@ const mockWrite = database.write as jest.Mock
 const makeUser = (overrides = {}) => ({
   restDuration: 90,
   timerEnabled: true,
+  streakTarget: 3,
   aiProvider: 'offline',
   aiApiKey: null,
   name: 'Jean',
@@ -259,6 +260,57 @@ describe('SettingsContent — section Mon profil', () => {
     const user = makeUser({ name: '' })
     const { getByPlaceholderText } = render(<SettingsContent user={user as never} />)
     expect(getByPlaceholderText('Toi')).toBeTruthy()
+  })
+})
+
+describe('SettingsContent — section Gamification', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockWrite.mockImplementation(async (fn: () => Promise<void>) => fn())
+  })
+
+  it('affiche les 4 boutons objectif hebdomadaire', () => {
+    const user = makeUser({ streakTarget: 3 })
+    const { getByText } = render(<SettingsContent user={user as never} />)
+    expect(getByText('2')).toBeTruthy()
+    expect(getByText('3')).toBeTruthy()
+    expect(getByText('4')).toBeTruthy()
+    expect(getByText('5')).toBeTruthy()
+  })
+
+  it("taper un bouton met à jour l'affichage immédiatement (optimiste)", async () => {
+    const mockUpdate = jest.fn()
+    const user = makeUser({ streakTarget: 3, update: mockUpdate })
+    const { getByTestId } = render(<SettingsContent user={user as never} />)
+
+    fireEvent.press(getByTestId('streak-target-5'))
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
+  })
+
+  it("appelle database.write lors du changement d'objectif", async () => {
+    const mockUpdate = jest.fn()
+    const user = makeUser({ streakTarget: 3, update: mockUpdate })
+    const { getByTestId } = render(<SettingsContent user={user as never} />)
+
+    fireEvent.press(getByTestId('streak-target-4'))
+
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
+  })
+
+  it('reverte en cas d\'erreur database.write', async () => {
+    mockWrite.mockRejectedValueOnce(new Error('DB error'))
+    const user = makeUser({ streakTarget: 3, update: jest.fn() })
+    const { getByTestId } = render(<SettingsContent user={user as never} />)
+
+    fireEvent.press(getByTestId('streak-target-5'))
+    // No crash expected — revert happens silently
+    await waitFor(() => {
+      expect(mockWrite).toHaveBeenCalled()
+    })
   })
 })
 

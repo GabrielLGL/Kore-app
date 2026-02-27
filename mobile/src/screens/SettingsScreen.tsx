@@ -5,13 +5,16 @@ import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Sharing from 'expo-sharing'
+import * as FileSystem from 'expo-file-system'
+import * as DocumentPicker from 'expo-document-picker'
 import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
 import { useTheme } from '../contexts/ThemeContext'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { AlertDialog } from '../components/AlertDialog'
-import { exportAllData } from '../model/utils/exportHelpers'
+import { BottomSheet } from '../components/BottomSheet'
+import { exportAllData, importAllData } from '../model/utils/exportHelpers'
 import { spacing, borderRadius, fontSize } from '../theme'
 import {
   USER_LEVELS,
@@ -36,10 +39,17 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const [vibrationEnabled, setVibrationEnabled] = useState(user?.vibrationEnabled ?? true)
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(user?.timerSoundEnabled ?? true)
   const [userName, setUserName] = useState(user?.name ?? '')
+  const [streakTarget, setStreakTarget] = useState(user?.streakTarget ?? 3)
   const [editingLevel, setEditingLevel] = useState(false)
   const [editingGoal, setEditingGoal] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState(false)
+  const [showExportOptions, setShowExportOptions] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState(false)
+  const [importSuccess, setImportSuccess] = useState(false)
+  const [showImportConfirm, setShowImportConfirm] = useState(false)
+  const [pendingImportUri, setPendingImportUri] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
     container: {
@@ -255,6 +265,40 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       textAlign: 'center' as const,
       marginTop: spacing.sm,
     },
+    importButton: {
+      backgroundColor: colors.cardSecondary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      alignItems: 'center' as const,
+      marginTop: spacing.sm,
+      ...neuShadow.elevatedSm,
+    },
+    importButtonText: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
+    },
+    sheetOption: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.cardSecondary,
+    },
+    sheetOptionContent: {
+      flex: 1,
+    },
+    sheetOptionTitle: {
+      color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
+    },
+    sheetOptionDesc: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginTop: 2,
+    },
   })
 
   useEffect(() => {
@@ -264,6 +308,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     setVibrationEnabled(user.vibrationEnabled ?? true)
     setTimerSoundEnabled(user.timerSoundEnabled ?? true)
     setUserName(user.name ?? '')
+    setStreakTarget(user.streakTarget ?? 3)
   }, [user])
 
   const handleSaveRestDuration = async () => {
@@ -327,8 +372,13 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     }
   }
 
-  const handleExport = async () => {
+  const handleExportPress = () => {
     haptics.onPress()
+    setShowExportOptions(true)
+  }
+
+  const handleExportShare = async () => {
+    setShowExportOptions(false)
     setExporting(true)
     try {
       const filePath = await exportAllData()
@@ -337,10 +387,68 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         dialogTitle: 'Exporter mes données Kore',
       })
     } catch (error) {
-      if (__DEV__) console.error('Export failed:', error)
+      if (__DEV__) console.error('Export share failed:', error)
       setExportError(true)
     } finally {
       setExporting(false)
+    }
+  }
+
+  const handleExportDownload = async () => {
+    setShowExportOptions(false)
+    setExporting(true)
+    try {
+      const filePath = await exportAllData()
+      const permissions =
+        await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
+      if (permissions.granted) {
+        const dateStr = new Date().toISOString().slice(0, 10)
+        const fileName = `kore-export-${dateStr}.json`
+        const content = await FileSystem.readAsStringAsync(filePath)
+        const destUri = await FileSystem.StorageAccessFramework.createFileAsync(
+          permissions.directoryUri, fileName, 'application/json'
+        )
+        await FileSystem.writeAsStringAsync(destUri, content)
+        haptics.onSuccess()
+      }
+    } catch (error) {
+      if (__DEV__) console.error('Export download failed:', error)
+      setExportError(true)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleImportPress = async () => {
+    haptics.onPress()
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      })
+      if (!result.canceled && result.assets[0]) {
+        setPendingImportUri(result.assets[0].uri)
+        setShowImportConfirm(true)
+      }
+    } catch (error) {
+      if (__DEV__) console.error('Document picker error:', error)
+    }
+  }
+
+  const handleImportConfirm = async () => {
+    if (!pendingImportUri) return
+    setShowImportConfirm(false)
+    setImporting(true)
+    try {
+      await importAllData(pendingImportUri)
+      haptics.onSuccess()
+      setImportSuccess(true)
+    } catch (error) {
+      if (__DEV__) console.error('Import failed:', error)
+      setImportError(true)
+    } finally {
+      setImporting(false)
+      setPendingImportUri(null)
     }
   }
 
@@ -602,19 +710,22 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             {[2, 3, 4, 5].map(target => (
               <TouchableOpacity
                 key={target}
+                testID={`streak-target-${target}`}
                 style={[
                   styles.streakTargetBtn,
-                  (user?.streakTarget ?? 3) === target && styles.streakTargetBtnActive,
+                  streakTarget === target && styles.streakTargetBtnActive,
                 ]}
                 onPress={async () => {
-                  if (!user || user.streakTarget === target) return
+                  if (!user || streakTarget === target) return
                   haptics.onSelect()
+                  setStreakTarget(target)
                   try {
                     await database.write(async () => {
                       await user.update(u => { u.streakTarget = target })
                     })
                   } catch (error) {
                     if (__DEV__) console.error('Failed to update streak target:', error)
+                    setStreakTarget(user.streakTarget ?? 3)
                   }
                 }}
                 activeOpacity={0.7}
@@ -622,7 +733,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 <Text
                   style={[
                     styles.streakTargetText,
-                    (user?.streakTarget ?? 3) === target && styles.streakTargetTextActive,
+                    streakTarget === target && styles.streakTargetTextActive,
                   ]}
                 >
                   {target}
@@ -668,17 +779,73 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             <Text style={styles.sectionTitle}>Données</Text>
           </View>
           <TouchableOpacity
-            style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
-            onPress={handleExport}
-            disabled={exporting}
+            style={[styles.exportButton, (exporting || importing) && styles.exportButtonDisabled]}
+            onPress={handleExportPress}
+            disabled={exporting || importing}
             activeOpacity={0.7}
           >
             <Text style={styles.exportButtonText}>
               {exporting ? 'Export en cours...' : 'Exporter mes données'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.importButton, (exporting || importing) && styles.exportButtonDisabled]}
+            onPress={handleImportPress}
+            disabled={exporting || importing}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.importButtonText}>
+              {importing ? 'Import en cours...' : 'Importer mes données'}
+            </Text>
+          </TouchableOpacity>
           <Text style={styles.exportHint}>Vos données vous appartiennent</Text>
         </View>
+
+        {/* BottomSheet choix d'export */}
+        <BottomSheet
+          visible={showExportOptions}
+          onClose={() => setShowExportOptions(false)}
+          title="Exporter mes données"
+        >
+          <TouchableOpacity style={styles.sheetOption} onPress={handleExportShare} activeOpacity={0.7}>
+            <Ionicons name="share-outline" size={20} color={colors.primary} />
+            <View style={styles.sheetOptionContent}>
+              <Text style={styles.sheetOptionTitle}>Partager</Text>
+              <Text style={styles.sheetOptionDesc}>Envoyer par email, WhatsApp, Drive…</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.sheetOption} onPress={handleExportDownload} activeOpacity={0.7}>
+            <Ionicons name="download-outline" size={20} color={colors.primary} />
+            <View style={styles.sheetOptionContent}>
+              <Text style={styles.sheetOptionTitle}>Enregistrer</Text>
+              <Text style={styles.sheetOptionDesc}>Choisir un dossier sur l'appareil</Text>
+            </View>
+          </TouchableOpacity>
+        </BottomSheet>
+
+        {/* AlertDialog confirmation import */}
+        <AlertDialog
+          visible={showImportConfirm}
+          title="Importer des données ?"
+          message="Cette action remplacera TOUTES vos données actuelles par celles du fichier sélectionné. Cette opération est irréversible."
+          confirmText="Importer"
+          confirmColor={colors.danger}
+          cancelText="Annuler"
+          onConfirm={handleImportConfirm}
+          onCancel={() => { setShowImportConfirm(false); setPendingImportUri(null) }}
+        />
+
+        {/* AlertDialog succès import */}
+        <AlertDialog
+          visible={importSuccess}
+          title="Import réussi"
+          message="Vos données ont été restaurées avec succès."
+          confirmText="OK"
+          confirmColor={colors.primary}
+          onConfirm={() => setImportSuccess(false)}
+          onCancel={() => setImportSuccess(false)}
+          hideCancel
+        />
 
         <AlertDialog
           visible={exportError}
@@ -688,6 +855,18 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
           confirmColor={colors.primary}
           onConfirm={() => setExportError(false)}
           onCancel={() => setExportError(false)}
+          hideCancel
+        />
+
+        {/* AlertDialog erreur import */}
+        <AlertDialog
+          visible={importError}
+          title="Erreur d'import"
+          message="Impossible d'importer les données. Vérifiez que le fichier est un export Kore valide."
+          confirmText="OK"
+          confirmColor={colors.primary}
+          onConfirm={() => setImportError(false)}
+          onCancel={() => setImportError(false)}
           hideCancel
         />
 

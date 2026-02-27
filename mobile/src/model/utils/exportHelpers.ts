@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system'
+import { Model } from '@nozbe/watermelondb'
 import { database } from '../index'
 
 const TABLE_NAMES = [
@@ -69,4 +70,35 @@ export async function exportAllData(): Promise<string> {
   await FileSystem.writeAsStringAsync(filePath, jsonString)
 
   return filePath
+}
+
+export async function importAllData(fileUri: string): Promise<void> {
+  const jsonString = await FileSystem.readAsStringAsync(fileUri)
+  const data: ExportData = JSON.parse(jsonString) as ExportData
+  if (!data.metadata?.tables) throw new Error('Format invalide')
+
+  await database.write(async () => {
+    const ops: Model[] = []
+
+    for (const tableName of TABLE_NAMES) {
+      const records = await database.get(tableName).query().fetch()
+      ops.push(...records.map(r => r.prepareDestroyPermanently()))
+    }
+
+    for (const tableName of TABLE_NAMES) {
+      const rows = (data[tableName] ?? []) as Record<string, unknown>[]
+      for (const raw of rows) {
+        ops.push(
+          database.get(tableName).prepareCreate(record => {
+            Object.assign(
+              (record as unknown as { _raw: Record<string, unknown> })._raw,
+              raw
+            )
+          })
+        )
+      }
+    }
+
+    await database.batch(...ops)
+  })
 }
