@@ -68,6 +68,15 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
     }
   }, [])
 
+  // Reset l'animation quand la série est dé-validée, pour que le bouton
+  // reprenne son apparence normale (évite le scale bloqué à 1.25)
+  React.useEffect(() => {
+    if (!validated) {
+      scaleAnim.stopAnimation()
+      scaleAnim.setValue(1)
+    }
+  }, [validated, scaleAnim])
+
   const handleWeightChange = useCallback((v: string) => {
     setLocalWeight(v)
     if (weightTimerRef.current) clearTimeout(weightTimerRef.current)
@@ -103,7 +112,9 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
   if (validated) {
     return (
       <View style={[styles.setRow, styles.setRowValidated]}>
-        <Text style={styles.setLabel}>Série {setOrder}</Text>
+        <View style={styles.setBadgeValidated}>
+          <Ionicons name="checkmark" size={14} color={colors.background} />
+        </View>
         <Text style={styles.validatedText}>
           {validated.weight} kg × {validated.reps} reps
         </Text>
@@ -113,7 +124,7 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
           </View>
         )}
         <TouchableOpacity onPress={() => onUnvalidate(setOrder)} style={styles.validateBtnActive} testID="validate-btn">
-          <Ionicons name="checkmark-outline" size={18} color={colors.text} />
+          <Ionicons name="close-outline" size={18} color={colors.text} />
         </TouchableOpacity>
       </View>
     )
@@ -129,7 +140,9 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
 
   return (
     <View style={[styles.setRow, neuShadow.pressed]}>
-      <Text style={styles.setLabel}>Série {setOrder}</Text>
+      <View style={styles.setBadge}>
+        <Text style={styles.setBadgeText}>{setOrder}</Text>
+      </View>
       <View style={styles.inputGroup}>
         <TextInput
           style={[styles.input, styles.inputWeight, weightError && styles.inputError]}
@@ -258,8 +271,13 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
           <Text style={styles.noteText}>{exercise.notes}</Text>
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity onPress={() => setIsEditingNote(true)}>
-          <Text style={styles.addNoteLink}>+ Ajouter une note</Text>
+        <TouchableOpacity
+          onPress={() => setIsEditingNote(true)}
+          style={styles.addNoteButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="create-outline" size={12} color={colors.primary} />
+          <Text style={styles.addNoteLink}>Ajouter une note</Text>
         </TouchableOpacity>
       )}
       {sessionExercise.setsTarget != null && (
@@ -376,10 +394,22 @@ function useStyles(colors: ThemeColors) {
       marginBottom: spacing.xs,
       minHeight: 32,
     },
-    addNoteLink: {
-      color: colors.textSecondary,
-      fontSize: fontSize.xs,
+    addNoteButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      alignSelf: 'flex-start',
       marginBottom: spacing.xs,
+      paddingVertical: 4,
+      paddingHorizontal: spacing.sm,
+      borderRadius: borderRadius.sm,
+      borderWidth: 1,
+      borderColor: colors.primary + '40',
+    },
+    addNoteLink: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: '500',
     },
     noSetsText: {
       color: colors.textSecondary,
@@ -391,7 +421,7 @@ function useStyles(colors: ThemeColors) {
     setRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: spacing.xs,
+      paddingVertical: spacing.sm,
       paddingHorizontal: spacing.sm,
       borderRadius: borderRadius.sm,
       marginBottom: spacing.xs,
@@ -402,10 +432,30 @@ function useStyles(colors: ThemeColors) {
       borderRadius: borderRadius.sm,
       paddingHorizontal: spacing.sm,
     },
-    setLabel: {
-      color: colors.textSecondary,
-      fontSize: fontSize.sm,
-      width: 62,
+
+    // Badge circulaire numéroté (état non validé)
+    setBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    // Badge avec checkmark (état validé)
+    setBadgeValidated: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    setBadgeText: {
+      color: colors.primary,
+      fontSize: fontSize.xs,
+      fontWeight: '700',
     },
 
     // Input group
@@ -460,8 +510,8 @@ function useStyles(colors: ThemeColors) {
     // Validated state
     validatedText: {
       color: colors.text,
-      fontSize: fontSize.sm,
-      fontWeight: '600',
+      fontSize: fontSize.md,
+      fontWeight: '700',
       flex: 1,
     },
     prChip: {
