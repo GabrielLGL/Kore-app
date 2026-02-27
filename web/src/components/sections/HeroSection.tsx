@@ -157,7 +157,7 @@ export default function HeroSection({ subscriberCount }: HeroSectionProps) {
       {/* ===== MOBILE NAV CHIPS ===== */}
       <nav
         aria-label="Navigation mobile"
-        className="sm:hidden relative z-[2] flex gap-3 justify-center px-6 pb-6 -mt-4"
+        className="sm:hidden relative z-[2] flex gap-3 justify-center pl-6 pr-[70px] pb-6 -mt-4"
       >
         {[
           { href: "#features", label: "Fonctionnalités" },
