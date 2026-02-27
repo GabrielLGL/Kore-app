@@ -79,7 +79,7 @@ export default function HeroSection({ subscriberCount }: HeroSectionProps) {
       </nav>
 
       {/* ===== HERO ===== */}
-      <header className="relative z-[2] min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
+      <header aria-label="Présentation de Kore" className="relative z-[2] min-h-screen flex flex-col items-center justify-center text-center px-6 py-20">
         {/* Logo pill */}
         <div className="hero-fade inline-flex items-center gap-4 mb-8 px-6 py-2.5 rounded-full bg-[var(--glass)] border border-[var(--glass-border)] backdrop-blur-[10px] shadow-neu-out hover:scale-105 hover:shadow-neu-in transition-all duration-300 cursor-default">
           <KoreLogo size={50} gradientId="heroGrad" />
@@ -93,6 +93,7 @@ export default function HeroSection({ subscriberCount }: HeroSectionProps) {
             className="shimmer-text"
             style={{
               display: "inline-block",
+              minWidth: "11ch",
               opacity: phase === "idle" ? 1 : 0,
               transform:
                 phase === "idle"
@@ -123,7 +124,7 @@ export default function HeroSection({ subscriberCount }: HeroSectionProps) {
         <div className="hero-fade grid grid-cols-3 gap-6 sm:gap-10 mb-10 max-w-lg mx-auto w-full">
           {[
             { value: "100%", label: "Offline" },
-            { value: "0€", label: "Pour commencer" },
+            { value: "0€", label: "Plan gratuit" },
             { value: "<1s", label: "Chargement" },
           ].map((stat) => (
             <div key={stat.label} className="bg-[var(--bg)] rounded-[20px] shadow-neu-out py-5 px-3 text-center">
