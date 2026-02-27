@@ -16,6 +16,10 @@ vi.mock('@/components/ThemeToggle', () => ({
 vi.mock('@/components/ScrollReveal', () => ({
   default: () => <div data-testid="scroll-reveal" />,
 }))
+// Mock HeroSection to avoid duplicate form elements and SocialProof fetch calls
+vi.mock('@/components/sections/HeroSection', () => ({
+  default: () => <div data-testid="hero-section" />,
+}))
 
 // Mock global fetch
 const mockFetch = vi.fn()
