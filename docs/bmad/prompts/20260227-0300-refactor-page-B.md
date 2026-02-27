@@ -134,4 +134,8 @@ export default function SubscribeSection({ email, name, status, setEmail, setNam
 Aucune dépendance inter-groupes — peut s'exécuter en parallèle avec Groupe A.
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260227-0320
+
+## Résolution
+Rapport do : docs/bmad/do/20260227-0320-refactor-page-B.md
+Note : HeroSection a reçu les props de formulaire (email, name, status, setEmail, setName, onSubmit) car page.tsx avait évolué pour inclure un formulaire hero inline.
