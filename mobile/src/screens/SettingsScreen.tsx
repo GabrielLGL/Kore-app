@@ -816,7 +816,7 @@ function createStyles(colors: ThemeColors, neuShadow: ReturnType<typeof getTheme
     radioCircle: {
       width: 18,
       height: 18,
-      borderRadius: 9,
+      borderRadius: borderRadius.sm,
       borderWidth: 2,
       borderColor: colors.textSecondary,
     },

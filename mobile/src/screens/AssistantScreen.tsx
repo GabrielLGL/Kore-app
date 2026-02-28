@@ -861,7 +861,7 @@ function useStyles(colors: ThemeColors) {
 
     // ── Question ────────────────────────────────────────────────────────────
     question: {
-      fontSize: 26,
+      fontSize: fontSize.title,
       fontWeight: '700',
       color: colors.text,
       marginBottom: spacing.sm,

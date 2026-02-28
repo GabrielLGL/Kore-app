@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useCallback } from 'react'
 import { View, Text, ScrollView, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import type { HeatmapDay } from '../model/utils/statsHelpers'
-import { spacing } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
 
@@ -149,7 +149,7 @@ function useStyles(colors: ThemeColors) {
       marginBottom: CELL_GAP,
     },
     monthLabel: {
-      fontSize: 10,
+      fontSize: fontSize.caption,
       color: colors.textSecondary,
     },
     grid: {
@@ -161,7 +161,7 @@ function useStyles(colors: ThemeColors) {
     cell: {
       width: CELL_SIZE,
       height: CELL_SIZE,
-      borderRadius: 2,
+      borderRadius: borderRadius.xxs,
       marginBottom: CELL_GAP,
     },
     legend: {
@@ -174,10 +174,10 @@ function useStyles(colors: ThemeColors) {
     legendCell: {
       width: CELL_SIZE,
       height: CELL_SIZE,
-      borderRadius: 2,
+      borderRadius: borderRadius.xxs,
     },
     legendText: {
-      fontSize: 10,
+      fontSize: fontSize.caption,
       color: colors.textSecondary,
     },
   })

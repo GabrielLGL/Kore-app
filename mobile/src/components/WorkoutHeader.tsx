@@ -84,7 +84,7 @@ function useStyles(colors: ThemeColors) {
     progressTrack: {
       backgroundColor: colors.cardSecondary,
       height: 3,
-      borderRadius: 2,
+      borderRadius: borderRadius.xxs,
       marginTop: spacing.xs,
       overflow: 'hidden',
     },

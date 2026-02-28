@@ -8,7 +8,7 @@ import User from '../model/models/User'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { Button } from '../components/Button'
 import { useHaptics } from '../hooks/useHaptics'
-import { spacing, fontSize } from '../theme'
+import { spacing, fontSize, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
@@ -231,7 +231,7 @@ function useStyles(colors: ThemeColors) {
     dot: {
       width: 10,
       height: 10,
-      borderRadius: 5,
+      borderRadius: borderRadius.sm,
       backgroundColor: colors.secondaryButton,
     },
     dotActive: {

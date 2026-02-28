@@ -111,7 +111,7 @@ function useStyles(colors: ThemeColors) {
     dragBar: {
       width: 18,
       height: 2,
-      borderRadius: 1,
+      borderRadius: borderRadius.xxs,
       backgroundColor: colors.border,
     },
     itemInfo: { flex: 1 },

@@ -70,6 +70,8 @@ export const spacing = {
  * Border radius standardisés (coins plus arrondis pour le neumorphisme)
  */
 export const borderRadius = {
+  xxs: 2,  // thin elements (drag handles, progress bars, heatmap cells)
+  xs: 4,   // small chips and tags
   sm: 10,
   md: 14,
   lg: 20,
@@ -80,15 +82,19 @@ export const borderRadius = {
  * Tailles de police standardisées
  */
 export const fontSize = {
+  micro: 7,   // ultra-small (calendar metadata)
+  tiny: 8,    // very small (calendar session names)
+  mini: 9,    // small (calendar labels, mini tags)
+  caption: 11,
   xs: 12,
   sm: 14,
+  bodyMd: 15,
   md: 16,
   lg: 18,
   xl: 20,
   xxl: 24,
   xxxl: 28,
-  caption: 11,
-  bodyMd: 15,
+  title: 26,  // large question/section titles
   jumbo: 48,
 }
 

@@ -153,7 +153,7 @@ function useStyles(colors: ThemeColors) {
       width: 40,
       height: 4,
       backgroundColor: colors.separator,
-      borderRadius: 2,
+      borderRadius: borderRadius.xxs,
       alignSelf: 'center',
       marginBottom: spacing.md,
     },

@@ -441,7 +441,7 @@ function createStyles(colors: ThemeColors) {
     setBadge: {
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: borderRadius.md,
       borderWidth: 1.5,
       borderColor: colors.primary,
       justifyContent: 'center',
@@ -451,7 +451,7 @@ function createStyles(colors: ThemeColors) {
     setBadgeValidated: {
       width: 28,
       height: 28,
-      borderRadius: 14,
+      borderRadius: borderRadius.md,
       backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
@@ -492,7 +492,7 @@ function createStyles(colors: ThemeColors) {
     validateBtn: {
       width: 38,
       height: 38,
-      borderRadius: 19,
+      borderRadius: borderRadius.lg,
       backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
@@ -504,7 +504,7 @@ function createStyles(colors: ThemeColors) {
     validateBtnActive: {
       width: 38,
       height: 38,
-      borderRadius: 19,
+      borderRadius: borderRadius.lg,
       backgroundColor: colors.success,
       justifyContent: 'center',
       alignItems: 'center',

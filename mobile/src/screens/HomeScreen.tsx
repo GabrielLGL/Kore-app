@@ -468,7 +468,7 @@ function useStyles(colors: ThemeColors) {
       opacity: 0.45,
     },
     dayLabel: {
-      fontSize: 9,
+      fontSize: fontSize.mini,
       fontWeight: '600',
       color: colors.placeholder,
       letterSpacing: 0.3,
@@ -487,19 +487,19 @@ function useStyles(colors: ThemeColors) {
     },
     sessionTag: {
       backgroundColor: colors.primaryBg,
-      borderRadius: 4,
+      borderRadius: borderRadius.xs,
       paddingHorizontal: 3,
       paddingVertical: 2,
       marginTop: 2,
       width: '100%',
     },
     sessionName: {
-      fontSize: 8,
+      fontSize: fontSize.tiny,
       fontWeight: '700',
       color: colors.text,
     },
     sessionMeta: {
-      fontSize: 7,
+      fontSize: fontSize.micro,
       color: colors.textSecondary,
       marginTop: 1,
     },
@@ -509,7 +509,7 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     emptyDayText: {
-      fontSize: 9,
+      fontSize: fontSize.mini,
       color: colors.placeholder,
     },
     // Sections
