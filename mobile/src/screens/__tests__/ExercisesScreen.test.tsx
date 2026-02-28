@@ -64,15 +64,19 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'Success', Error: 'Error' },
 }))
 
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
-    addListener: jest.fn((event: string, callback: () => void) => {
-      // Trigger focus callback immediately to cover lines 56-61
-      if (event === 'focus') setTimeout(() => callback(), 0)
-      return jest.fn()
-    }),
-    navigate: jest.fn(),
+// Stable reference — prevents useEffect([navigation]) from re-running on re-renders
+const mockNavigation = {
+  addListener: jest.fn((event: string, callback: () => void) => {
+    let id: ReturnType<typeof setTimeout> | null = null
+    if (event === 'focus') id = setTimeout(callback, 0)
+    // Return cleanup that cancels the timeout to prevent updates after unmount
+    return jest.fn(() => { if (id !== null) clearTimeout(id) })
   }),
+  navigate: jest.fn(),
+}
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => mockNavigation,
 }))
 
 jest.mock('@nozbe/with-observables', () => (

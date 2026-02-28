@@ -35,6 +35,13 @@ import { database } from '../../model/index'
 
 const mockWrite = database.write as jest.Mock
 
+// Prevent react-native's internal batch flusher timer from firing after teardown
+beforeEach(() => jest.useFakeTimers())
+afterEach(() => {
+  act(() => jest.runAllTimers())
+  jest.useRealTimers()
+})
+
 const makeUser = (overrides = {}) => ({
   restDuration: 90,
   timerEnabled: true,
