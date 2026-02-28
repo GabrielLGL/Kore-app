@@ -211,7 +211,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="add-circle-outline" size={20} color={colors.text} />
+              <Ionicons name="add-circle-outline" size={20} color={colors.primaryText} />
               <Text style={styles.btnText}>{t.programs.createTitle}</Text>
             </View>
           </TouchableOpacity>
@@ -262,7 +262,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
                 <Text style={styles.buttonText}>{t.common.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalButton, {backgroundColor: colors.primary}]} onPress={handleSaveProgram}>
-                <Text style={styles.buttonText}>{t.common.validate}</Text>
+                <Text style={styles.buttonTextPrimary}>{t.common.validate}</Text>
               </TouchableOpacity>
             </>
           }
@@ -359,7 +359,7 @@ function useStyles(colors: ThemeColors) {
       shadowOpacity: 0.5,
       shadowRadius: 5,
     },
-    btnText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.md },
+    btnText: { color: colors.primaryText, fontWeight: 'bold', fontSize: fontSize.md },
 
     // Modal styles
     input: {
@@ -377,6 +377,7 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     buttonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.bodyMd },
+    buttonTextPrimary: { color: colors.primaryText, fontWeight: 'bold', fontSize: fontSize.bodyMd },
 
     // BottomSheet content styles
     sheetOption: {

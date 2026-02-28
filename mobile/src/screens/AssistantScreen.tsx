@@ -951,7 +951,7 @@ function useStyles(colors: ThemeColors) {
       opacity: 0.4,
     },
     nextBtnText: {
-      color: colors.text,
+      color: colors.primaryText,
       fontSize: fontSize.md,
       fontWeight: '700',
     },

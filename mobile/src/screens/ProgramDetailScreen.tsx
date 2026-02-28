@@ -230,7 +230,7 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleSaveSession}
             >
-              <Text style={styles.buttonText}>{t.common.validate}</Text>
+              <Text style={styles.buttonTextPrimary}>{t.common.validate}</Text>
             </TouchableOpacity>
           </>
         }
@@ -332,6 +332,7 @@ function useStyles(colors: ThemeColors) {
       alignItems: 'center',
     },
     buttonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.bodyMd },
+    buttonTextPrimary: { color: colors.primaryText, fontWeight: 'bold', fontSize: fontSize.bodyMd },
   })
 }
 

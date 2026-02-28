@@ -227,7 +227,7 @@ function useStyles(colors: ThemeColors) {
       opacity: 0.6,
     },
     btnPrimaryText: {
-      color: colors.text,
+      color: colors.primaryText,
       fontSize: fontSize.md,
       fontWeight: '700',
     },
