@@ -19,6 +19,7 @@ import User from '../model/models/User'
 import { computeGlobalKPIs, computeMotivationalPhrase, formatVolume } from '../model/utils/statsHelpers'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 import type { RootStackParamList } from '../navigation'
@@ -37,14 +38,6 @@ interface StatButton {
   route: StatRoute
 }
 
-const STAT_BUTTONS: StatButton[] = [
-  { icon: 'time-outline',          label: 'Durée',      route: 'StatsDuration' },
-  { icon: 'barbell-outline',       label: 'Volume',     route: 'StatsVolume' },
-  { icon: 'calendar-outline',      label: 'Agenda',     route: 'StatsCalendar' },
-  { icon: 'stats-chart-outline',   label: 'Exercices',  route: 'StatsExercises' },
-  { icon: 'resize-outline',        label: 'Mesures',    route: 'StatsMeasurements' },
-  { icon: 'list-outline',          label: 'Historique', route: 'StatsHistory' },
-]
 
 // ─── KPI Item ─────────────────────────────────────────────────────────────────
 
@@ -71,6 +64,16 @@ export function StatsScreenBase({ users, histories, sets }: Props) {
   const styles = useStyles(colors)
   const navigation = useNavigation<StatsNavigation>()
   const haptics = useHaptics()
+  const { t } = useLanguage()
+
+  const STAT_BUTTONS: StatButton[] = useMemo(() => [
+    { icon: 'time-outline',        label: t.stats.duration,  route: 'StatsDuration' },
+    { icon: 'barbell-outline',     label: t.stats.volume,    route: 'StatsVolume' },
+    { icon: 'calendar-outline',    label: t.stats.calendar,  route: 'StatsCalendar' },
+    { icon: 'stats-chart-outline', label: t.stats.exercises, route: 'StatsExercises' },
+    { icon: 'resize-outline',      label: t.stats.measures,  route: 'StatsMeasurements' },
+    { icon: 'list-outline',        label: t.stats.history,   route: 'StatsHistory' },
+  ], [t])
 
   const user = users[0] ?? null
   const kpis = useMemo(() => computeGlobalKPIs(histories, sets), [histories, sets])
@@ -89,15 +92,15 @@ export function StatsScreenBase({ users, histories, sets }: Props) {
     >
       {/* ── Header Card ── */}
       <View style={styles.headerCard}>
-        <Text style={styles.userName}>{user?.name || 'Toi'}</Text>
+        <Text style={styles.userName}>{user?.name || t.stats.defaultName}</Text>
         <Text style={styles.motivation}>{motivationalPhrase}</Text>
         <View style={styles.separator} />
         <View style={styles.kpisRow}>
-          <KpiItem label="Séances" value={String(kpis.totalSessions)} colors={colors} />
+          <KpiItem label={t.stats.sessions} value={String(kpis.totalSessions)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
+          <KpiItem label={t.stats.volume} value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Records" value={String(kpis.totalPRs)} colors={colors} />
+          <KpiItem label={t.stats.records} value={String(kpis.totalPRs)} colors={colors} />
         </View>
       </View>
 

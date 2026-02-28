@@ -12,12 +12,14 @@ import { AlertDialog } from '../components/AlertDialog'
 import { useHaptics } from '../hooks/useHaptics'
 import { spacing, fontSize, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import type Program from '../model/models/Program'
 import type User from '../model/models/User'
-import type { AIFormData, AIGoal, AILevel, AIDuration, AISplit } from '../services/ai/types'
+import type { AIFormData, AILevel, AISplit } from '../services/ai/types'
 import { useFocusEffect } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RouteProp } from '@react-navigation/native'
 import type { RootStackParamList } from '../navigation/index'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,98 +33,18 @@ interface StepOption {
   icon?: keyof typeof Ionicons.glyphMap
 }
 
-type WizardStepKind = 'single' | 'multi' | 'programs' | 'multi-focus' | 'multi-muscle' | 'multi-injuries'
+type WizardStepKind = 'single' | 'multi' | 'multi-focus' | 'multi-muscle' | 'multi-injuries'
 
 interface WizardStep {
   id: string
   field: keyof AIFormData
   question: string
+  subtitle?: string
   kind: WizardStepKind
   options?: StepOption[]
 }
 
-// ─── Options ──────────────────────────────────────────────────────────────────
-
-const MODE_OPTIONS: StepOption[] = [
-  { value: 'program', label: 'Programme complet', sub: 'Plusieurs séances structurées', icon: 'calendar-outline' },
-  { value: 'session', label: 'Séance du jour', sub: "Une session pour aujourd'hui", icon: 'flash-outline' },
-]
-
-const GOAL_OPTIONS: StepOption[] = [
-  { value: 'bodybuilding', label: 'Bodybuilding', icon: 'body-outline' },
-  { value: 'power',        label: 'Power',        icon: 'barbell-outline' },
-  { value: 'renfo',        label: 'Renfo',        icon: 'flame-outline' },
-  { value: 'cardio',       label: 'Cardio',       icon: 'walk-outline' },
-]
-
-const LEVEL_OPTIONS: StepOption[] = [
-  { value: 'débutant',      label: 'Débutant',      icon: 'leaf-outline' },
-  { value: 'intermédiaire', label: 'Intermédiaire', icon: 'trending-up-outline' },
-  { value: 'avancé',        label: 'Avancé',        icon: 'rocket-outline' },
-]
-
-const EQUIPMENT_OPTIONS = ['Poids du corps', 'Haltères', 'Barre & disques', 'Machines']
-
-const DURATION_OPTIONS: StepOption[] = [
-  { value: 45, label: '45 min' },
-  { value: 60, label: '60 min' },
-  { value: 90, label: '90 min' },
-  { value: 120, label: '2h' },
-]
-
-const MUSCLE_OPTIONS: StepOption[] = [
-  { value: 'Pecs',       label: 'Pecs'       },
-  { value: 'Dos',        label: 'Dos'        },
-  { value: 'Quadriceps', label: 'Quadriceps' },
-  { value: 'Ischios',    label: 'Ischios'    },
-  { value: 'Epaules',    label: 'Epaules'    },
-  { value: 'Biceps',     label: 'Biceps'     },
-  { value: 'Triceps',    label: 'Triceps'    },
-  { value: 'Abdos',      label: 'Abdos'      },
-  { value: 'Full Body',  label: 'Full Body'  },
-]
-
-const SPLIT_OPTIONS: StepOption[] = [
-  { value: 'auto',       label: 'Automatique',       sub: "L'IA choisit selon tes jours",              icon: 'refresh-outline' },
-  { value: 'fullbody',   label: 'Full Body',          sub: 'Tout le corps à chaque séance',             icon: 'grid-outline' },
-  { value: 'upperlower', label: 'Upper / Lower',      sub: 'Haut du corps / Bas du corps',              icon: 'swap-vertical-outline' },
-  { value: 'ppl',        label: 'PPL',                sub: 'Push · Pull · Legs',                        icon: 'repeat-outline' },
-  { value: 'brosplit',   label: 'Bro Split',          sub: '1 groupe musculaire par séance',            icon: 'barbell-outline' },
-  { value: 'arnold',     label: 'Arnold Split',       sub: 'Poitrine+Dos / Épaules+Bras / Jambes',      icon: 'star-outline' },
-  { value: 'phul',       label: 'PHUL',               sub: 'Force + Hypertrophie sur 4 jours',          icon: 'flash-outline' },
-  { value: 'fiveday',    label: '5 Jours',            sub: 'Poitrine / Dos / Épaules / Jambes / Bras',  icon: 'calendar-outline' },
-  { value: 'pushpull',   label: 'Push / Pull',        sub: '2 jours alternés',                          icon: 'swap-horizontal-outline' },
-  { value: 'fullbodyhi', label: 'Full Body Intensif', sub: '3 séances haute intensité',                 icon: 'flame-outline' },
-]
-
-const PHASE_OPTIONS: StepOption[] = [
-  { value: 'prise_masse',    label: 'Prise de masse', sub: 'Surplus calorique, volume élevé'    },
-  { value: 'seche',          label: 'Sèche',          sub: 'Déficit, maintien musculaire'        },
-  { value: 'recomposition',  label: 'Recomposition',  sub: 'Maintien calorique, transformation' },
-  { value: 'maintien',       label: 'Maintien',       sub: 'Conserver les acquis'                },
-]
-
-const RECOVERY_OPTIONS: StepOption[] = [
-  { value: 'rapide',   label: 'Rapide',   sub: 'Prêt dès le lendemain'         },
-  { value: 'normale',  label: 'Normale',  sub: '48h entre groupes musculaires' },
-  { value: 'lente',    label: 'Lente',    sub: 'Besoin de 72h+'               },
-]
-
-const INJURIES_OPTIONS: StepOption[] = [
-  { value: 'none',     label: 'Aucune'     },
-  { value: 'epaules',  label: 'Épaules'    },
-  { value: 'genoux',   label: 'Genoux'     },
-  { value: 'bas_dos',  label: 'Bas du dos' },
-  { value: 'poignets', label: 'Poignets'   },
-  { value: 'nuque',    label: 'Nuque/Cou'  },
-]
-
-const AGE_GROUP_OPTIONS: StepOption[] = [
-  { value: '18-25', label: '18–25 ans' },
-  { value: '26-35', label: '26–35 ans' },
-  { value: '36-45', label: '36–45 ans' },
-  { value: '45+',   label: '45+ ans'   },
-]
+// ─── Static data (values are DB keys — never translate these) ─────────────────
 
 const SPLIT_VALID_DAYS: Record<AISplit, number[]> = {
   auto:       [2, 3, 4, 5, 6],
@@ -142,6 +64,7 @@ function getDaysForSplit(split: AISplit | undefined): number[] {
   return SPLIT_VALID_DAYS[split]
 }
 
+// MUSCLES_FOCUS_OPTIONS: values are data keys used in the form — do not translate values
 const MUSCLES_FOCUS_OPTIONS = ['Équilibré', 'Pecs', 'Dos', 'Épaules', 'Bras', 'Jambes', 'Abdos']
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -151,75 +74,221 @@ const PROVIDER_LABELS: Record<string, string> = {
   claude:  'Claude',
 }
 
-// ─── buildSteps ───────────────────────────────────────────────────────────────
-
-function buildSteps(data: Partial<AIFormData>): WizardStep[] {
-  const steps: WizardStep[] = [
-    { id: 'mode',      field: 'mode',        question: 'Que veux-tu générer ?',          kind: 'single', options: MODE_OPTIONS      },
-    { id: 'goal',      field: 'goal',        question: 'Quel est ton objectif ?',         kind: 'single', options: GOAL_OPTIONS      },
-    { id: 'level',     field: 'level',       question: 'Quel est ton niveau ?',           kind: 'single', options: LEVEL_OPTIONS     },
-    { id: 'equipment', field: 'equipment',   question: 'Quel équipement as-tu ?',         kind: 'multi'                               },
-    { id: 'duration',  field: 'durationMin', question: 'Combien de temps par séance ?',   kind: 'single', options: DURATION_OPTIONS  },
-  ]
-
-  if (data.mode === 'session') {
-    steps.push({ id: 'muscle',        field: 'muscleGroups',    question: 'Quels groupes musculaires ?', kind: 'multi-muscle' })
-    steps.push({ id: 'targetProgram', field: 'targetProgramId', question: 'Dans quel programme ?',   kind: 'programs'                           })
-  } else {
-    steps.push({
-      id: 'split',
-      field: 'split',
-      question: 'Quel style de programme ?',
-      kind: 'single',
-      options: SPLIT_OPTIONS,
-    })
-    steps.push({ id: 'phase',    field: 'phase',    question: 'Dans quelle phase es-tu ?',         kind: 'single',          options: PHASE_OPTIONS    })
-    steps.push({ id: 'recovery', field: 'recovery', question: 'Comment te récupères-tu ?',          kind: 'single',          options: RECOVERY_OPTIONS })
-    steps.push({ id: 'injuries', field: 'injuries', question: 'As-tu des zones sensibles ?',        kind: 'multi-injuries'                              })
-    steps.push({ id: 'ageGroup', field: 'ageGroup', question: "Dans quelle tranche d'âge es-tu ?", kind: 'single',          options: AGE_GROUP_OPTIONS })
-    const daysOptions: StepOption[] = getDaysForSplit(data.split).map(d => ({ value: d, label: `${d}j` }))
-    steps.push({ id: 'days', field: 'daysPerWeek', question: 'Combien de jours par semaine ?', kind: 'single', options: daysOptions })
-    steps.push({
-      id: 'musclesFocus',
-      field: 'musclesFocus',
-      question: 'Sur quels muscles veux-tu progresser ?',
-      kind: 'multi-focus',
-    })
-  }
-
-  return steps
-}
-
 // ─── Composant interne ────────────────────────────────────────────────────────
 
 interface AssistantScreenInnerProps {
   programs: Program[]
   user: User | null
   navigation: NativeStackNavigationProp<RootStackParamList, 'Assistant'>
+  route: RouteProp<RootStackParamList, 'Assistant'>
 }
 
-export function AssistantScreenInner({ programs, user, navigation }: AssistantScreenInnerProps) {
+export function AssistantScreenInner({ programs, user, navigation, route }: AssistantScreenInnerProps) {
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const { t } = useLanguage()
+
+  const sessionMode = route.params?.sessionMode
+
+  const emptyForm: Partial<AIFormData> = {
+    equipment: [],
+    musclesFocus: [],
+    muscleGroups: [],
+    injuries: [],
+    mode: sessionMode ? 'session' : 'program',
+    targetProgramId: sessionMode?.targetProgramId,
+  }
+
+  // ── Translated option arrays (defined inside component to access t) ─────────
+
+  const GOAL_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'bodybuilding', label: t.assistant.goals.bodybuilding.label, sub: t.assistant.goals.bodybuilding.sub, icon: 'body-outline'    },
+    { value: 'power',        label: t.assistant.goals.power.label,        sub: t.assistant.goals.power.sub,        icon: 'barbell-outline' },
+    { value: 'renfo',        label: t.assistant.goals.renfo.label,        sub: t.assistant.goals.renfo.sub,        icon: 'flame-outline'   },
+    { value: 'cardio',       label: t.assistant.goals.cardio.label,       sub: t.assistant.goals.cardio.sub,       icon: 'walk-outline'    },
+  ], [t])
+
+  const EQUIPMENT_OPTIONS: string[] = useMemo(() => [
+    t.assistant.equipment.bodyweight,
+    t.assistant.equipment.dumbbells,
+    t.assistant.equipment.barbell,
+    t.assistant.equipment.machines,
+  ], [t])
+
+  const DURATION_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 45,  label: t.assistant.durations.d45.label,  sub: t.assistant.durations.d45.sub  },
+    { value: 60,  label: t.assistant.durations.d60.label,  sub: t.assistant.durations.d60.sub  },
+    { value: 90,  label: t.assistant.durations.d90.label,  sub: t.assistant.durations.d90.sub  },
+    { value: 120, label: t.assistant.durations.d120.label, sub: t.assistant.durations.d120.sub },
+  ], [t])
+
+  const MUSCLE_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'Pecs',       label: t.assistant.muscles.Pecs       },
+    { value: 'Dos',        label: t.assistant.muscles.Dos        },
+    { value: 'Quadriceps', label: t.assistant.muscles.Quadriceps },
+    { value: 'Ischios',    label: t.assistant.muscles.Ischios    },
+    { value: 'Epaules',    label: t.assistant.muscles.Epaules    },
+    { value: 'Biceps',     label: t.assistant.muscles.Biceps     },
+    { value: 'Triceps',    label: t.assistant.muscles.Triceps    },
+    { value: 'Abdos',      label: t.assistant.muscles.Abdos      },
+    { value: 'Full Body',  label: t.assistant.muscles['Full Body'] },
+  ], [t])
+
+  const SPLIT_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'auto',       label: t.assistant.splits.auto.label,       sub: t.assistant.splits.auto.sub,       icon: 'refresh-outline'         },
+    { value: 'fullbody',   label: t.assistant.splits.fullbody.label,   sub: t.assistant.splits.fullbody.sub,   icon: 'grid-outline'            },
+    { value: 'upperlower', label: t.assistant.splits.upperlower.label, sub: t.assistant.splits.upperlower.sub, icon: 'swap-vertical-outline'   },
+    { value: 'ppl',        label: t.assistant.splits.ppl.label,        sub: t.assistant.splits.ppl.sub,        icon: 'repeat-outline'          },
+    { value: 'brosplit',   label: t.assistant.splits.brosplit.label,   sub: t.assistant.splits.brosplit.sub,   icon: 'barbell-outline'         },
+    { value: 'arnold',     label: t.assistant.splits.arnold.label,     sub: t.assistant.splits.arnold.sub,     icon: 'star-outline'            },
+    { value: 'phul',       label: t.assistant.splits.phul.label,       sub: t.assistant.splits.phul.sub,       icon: 'flash-outline'           },
+    { value: 'fiveday',    label: t.assistant.splits.fiveday.label,    sub: t.assistant.splits.fiveday.sub,    icon: 'calendar-outline'        },
+    { value: 'pushpull',   label: t.assistant.splits.pushpull.label,   sub: t.assistant.splits.pushpull.sub,   icon: 'swap-horizontal-outline' },
+    { value: 'fullbodyhi', label: t.assistant.splits.fullbodyhi.label, sub: t.assistant.splits.fullbodyhi.sub, icon: 'flame-outline'           },
+  ], [t])
+
+  const PHASE_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'prise_masse',   label: t.assistant.phases.prise_masse.label,   sub: t.assistant.phases.prise_masse.sub   },
+    { value: 'seche',         label: t.assistant.phases.seche.label,         sub: t.assistant.phases.seche.sub         },
+    { value: 'recomposition', label: t.assistant.phases.recomposition.label, sub: t.assistant.phases.recomposition.sub },
+    { value: 'maintien',      label: t.assistant.phases.maintien.label,      sub: t.assistant.phases.maintien.sub      },
+  ], [t])
+
+  const RECOVERY_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'rapide',  label: t.assistant.recoveries.rapide.label,  sub: t.assistant.recoveries.rapide.sub  },
+    { value: 'normale', label: t.assistant.recoveries.normale.label, sub: t.assistant.recoveries.normale.sub },
+    { value: 'lente',   label: t.assistant.recoveries.lente.label,   sub: t.assistant.recoveries.lente.sub   },
+  ], [t])
+
+  const INJURIES_OPTIONS: StepOption[] = useMemo(() => [
+    { value: 'none',     label: t.assistant.injuries.none     },
+    { value: 'epaules',  label: t.assistant.injuries.epaules  },
+    { value: 'genoux',   label: t.assistant.injuries.genoux   },
+    { value: 'bas_dos',  label: t.assistant.injuries.bas_dos  },
+    { value: 'poignets', label: t.assistant.injuries.poignets },
+    { value: 'nuque',    label: t.assistant.injuries.nuque    },
+  ], [t])
+
+  // ── buildSteps (inside component to access t and option arrays) ────────────
+
+  const buildSteps = useCallback((data: Partial<AIFormData>, isSession: boolean): WizardStep[] => {
+    const goalStep: WizardStep = {
+      id: 'goal',
+      field: 'goal',
+      question: t.assistant.steps.goal.question,
+      subtitle: t.assistant.steps.goal.subtitle,
+      kind: 'single',
+      options: GOAL_OPTIONS,
+    }
+
+    const equipmentStep: WizardStep = {
+      id: 'equipment',
+      field: 'equipment',
+      question: t.assistant.steps.equipment.question,
+      subtitle: t.assistant.steps.equipment.subtitle,
+      kind: 'multi',
+    }
+
+    const durationStep: WizardStep = {
+      id: 'duration',
+      field: 'durationMin',
+      question: t.assistant.steps.duration.question,
+      subtitle: t.assistant.steps.duration.subtitle,
+      kind: 'single',
+      options: DURATION_OPTIONS,
+    }
+
+    if (isSession) {
+      return [
+        goalStep,
+        equipmentStep,
+        durationStep,
+        {
+          id: 'muscle',
+          field: 'muscleGroups',
+          question: t.assistant.steps.muscle.question,
+          subtitle: t.assistant.steps.muscle.subtitle,
+          kind: 'multi-muscle',
+        },
+      ]
+    }
+
+    const daysOptions: StepOption[] = getDaysForSplit(data.split).map(d => ({
+      value: d,
+      label: `${d} ${d > 1 ? t.assistant.days : t.assistant.day}`,
+    }))
+
+    return [
+      goalStep,
+      equipmentStep,
+      durationStep,
+      {
+        id: 'split',
+        field: 'split',
+        question: t.assistant.steps.split.question,
+        subtitle: t.assistant.steps.split.subtitle,
+        kind: 'single',
+        options: SPLIT_OPTIONS,
+      },
+      {
+        id: 'phase',
+        field: 'phase',
+        question: t.assistant.steps.phase.question,
+        subtitle: t.assistant.steps.phase.subtitle,
+        kind: 'single',
+        options: PHASE_OPTIONS,
+      },
+      {
+        id: 'recovery',
+        field: 'recovery',
+        question: t.assistant.steps.recovery.question,
+        subtitle: t.assistant.steps.recovery.subtitle,
+        kind: 'single',
+        options: RECOVERY_OPTIONS,
+      },
+      {
+        id: 'injuries',
+        field: 'injuries',
+        question: t.assistant.steps.injuries.question,
+        subtitle: t.assistant.steps.injuries.subtitle,
+        kind: 'multi-injuries',
+      },
+      {
+        id: 'days',
+        field: 'daysPerWeek',
+        question: t.assistant.steps.days.question,
+        subtitle: t.assistant.steps.days.subtitle,
+        kind: 'single',
+        options: daysOptions,
+      },
+      {
+        id: 'musclesFocus',
+        field: 'musclesFocus',
+        question: t.assistant.steps.priority.question,
+        subtitle: t.assistant.steps.priority.subtitle,
+        kind: 'multi-focus',
+      },
+    ]
+  }, [t, GOAL_OPTIONS, DURATION_OPTIONS, SPLIT_OPTIONS, PHASE_OPTIONS, RECOVERY_OPTIONS])
 
   // ── Wizard state ──────────────────────────────────────────────────────────
-  const [currentStep, setCurrentStep]     = useState(0)
-  const [formData, setFormData]           = useState<Partial<AIFormData>>({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
-  const [isGenerating, setIsGenerating]         = useState(false)
+  const [currentStep, setCurrentStep]               = useState(0)
+  const [formData, setFormData]                     = useState<Partial<AIFormData>>(emptyForm)
+  const [isGenerating, setIsGenerating]             = useState(false)
   const [isResetAlertVisible, setIsResetAlertVisible] = useState(false)
-  const [errorAlertVisible, setErrorAlertVisible]     = useState(false)
-  const [errorAlertMessage, setErrorAlertMessage]     = useState('')
+  const [errorAlertVisible, setErrorAlertVisible]   = useState(false)
+  const [errorAlertMessage, setErrorAlertMessage]   = useState('')
 
-  const progressAnim   = useRef(new Animated.Value(0)).current
-  const contentAnim    = useRef(new Animated.Value(1)).current
-  const pendingFadeIn  = useRef(false)
+  const progressAnim  = useRef(new Animated.Value(0)).current
+  const contentAnim   = useRef(new Animated.Value(1)).current
+  const pendingFadeIn = useRef(false)
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  // Réactif via withObservables — mise à jour depuis les settings uniquement
   const providerLabel = PROVIDER_LABELS[user?.aiProvider ?? 'offline'] ?? 'Offline'
+  const isSession     = Boolean(sessionMode)
 
-  const steps      = useMemo(() => buildSteps(formData), [formData])
+  const steps      = useMemo(() => buildSteps(formData, isSession), [buildSteps, formData, isSession])
   const totalSteps = steps.length
   const step       = steps[currentStep]
 
@@ -233,20 +302,23 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
     }).start()
   }, [currentStep, totalSteps, progressAnim])
 
-  // ── Reset au retour sur l'onglet (badge provider + étape 1) ─────────────
+  // ── Reset au retour sur l'onglet ─────────────────────────────────────────
   useFocusEffect(
     useCallback(() => {
-      // Reset wizard à l'étape 1
       setCurrentStep(0)
-      setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
+      setFormData({
+        equipment: [],
+        musclesFocus: [],
+        muscleGroups: [],
+        injuries: [],
+        mode: sessionMode ? 'session' : 'program',
+        targetProgramId: sessionMode?.targetProgramId,
+      })
       contentAnim.setValue(1)
-    }, [contentAnim])
+    }, [contentAnim, sessionMode])
   )
 
   // ── Transition fade entre étapes ─────────────────────────────────────────
-  // Pas de fade-out animée : setValue(0) est synchrone (JS thread), donc
-  // le nouveau contenu est garanti invisible quand React le rend.
-  // La fade-in se déclenche dans un useEffect, après le commit React.
   const goToStep = useCallback((nextIndex: number, newData?: Partial<AIFormData>) => {
     contentAnim.setValue(0)
     pendingFadeIn.current = true
@@ -266,32 +338,49 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
 
   // ─── Génération ───────────────────────────────────────────────────────────
 
+  const levelMap: Record<string, AILevel> = {
+    beginner:     'débutant',
+    intermediate: 'intermédiaire',
+    advanced:     'avancé',
+  }
+
   const triggerGenerate = useCallback(async (data: AIFormData) => {
     haptics.onPress()
     setIsGenerating(true)
     try {
-      const result = await generatePlan(data, user)
+      const formWithLevel: AIFormData = {
+        ...data,
+        level: levelMap[user?.userLevel ?? ''] ?? 'intermédiaire',
+      }
+      const result = await generatePlan(formWithLevel, user)
       let fallbackNotice: string | undefined
       if (result.usedFallback) {
         const providerName = PROVIDER_LABELS[result.fallbackReason ?? ''] ?? result.fallbackReason ?? 'cloud'
         fallbackNotice = `Plan généré hors ligne — ${providerName} indisponible`
       }
       setCurrentStep(0)
-      setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
+      setFormData({
+        equipment: [],
+        musclesFocus: [],
+        muscleGroups: [],
+        injuries: [],
+        mode: sessionMode ? 'session' : 'program',
+        targetProgramId: sessionMode?.targetProgramId,
+      })
       contentAnim.setValue(1)
       navigation.navigate('AssistantPreview', {
         plan: result.plan,
-        mode: (data.mode ?? 'program') as 'program' | 'session',
-        targetProgramId: data.targetProgramId,
+        mode: (formWithLevel.mode ?? 'program') as 'program' | 'session',
+        targetProgramId: formWithLevel.targetProgramId,
       })
       void fallbackNotice
     } catch {
-      setErrorAlertMessage('Impossible de générer le plan. Réessaie.')
+      setErrorAlertMessage(t.assistant.errorMessage)
       setErrorAlertVisible(true)
     } finally {
       setIsGenerating(false)
     }
-  }, [user, haptics, navigation, contentAnim])
+  }, [user, haptics, navigation, contentAnim, sessionMode, t])
 
   // ─── Navigation wizard ────────────────────────────────────────────────────
 
@@ -308,14 +397,14 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
 
     haptics.onSelect()
 
-    const currentSteps = buildSteps(newData)
+    const currentSteps = buildSteps(newData, isSession)
     if (currentStep === currentSteps.length - 1) {
       setFormData(newData)
       triggerGenerate(newData as AIFormData)
     } else {
-      goToStep(currentStep + 1, newData)  // formData mis à jour dans le callback
+      goToStep(currentStep + 1, newData)
     }
-  }, [formData, currentStep, haptics, triggerGenerate, goToStep])
+  }, [formData, currentStep, haptics, triggerGenerate, goToStep, isSession, buildSteps])
 
   const toggleEquipment = useCallback((item: string) => {
     haptics.onSelect()
@@ -371,28 +460,39 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
     })
   }, [haptics])
 
-  const handleEquipmentNext = useCallback(() => {
+  const handleMultiNext = useCallback(() => {
     haptics.onPress()
-    const currentSteps = buildSteps(formData)
+    const currentSteps = buildSteps(formData, isSession)
     if (currentStep === currentSteps.length - 1) {
       triggerGenerate(formData as AIFormData)
     } else {
       goToStep(currentStep + 1)
     }
-  }, [formData, currentStep, haptics, triggerGenerate, goToStep])
+  }, [formData, currentStep, haptics, triggerGenerate, goToStep, isSession, buildSteps])
 
   const handleBack = useCallback(() => {
     if (currentStep === 0) return
     goToStep(currentStep - 1)
   }, [currentStep, goToStep])
 
+  const resetForm = useCallback(() => {
+    setFormData({
+      equipment: [],
+      musclesFocus: [],
+      muscleGroups: [],
+      injuries: [],
+      mode: sessionMode ? 'session' : 'program',
+      targetProgramId: sessionMode?.targetProgramId,
+    })
+    setCurrentStep(0)
+    contentAnim.setValue(1)
+  }, [contentAnim, sessionMode])
+
   const handleReset = useCallback(() => {
     haptics.onDelete()
     setIsResetAlertVisible(false)
-    setFormData({ equipment: [], musclesFocus: [], muscleGroups: [], injuries: [] })
-    setCurrentStep(0)
-    contentAnim.setValue(1)
-  }, [haptics, contentAnim])
+    resetForm()
+  }, [haptics, resetForm])
 
   const handleResetRequest = useCallback(() => {
     if (currentStep > 2) {
@@ -400,11 +500,9 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
       setIsResetAlertVisible(true)
     } else {
       haptics.onDelete()
-      setFormData({ equipment: [], musclesFocus: [], injuries: [] })
-      setCurrentStep(0)
-      contentAnim.setValue(1)
+      resetForm()
     }
-  }, [currentStep, haptics, contentAnim])
+  }, [currentStep, haptics, resetForm])
 
   // ─── Rendu du step courant (wizard) ──────────────────────────────────────
 
@@ -433,22 +531,23 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
           <TouchableOpacity
             style={[styles.nextBtn, !hasSelection && styles.nextBtnDisabled]}
             disabled={!hasSelection}
-            onPress={handleEquipmentNext}
+            onPress={handleMultiNext}
           >
-            <Text style={styles.nextBtnText}>Suivant →</Text>
+            <Text style={styles.nextBtnText}>{t.assistant.next}</Text>
           </TouchableOpacity>
         </View>
       )
     }
 
     if (step.kind === 'multi-focus') {
-      const selected   = formData.musclesFocus ?? []
+      const selected    = formData.musclesFocus ?? []
       const isEquilibre = selected.length === 0
       return (
         <View>
           <View style={styles.chipsWrap}>
             {MUSCLES_FOCUS_OPTIONS.map(muscle => {
               const isActive = muscle === 'Équilibré' ? isEquilibre : selected.includes(muscle)
+              const label = t.assistant.musclesFocus[muscle as keyof typeof t.assistant.musclesFocus] ?? muscle
               return (
                 <TouchableOpacity
                   key={muscle}
@@ -456,7 +555,7 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
                   onPress={() => toggleMusclesFocus(muscle)}
                 >
                   <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                    {muscle}
+                    {label}
                   </Text>
                 </TouchableOpacity>
               )
@@ -464,16 +563,16 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
           </View>
           <TouchableOpacity
             style={styles.nextBtn}
-            onPress={handleEquipmentNext}
+            onPress={handleMultiNext}
           >
-            <Text style={styles.nextBtnText}>Suivant →</Text>
+            <Text style={styles.nextBtnText}>{t.assistant.next}</Text>
           </TouchableOpacity>
         </View>
       )
     }
 
     if (step.kind === 'multi-muscle') {
-      const selected = formData.muscleGroups ?? []
+      const selected     = formData.muscleGroups ?? []
       const hasSelection = selected.length > 0
       return (
         <View>
@@ -496,9 +595,9 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
           <TouchableOpacity
             style={[styles.nextBtn, !hasSelection && styles.nextBtnDisabled]}
             disabled={!hasSelection}
-            onPress={handleEquipmentNext}
+            onPress={handleMultiNext}
           >
-            <Text style={styles.nextBtnText}>Suivant →</Text>
+            <Text style={styles.nextBtnText}>{t.assistant.next}</Text>
           </TouchableOpacity>
         </View>
       )
@@ -524,37 +623,9 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
               )
             })}
           </View>
-          <TouchableOpacity style={styles.nextBtn} onPress={handleEquipmentNext}>
-            <Text style={styles.nextBtnText}>Suivant →</Text>
+          <TouchableOpacity style={styles.nextBtn} onPress={handleMultiNext}>
+            <Text style={styles.nextBtnText}>{t.assistant.next}</Text>
           </TouchableOpacity>
-        </View>
-      )
-    }
-
-    if (step.kind === 'programs') {
-      if (programs.length === 0) {
-        return (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              Aucun programme disponible.{'\n'}Crée d'abord un programme dans l'onglet Accueil.
-            </Text>
-          </View>
-        )
-      }
-      return (
-        <View style={styles.optionsList}>
-          {programs.map(p => (
-            <TouchableOpacity
-              key={p.id}
-              style={styles.optionCard}
-              onPress={() => handleSelect('targetProgramId', p.id)}
-            >
-              <View style={styles.optionRow}>
-                <Ionicons name="document-text-outline" size={24} color={colors.primary} />
-                <Text style={styles.optionLabel}>{p.name}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
         </View>
       )
     }
@@ -634,7 +705,7 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
       {isGenerating ? (
         <View style={styles.generatingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.generatingText}>Génération en cours...</Text>
+          <Text style={styles.generatingText}>{t.assistant.generating}</Text>
         </View>
       ) : (
         <Animated.View style={[styles.contentWrapper, { opacity: contentAnim }]}>
@@ -645,6 +716,9 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
             keyboardShouldPersistTaps="handled"
           >
             <Text style={styles.question}>{step?.question}</Text>
+            {step?.subtitle !== undefined && (
+              <Text style={styles.stepSubtitle}>{step.subtitle}</Text>
+            )}
             {renderStepContent()}
           </ScrollView>
         </Animated.View>
@@ -653,27 +727,27 @@ export function AssistantScreenInner({ programs, user, navigation }: AssistantSc
       {/* ── Bouton recommencer ── */}
       {currentStep > 0 && (
         <TouchableOpacity style={styles.resetFooterBtn} onPress={handleResetRequest}>
-          <Text style={styles.resetFooterBtnText}>Recommencer</Text>
+          <Text style={styles.resetFooterBtnText}>{t.assistant.restart}</Text>
         </TouchableOpacity>
       )}
 
       <AlertDialog
         visible={isResetAlertVisible}
-        title="Recommencer ?"
-        message="Ta progression actuelle sera perdue."
+        title={t.assistant.restartTitle}
+        message={t.assistant.restartMessage}
         onConfirm={handleReset}
         onCancel={() => setIsResetAlertVisible(false)}
-        confirmText="Recommencer"
-        cancelText="Annuler"
+        confirmText={t.assistant.restart}
+        cancelText={t.common.cancel}
       />
 
       <AlertDialog
         visible={errorAlertVisible}
-        title="Erreur"
+        title={t.assistant.errorTitle}
         message={errorAlertMessage}
         onConfirm={() => setErrorAlertVisible(false)}
         onCancel={() => setErrorAlertVisible(false)}
-        confirmText="OK"
+        confirmText={t.common.ok}
         confirmColor={colors.primary}
         hideCancel
       />
@@ -790,8 +864,16 @@ function useStyles(colors: ThemeColors) {
       fontSize: 26,
       fontWeight: '700',
       color: colors.text,
-      marginBottom: spacing.xl,
+      marginBottom: spacing.sm,
       lineHeight: 34,
+    },
+
+    // ── Step subtitle ────────────────────────────────────────────────────────
+    stepSubtitle: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      marginBottom: spacing.lg,
+      lineHeight: 20,
     },
 
     // ── Options single-choice ────────────────────────────────────────────────
@@ -885,20 +967,6 @@ function useStyles(colors: ThemeColors) {
       color: colors.textSecondary,
       fontSize: fontSize.sm,
       fontWeight: '500',
-    },
-
-    // ── Empty state ──────────────────────────────────────────────────────────
-    emptyContainer: {
-      padding: spacing.lg,
-      backgroundColor: colors.card,
-      borderRadius: borderRadius.md,
-      alignItems: 'center',
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: fontSize.sm,
-      textAlign: 'center',
-      lineHeight: 22,
     },
   })
 }

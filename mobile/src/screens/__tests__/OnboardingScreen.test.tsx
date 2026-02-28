@@ -41,6 +41,7 @@ describe('OnboardingScreen — étape 1 (niveau)', () => {
 
   it('affiche les cartes de niveau à l\'étape 1', () => {
     const { getByText } = render(<OnboardingScreen />)
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     expect(getByText('Quel est ton niveau ?')).toBeTruthy()
     expect(getByText('Débutant')).toBeTruthy()
     expect(getByText('Intermédiaire')).toBeTruthy()
@@ -55,6 +56,7 @@ describe('OnboardingScreen — étape 1 (niveau)', () => {
   it('passe à l\'étape 2 après sélection d\'un niveau et tap Suivant', () => {
     const { getByText } = render(<OnboardingScreen />)
 
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     fireEvent.press(getByText('Débutant'))
     fireEvent.press(getByText('Suivant'))
 
@@ -76,6 +78,7 @@ describe('OnboardingScreen — étape 2 (objectif)', () => {
   it('affiche les cartes d\'objectif à l\'étape 2', () => {
     const { getByText } = render(<OnboardingScreen />)
 
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     fireEvent.press(getByText('Débutant'))
     fireEvent.press(getByText('Suivant'))
 
@@ -88,6 +91,7 @@ describe('OnboardingScreen — étape 2 (objectif)', () => {
   it('revient à l\'étape 1 au tap sur Retour', () => {
     const { getByText } = render(<OnboardingScreen />)
 
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     fireEvent.press(getByText('Débutant'))
     fireEvent.press(getByText('Suivant'))
     expect(getByText('Quel est ton objectif ?')).toBeTruthy()
@@ -114,6 +118,7 @@ describe('OnboardingScreen — étape 2 (objectif)', () => {
 
     const { getByText } = render(<OnboardingScreen />)
 
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     fireEvent.press(getByText('Débutant'))
     fireEvent.press(getByText('Suivant'))
     fireEvent.press(getByText('Force'))
@@ -128,6 +133,7 @@ describe('OnboardingScreen — étape 2 (objectif)', () => {
   it('ne confirme pas si aucun objectif sélectionné', async () => {
     const { getByText } = render(<OnboardingScreen />)
 
+    fireEvent.press(getByText('Suivant')) // avance de l'étape 0 (langue) à l'étape 1
     fireEvent.press(getByText('Débutant'))
     fireEvent.press(getByText('Suivant'))
 

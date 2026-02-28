@@ -10,14 +10,12 @@ import { Button } from '../components/Button'
 import { useHaptics } from '../hooks/useHaptics'
 import { spacing, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
+import type { Language } from '../i18n'
 import {
   USER_LEVELS,
   USER_GOALS,
-  USER_LEVEL_LABELS,
-  USER_LEVEL_DESCRIPTIONS,
-  USER_GOAL_LABELS,
-  USER_GOAL_DESCRIPTIONS,
   type UserLevel,
   type UserGoal,
 } from '../model/constants'
@@ -30,18 +28,34 @@ export default function OnboardingScreen() {
   const styles = useStyles(colors)
   const navigation = useNavigation<OnboardingNavigation>()
   const haptics = useHaptics()
+  const { t, language, setLanguage } = useLanguage()
 
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<0 | 1 | 2>(0)
   const [selectedLevel, setSelectedLevel] = useState<UserLevel | null>(null)
   const [selectedGoal, setSelectedGoal] = useState<UserGoal | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const handleNext = () => {
+  const handleSelectLanguage = async (lang: Language) => {
+    haptics.onSelect()
+    await setLanguage(lang)
+  }
+
+  const handleNextFromLanguage = () => {
+    haptics.onPress()
+    setStep(1)
+  }
+
+  const handleNextFromLevel = () => {
     haptics.onPress()
     setStep(2)
   }
 
-  const handleBack = () => {
+  const handleBackToLanguage = () => {
+    haptics.onSelect()
+    setStep(0)
+  }
+
+  const handleBackToLevel = () => {
     haptics.onSelect()
     setStep(1)
   }
@@ -66,10 +80,7 @@ export default function OnboardingScreen() {
       haptics.onSuccess()
 
       if (Platform.OS === 'android') {
-        ToastAndroid.show(
-          'Pour modifier vos préférences, rendez-vous dans Paramètres',
-          ToastAndroid.LONG
-        )
+        ToastAndroid.show(t.onboarding.confirmHint, ToastAndroid.LONG)
       }
 
       navigation.replace('Home')
@@ -82,29 +93,31 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Progress dots */}
+        {/* Progress dots — 3 steps */}
         <View style={styles.dotsRow}>
+          <View style={[styles.dot, step === 0 && styles.dotActive]} />
           <View style={[styles.dot, step === 1 && styles.dotActive]} />
           <View style={[styles.dot, step === 2 && styles.dotActive]} />
         </View>
 
-        {step === 1 ? (
+        {step === 0 ? (
           <>
-            <Text style={styles.title}>Quel est ton niveau ?</Text>
-            <Text style={styles.subtitle}>
-              Influence la difficulté des exercices suggérés et les poids de départ
-            </Text>
+            <Text style={styles.title}>{t.onboarding.language.title}</Text>
+            <Text style={styles.subtitle}>{t.onboarding.language.subtitle}</Text>
 
             <View style={styles.cardsContainer}>
-              {USER_LEVELS.map(level => (
-                <OnboardingCard
-                  key={level}
-                  label={USER_LEVEL_LABELS[level]}
-                  description={USER_LEVEL_DESCRIPTIONS[level]}
-                  selected={selectedLevel === level}
-                  onPress={() => setSelectedLevel(level)}
-                />
-              ))}
+              <OnboardingCard
+                label={t.onboarding.language.fr}
+                description={t.onboarding.language.frDesc}
+                selected={language === 'fr'}
+                onPress={() => handleSelectLanguage('fr')}
+              />
+              <OnboardingCard
+                label={t.onboarding.language.en}
+                description={t.onboarding.language.enDesc}
+                selected={language === 'en'}
+                onPress={() => handleSelectLanguage('en')}
+              />
             </View>
 
             <View style={styles.footer}>
@@ -112,26 +125,60 @@ export default function OnboardingScreen() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                onPress={handleNext}
-                disabled={selectedLevel === null}
+                onPress={handleNextFromLanguage}
               >
-                Suivant
+                {t.common.next}
+              </Button>
+            </View>
+          </>
+        ) : step === 1 ? (
+          <>
+            <Text style={styles.title}>{t.onboarding.level.title}</Text>
+            <Text style={styles.subtitle}>{t.onboarding.level.subtitle}</Text>
+
+            <View style={styles.cardsContainer}>
+              {USER_LEVELS.map(level => (
+                <OnboardingCard
+                  key={level}
+                  label={t.onboarding.levels[level]}
+                  description={t.onboarding.levelDescriptions[level]}
+                  selected={selectedLevel === level}
+                  onPress={() => setSelectedLevel(level)}
+                />
+              ))}
+            </View>
+
+            <View style={styles.footerRow}>
+              <Button
+                variant="secondary"
+                size="lg"
+                onPress={handleBackToLanguage}
+                style={styles.backButton}
+              >
+                {t.common.back}
+              </Button>
+              <Button
+                variant="primary"
+                size="lg"
+                onPress={handleNextFromLevel}
+                disabled={selectedLevel === null}
+                style={styles.confirmButton}
+              >
+                {t.common.next}
               </Button>
             </View>
           </>
         ) : (
           <>
-            <Text style={styles.title}>Quel est ton objectif ?</Text>
-            <Text style={styles.subtitle}>
-              Influence les plages de répétitions et le type de programmes recommandés
-            </Text>
+            <Text style={styles.title}>{t.onboarding.goal.title}</Text>
+            <Text style={styles.subtitle}>{t.onboarding.goal.subtitle}</Text>
 
             <View style={styles.cardsContainer}>
               {USER_GOALS.map(goal => (
                 <OnboardingCard
                   key={goal}
-                  label={USER_GOAL_LABELS[goal]}
-                  description={USER_GOAL_DESCRIPTIONS[goal]}
+                  label={t.onboarding.goals[goal]}
+                  description={t.onboarding.goalDescriptions[goal]}
                   selected={selectedGoal === goal}
                   onPress={() => setSelectedGoal(goal)}
                 />
@@ -142,10 +189,10 @@ export default function OnboardingScreen() {
               <Button
                 variant="secondary"
                 size="lg"
-                onPress={handleBack}
+                onPress={handleBackToLevel}
                 style={styles.backButton}
               >
-                Retour
+                {t.common.back}
               </Button>
               <Button
                 variant="primary"
@@ -154,7 +201,7 @@ export default function OnboardingScreen() {
                 disabled={selectedGoal === null || isSaving}
                 style={styles.confirmButton}
               >
-                Confirmer
+                {t.common.confirm}
               </Button>
             </View>
           </>

@@ -22,6 +22,7 @@ import { useExerciseManager } from '../hooks/useExerciseManager'
 import { fontSize, spacing, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
+import { useLanguage } from '../contexts/LanguageContext'
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true)
@@ -70,6 +71,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
   const styles = useStyles(colors)
   const navigation = useNavigation<ExercisesNavigation>()
   const haptics = useHaptics()
+  const { t } = useLanguage()
   const slideAnim = useKeyboardAnimation(-200)
   const [keyboardVisible, setKeyboardVisible] = useState(false)
   const { searchQuery, setSearchQuery, filterMuscle, setFilterMuscle, filterEquipment, setFilterEquipment, filteredExercises } = useExerciseFilters(exercises)
@@ -192,14 +194,14 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Ionicons name="search-outline" size={16} color={colors.placeholder} />
-                  <Text style={styles.searchFakeText}>Rechercher un exercice...</Text>
+                  <Text style={styles.searchFakeText}>{t.exercises.search}</Text>
                 </View>
               </TouchableOpacity>
             ) : (
               <View style={styles.searchBarContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Tapez le nom..."
+                  placeholder={t.exercises.typeName}
                   placeholderTextColor={colors.textSecondary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -211,7 +213,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
                     setSearchQuery('')
                   }}
                 >
-                  <Text style={styles.closeSearchText}>Fermer</Text>
+                  <Text style={styles.closeSearchText}>{t.common.close}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -221,14 +223,14 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
               items={MUSCLES_LIST}
               selectedValue={filterMuscle}
               onChange={setFilterMuscle}
-              noneLabel="Tous muscles"
+              noneLabel={t.exercises.allMuscles}
               style={styles.filterRow}
             />
             <ChipSelector
               items={EQUIPMENT_LIST}
               selectedValue={filterEquipment}
               onChange={setFilterEquipment}
-              noneLabel="Tout équipement"
+              noneLabel={t.exercises.allEquipment}
               style={[styles.filterRow, { marginTop: HEADER_PADDING_V }]}
             />
           </View>
@@ -242,7 +244,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
               style={styles.list}
               contentContainerStyle={{ paddingHorizontal: SCREEN_PADDING_H, paddingBottom: LIST_PADDING_BOTTOM }}
               ItemSeparatorComponent={renderSeparator}
-              ListEmptyComponent={<Text style={styles.emptyList}>Aucun exercice trouvé.</Text>}
+              ListEmptyComponent={<Text style={styles.emptyList}>{t.exercises.noExercises}</Text>}
             />
           </View>
 
@@ -255,7 +257,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
                   setIsAddModalVisible(true)
                 }}
               >
-                <Text style={styles.addButtonText}>+ Créer un exercice</Text>
+                <Text style={styles.addButtonText}>{t.exercises.createExercise}</Text>
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -264,29 +266,29 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
 
           <BottomSheet visible={isOptionsVisible} onClose={() => setIsOptionsVisible(false)} title={selectedExercise?.name}>
             <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); if (selectedExercise) loadExerciseForEdit(selectedExercise); setIsEditModalVisible(true); }}>
-              <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: spacing.ms }} /><Text style={styles.sheetText}>Modifier l'exercice</Text>
+              <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: spacing.ms }} /><Text style={styles.sheetText}>{t.exercises.editTitle}</Text>
             </TouchableOpacity>
             {selectedExercise?.isCustom && (
               <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); setIsAlertVisible(true); }}>
-                <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: spacing.ms }} /><Text style={[styles.sheetText, { color: colors.danger }]}>Supprimer l'exercice</Text>
+                <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: spacing.ms }} /><Text style={[styles.sheetText, { color: colors.danger }]}>{t.exercises.deleteTitle}</Text>
               </TouchableOpacity>
             )}
           </BottomSheet>
 
-          <CustomModal visible={isEditModalVisible} title="Renommer l'exercice" onClose={() => setIsEditModalVisible(false)}
+          <CustomModal visible={isEditModalVisible} title={t.exercises.editTitle} onClose={() => setIsEditModalVisible(false)}
             buttons={
                 <>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditModalVisible(false)}><Text style={styles.btnText}>Annuler</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.confirmBtn} onPress={handleUpdateExercise}><Text style={styles.btnText}>Enregistrer</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditModalVisible(false)}><Text style={styles.btnText}>{t.common.cancel}</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.confirmBtn} onPress={handleUpdateExercise}><Text style={styles.btnText}>{t.common.save}</Text></TouchableOpacity>
                 </>
             }
           >
-            <TextInput style={styles.input} value={editExerciseData.name} onChangeText={updateEditExerciseName} placeholder="Nom..." />
-            <Text style={styles.label}>Muscles</Text>
+            <TextInput style={styles.input} value={editExerciseData.name} onChangeText={updateEditExerciseName} placeholder={t.exercises.namePlaceholder} />
+            <Text style={styles.label}>{t.exercises.muscles}</Text>
             <View style={styles.chipsContainer}>
                 {MUSCLES_LIST.map(m => ( <TouchableOpacity key={m} style={[styles.chip, editExerciseData.muscles.includes(m) && styles.chipActive]} onPress={() => updateEditExerciseMuscles(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}><Text style={[styles.chipText, editExerciseData.muscles.includes(m) && styles.chipTextActive]}>{m}</Text></TouchableOpacity> ))}
             </View>
-            <Text style={styles.label}>Équipement</Text>
+            <Text style={styles.label}>{t.exercises.equipment}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.equipRow}>
                 {EQUIPMENT_LIST.map(e => ( <TouchableOpacity key={e} style={[styles.equipBtn, editExerciseData.equipment === e && styles.equipBtnActive]} onPress={() => updateEditExerciseEquipment(e)}><Text style={[styles.equipText, editExerciseData.equipment === e && styles.equipTextActive]}>{e}</Text></TouchableOpacity> ))}
             </ScrollView>
@@ -294,23 +296,23 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
 
           <AlertDialog
             visible={isAlertVisible}
-            title={`Supprimer ${selectedExercise?.name} ?`}
-            message="Cette action supprimera l'exercice de vos séances et statistiques."
+            title={`${t.common.delete} ${selectedExercise?.name} ?`}
+            message={t.exercises.deleteMessage}
             onConfirm={handleDeleteExercise}
             onCancel={() => setIsAlertVisible(false)}
-            confirmText="Supprimer"
-            cancelText="Annuler"
+            confirmText={t.common.delete}
+            cancelText={t.common.cancel}
           />
 
-          <CustomModal visible={isAddModalVisible} title="Nouvel Exercice" onClose={() => setIsAddModalVisible(false)}
+          <CustomModal visible={isAddModalVisible} title={t.exercises.newTitle} onClose={() => setIsAddModalVisible(false)}
             buttons={
                 <>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAddModalVisible(false)}><Text style={styles.btnText}>Annuler</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.confirmBtn} onPress={handleCreateExercise}><Text style={styles.btnText}>Créer</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAddModalVisible(false)}><Text style={styles.btnText}>{t.common.cancel}</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.confirmBtn} onPress={handleCreateExercise}><Text style={styles.btnText}>{t.exercises.create}</Text></TouchableOpacity>
                 </>
             }
           >
-             <TextInput style={styles.input} value={newExerciseData.name} onChangeText={updateNewExerciseName} placeholder="Nom..." placeholderTextColor={colors.textSecondary} />
+             <TextInput style={styles.input} value={newExerciseData.name} onChangeText={updateNewExerciseName} placeholder={t.exercises.namePlaceholder} placeholderTextColor={colors.textSecondary} />
                 <View style={styles.chipsContainer}>
                   {MUSCLES_LIST.map(m => (<TouchableOpacity key={m} style={[styles.chip, newExerciseData.muscles.includes(m) && styles.chipActive]} onPress={() => updateNewExerciseMuscles(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}><Text style={[styles.chipText, newExerciseData.muscles.includes(m) && styles.chipTextActive]}>{m}</Text></TouchableOpacity>))}
                 </View>

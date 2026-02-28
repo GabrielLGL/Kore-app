@@ -8,6 +8,7 @@ import type { RouteProp } from '@react-navigation/native'
 import { importGeneratedPlan, importGeneratedSession } from '../model/utils/databaseHelpers'
 import { useHaptics } from '../hooks/useHaptics'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { spacing, fontSize, borderRadius } from '../theme'
 import type { ThemeColors } from '../theme'
 import type { RootStackParamList } from '../navigation/index'
@@ -27,6 +28,7 @@ export default function AssistantPreviewScreen({ navigation, route }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const { t } = useLanguage()
 
   const [programName, setProgramName] = useState(plan.name)
   const [isSaving, setIsSaving] = useState(false)
@@ -67,7 +69,7 @@ export default function AssistantPreviewScreen({ navigation, route }: Props) {
           style={styles.nameInput}
           value={programName}
           onChangeText={setProgramName}
-          placeholder="Nom du programme"
+          placeholder={t.assistantPreview.programNamePlaceholder}
           placeholderTextColor={colors.textSecondary}
           maxLength={60}
         />
@@ -75,7 +77,7 @@ export default function AssistantPreviewScreen({ navigation, route }: Props) {
 
       {/* ── Résumé ── */}
       <Text style={styles.summary}>
-        {plan.sessions.length} séance{plan.sessions.length > 1 ? 's' : ''} · {totalExercises} exercice{totalExercises > 1 ? 's' : ''}
+        {plan.sessions.length} {plan.sessions.length > 1 ? t.assistantPreview.sessions : t.assistantPreview.session} · {totalExercises} {totalExercises > 1 ? t.assistantPreview.exercises : t.assistantPreview.exercise}
       </Text>
 
       {/* ── Liste des séances ── */}
@@ -91,10 +93,10 @@ export default function AssistantPreviewScreen({ navigation, route }: Props) {
               <View key={eIdx} style={styles.exerciseRow}>
                 <Text style={styles.exerciseName}>{ex.exerciseName}</Text>
                 <Text style={styles.exerciseSets}>
-                  {ex.setsTarget} série{ex.setsTarget > 1 ? 's' : ''} × {ex.repsTarget} reps
+                  {ex.setsTarget} {ex.setsTarget > 1 ? t.assistantPreview.setsPlural : t.assistantPreview.sets} × {ex.repsTarget} reps
                 </Text>
                 {ex.restSeconds !== undefined && ex.restSeconds > 0 && (
-                  <Text style={styles.exerciseRest}>repos : {ex.restSeconds}s</Text>
+                  <Text style={styles.exerciseRest}>{t.assistantPreview.rest} : {ex.restSeconds}s</Text>
                 )}
               </View>
             ))}
@@ -105,13 +107,13 @@ export default function AssistantPreviewScreen({ navigation, route }: Props) {
       {/* ── Boutons sticky ── */}
       <View style={styles.bottomRow}>
         <TouchableOpacity style={[styles.btn, styles.btnSecondary]} onPress={handleModify} disabled={isSaving}>
-          <Text style={styles.btnSecondaryText}>Modifier</Text>
+          <Text style={styles.btnSecondaryText}>{t.assistantPreview.modify}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.btn, styles.btnPrimary, isSaving && styles.btnDisabled]} onPress={handleValidate} disabled={isSaving}>
           {isSaving ? (
             <ActivityIndicator size="small" color={colors.text} />
           ) : (
-            <Text style={styles.btnPrimaryText}>Valider</Text>
+            <Text style={styles.btnPrimaryText}>{t.assistantPreview.validate}</Text>
           )}
         </TouchableOpacity>
       </View>

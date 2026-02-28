@@ -21,6 +21,7 @@ import Session from '../model/models/Session'
 import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 import type { RootStackParamList } from '../navigation'
@@ -43,7 +44,9 @@ interface Props {
 function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
+  const { t, language } = useLanguage()
   const { width: screenWidth } = useWindowDimensions()
+  const dateLocale = language === 'fr' ? 'fr-FR' : 'en-US'
 
   const statsForExercise = useMemo(
     () => buildExerciseStatsFromData(setsForExercise, histories, sessions),
@@ -95,20 +98,20 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
       <View style={styles.prCard}>
         <View style={styles.prHeader}>
           <Ionicons name="trophy-outline" size={20} color={colors.warning} />
-          <Text style={styles.prTitle}>Record personnel</Text>
+          <Text style={styles.prTitle}>{t.exerciseHistory.pr}</Text>
         </View>
         {pr ? (
           <>
             <Text style={styles.prValue}>{pr.weight} kg × {pr.reps} reps</Text>
-            <Text style={styles.prOneRM}>1RM estimé : ~{oneRM} kg</Text>
+            <Text style={styles.prOneRM}>{t.exerciseHistory.prOneRM}{oneRM} {t.exerciseHistory.prOneRMUnit}</Text>
           </>
         ) : (
-          <Text style={styles.prEmpty}>Aucun record enregistré</Text>
+          <Text style={styles.prEmpty}>{t.exerciseHistory.prEmpty}</Text>
         )}
       </View>
 
       {/* Chart */}
-      <Text style={styles.sectionTitle}>Évolution du poids</Text>
+      <Text style={styles.sectionTitle}>{t.exerciseHistory.weightEvolution}</Text>
       {chartData ? (
         <View style={styles.chartWrapper}>
           <LineChart
@@ -125,19 +128,19 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
-            Enregistrez au moins 2 séances pour voir l'évolution.
+            {t.exerciseHistory.chartEmpty}
           </Text>
         </View>
       )}
 
       {/* History list */}
       <Text style={[styles.sectionTitle, styles.historySectionTitle]}>
-        Historique complet ({statsForExercise.length} séances)
+        {t.exerciseHistory.fullHistory} ({statsForExercise.length} {statsForExercise.length !== 1 ? t.home.sessions : t.home.session})
       </Text>
 
       {reversedStats.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Aucune séance enregistrée pour cet exercice.</Text>
+          <Text style={styles.emptyText}>{t.exerciseHistory.noHistory}</Text>
         </View>
       ) : (
         <View style={styles.historyCard}>
@@ -148,7 +151,7 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
                 <View style={styles.historyInfo}>
                   <Text style={styles.historySession}>{stat.sessionName}</Text>
                   <Text style={styles.historyDate}>
-                    {stat.startTime.toLocaleDateString('fr-FR', {
+                    {stat.startTime.toLocaleDateString(dateLocale, {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -158,7 +161,7 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
                 <View style={styles.historySets}>
                   {stat.sets.map((s, si) => (
                     <Text key={si} style={styles.setChip}>
-                      {s.weight > 0 ? `${s.weight} kg` : 'PC'} × {s.reps}
+                      {s.weight > 0 ? `${s.weight} kg` : t.exerciseHistory.bodyweight} × {s.reps}
                     </Text>
                   ))}
                 </View>

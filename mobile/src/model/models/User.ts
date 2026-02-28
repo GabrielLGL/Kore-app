@@ -45,6 +45,9 @@ export default class User extends Model {
   // Thème dynamique — version 23
   @text('theme_mode') themeMode!: string | null
 
+  // Langue — version 26
+  @text('language_mode') languageMode!: string | null
+
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
 }

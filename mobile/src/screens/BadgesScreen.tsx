@@ -17,6 +17,7 @@ import {
 import { BadgeCard } from '../components/BadgeCard'
 import { spacing, fontSize, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 
 // ─── Ordre d'affichage des catégories ─────────────────────────────────────────
@@ -40,6 +41,7 @@ interface Props {
 function BadgesScreenBase({ userBadges }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
+  const { t } = useLanguage()
 
   const unlockedIds = useMemo(
     () => new Set(userBadges.map(b => b.badgeId)),
@@ -79,7 +81,7 @@ function BadgesScreenBase({ userBadges }: Props) {
       {/* Compteur total */}
       <View style={styles.counterRow}>
         <Text style={styles.counterText}>
-          {unlockedIds.size}/{BADGES_LIST.length} badges d\u00e9bloqu\u00e9s
+          {unlockedIds.size}/{BADGES_LIST.length} {t.badges.unlocked}
         </Text>
       </View>
 

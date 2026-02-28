@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 25, // v25 : vibration_enabled + timer_sound_enabled
+  version: 26, // v26 : language_mode
   tables: [
     tableSchema({
       name: 'programs',
@@ -86,6 +86,7 @@ export const mySchema = appSchema({
             {name: 'last_workout_week', type: 'string', isOptional: true},
             {name: 'total_prs', type: 'number'},
             {name: 'theme_mode', type: 'string', isOptional: true},
+            {name: 'language_mode', type: 'string', isOptional: true},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
         ]

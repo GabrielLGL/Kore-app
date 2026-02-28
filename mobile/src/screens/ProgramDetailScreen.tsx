@@ -15,6 +15,7 @@ import { AlertDialog } from '../components/AlertDialog'
 import { useProgramManager } from '../hooks/useProgramManager'
 import { useHaptics } from '../hooks/useHaptics'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { RootStackParamList } from '../navigation/index'
 import { fontSize, spacing, borderRadius } from '../theme'
 import type { ThemeColors } from '../theme'
@@ -31,6 +32,7 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const { t } = useLanguage()
 
   const {
     sessionNameInput,
@@ -49,6 +51,7 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
 
   const [isSessionModalVisible, setIsSessionModalVisible] = useState(false)
   const [isSessionOptionsVisible, setIsSessionOptionsVisible] = useState(false)
+  const [isAddSessionChoiceVisible, setIsAddSessionChoiceVisible] = useState(false)
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [alertConfig, setAlertConfig] = useState({ title: '', message: '', onConfirm: async () => {} })
 
@@ -66,11 +69,22 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
 
   const handleAddSession = useCallback(() => {
     haptics.onPress()
+    setIsAddSessionChoiceVisible(true)
+  }, [haptics])
+
+  const handleAddSessionManual = useCallback(() => {
+    setIsAddSessionChoiceVisible(false)
     setTargetProgram(program)
     setIsRenamingSession(false)
     setSessionNameInput('')
     setIsSessionModalVisible(true)
-  }, [haptics, program, setTargetProgram, setIsRenamingSession, setSessionNameInput])
+  }, [program, setTargetProgram, setIsRenamingSession, setSessionNameInput])
+
+  const handleAddSessionAI = useCallback(() => {
+    haptics.onPress()
+    setIsAddSessionChoiceVisible(false)
+    navigation.navigate('Assistant', { sessionMode: { targetProgramId: program.id } })
+  }, [haptics, navigation, program.id])
 
   const handleSaveSession = async () => {
     const success = await saveSession()
@@ -114,14 +128,36 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
         renderItem={renderSession}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Aucune séance pour l'instant</Text>
+          <Text style={styles.emptyText}>{t.programDetail.noSessions}</Text>
         }
         ListFooterComponent={
           <TouchableOpacity style={styles.addButton} onPress={handleAddSession}>
-            <Text style={styles.addButtonText}>+ Ajouter une séance</Text>
+            <Text style={styles.addButtonText}>{t.programDetail.addSession}</Text>
           </TouchableOpacity>
         }
       />
+
+      {/* Choix ajout séance : manuel ou IA */}
+      <BottomSheet
+        visible={isAddSessionChoiceVisible}
+        onClose={() => setIsAddSessionChoiceVisible(false)}
+        title={t.programDetail.addSessionTitle}
+      >
+        <TouchableOpacity style={styles.sheetOption} onPress={handleAddSessionManual}>
+          <Ionicons name="pencil-outline" size={20} color={colors.text} style={styles.sheetIcon} />
+          <View>
+            <Text style={styles.sheetOptionText}>{t.programDetail.createManually}</Text>
+            <Text style={styles.sheetOptionSub}>{t.programDetail.createManuallyDesc}</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.sheetOption} onPress={handleAddSessionAI}>
+          <Ionicons name="hardware-chip-outline" size={20} color={colors.primary} style={styles.sheetIcon} />
+          <View>
+            <Text style={styles.sheetOptionText}>{t.programDetail.generateWithAI}</Text>
+            <Text style={styles.sheetOptionSub}>{t.programDetail.generateWithAIDesc}</Text>
+          </View>
+        </TouchableOpacity>
+      </BottomSheet>
 
       {/* Options Séance BottomSheet */}
       <BottomSheet
@@ -142,15 +178,15 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
           }}
         >
           <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} />
-          <Text style={styles.sheetOptionText}>Renommer la Séance</Text>
+          <Text style={styles.sheetOptionText}>{t.programDetail.renameSession}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateSession}>
           <Ionicons name="copy-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} />
-          <Text style={styles.sheetOptionText}>Dupliquer la Séance</Text>
+          <Text style={styles.sheetOptionText}>{t.programDetail.duplicateSession}</Text>
         </TouchableOpacity>
         {programs.length > 1 && (
           <>
-            <Text style={styles.sectionLabel}>Déplacer vers :</Text>
+            <Text style={styles.sectionLabel}>{t.programDetail.moveTo}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moveRow}>
               {programs.filter(p => p.id !== program.id).map(p => (
                 <TouchableOpacity key={p.id} style={styles.moveChip} onPress={() => handleMoveSession(p)}>
@@ -165,22 +201,22 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
           onPress={() => {
             setIsSessionOptionsVisible(false)
             setAlertConfig({
-              title: `Supprimer ${selectedSession?.name} ?`,
-              message: 'Supprimer cette séance ?',
+              title: `${t.common.delete} ${selectedSession?.name} ?`,
+              message: `${t.common.delete} ?`,
               onConfirm: async () => { await deleteSession() },
             })
             setIsAlertVisible(true)
           }}
         >
           <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: 20, width: 30 }} />
-          <Text style={[styles.sheetOptionText, { color: colors.danger }]}>Supprimer la Séance</Text>
+          <Text style={[styles.sheetOptionText, { color: colors.danger }]}>{t.programDetail.deleteSession}</Text>
         </TouchableOpacity>
       </BottomSheet>
 
       {/* Session Modal (Création / Renommage) */}
       <CustomModal
         visible={isSessionModalVisible}
-        title={isRenamingSession ? 'Renommer la séance' : 'Ajouter une séance'}
+        title={isRenamingSession ? t.programDetail.renameSessionTitle : t.programDetail.addSessionTitle}
         onClose={() => setIsSessionModalVisible(false)}
         buttons={
           <>
@@ -188,13 +224,13 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
               style={[styles.modalButton, { backgroundColor: colors.secondaryButton }]}
               onPress={() => setIsSessionModalVisible(false)}
             >
-              <Text style={styles.buttonText}>Annuler</Text>
+              <Text style={styles.buttonText}>{t.common.cancel}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleSaveSession}
             >
-              <Text style={styles.buttonText}>Valider</Text>
+              <Text style={styles.buttonText}>{t.common.validate}</Text>
             </TouchableOpacity>
           </>
         }
@@ -205,7 +241,7 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
           onChangeText={setSessionNameInput}
           autoFocus
           placeholderTextColor={colors.textSecondary}
-          placeholder="ex : Push ou Pull"
+          placeholder={t.programDetail.sessionNamePlaceholder}
         />
       </CustomModal>
 
@@ -219,8 +255,8 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
           setIsAlertVisible(false)
         }}
         onCancel={() => setIsAlertVisible(false)}
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
       />
     </SafeAreaView>
   )
@@ -259,6 +295,8 @@ function useStyles(colors: ThemeColors) {
       borderBottomColor: colors.cardSecondary,
     },
     sheetOptionText: { color: colors.text, fontSize: 17, fontWeight: '500' },
+    sheetOptionSub: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
+    sheetIcon: { marginRight: spacing.ms, width: 28 },
     sectionLabel: {
       color: colors.textSecondary,
       fontSize: fontSize.xs,

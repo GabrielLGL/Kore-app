@@ -48,6 +48,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation'
 import { spacing, fontSize, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import type { RecapExerciseData, RecapComparisonData } from '../types/workout'
 import {
@@ -70,6 +71,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
 }) => {
   const colors = useColors()
   const styles = useStyles(colors)
+  const { t } = useLanguage()
   const startTimestampRef = useRef<number>(Date.now())
   const historyRef = useRef<History | null>(null)
   const notificationPermissionRef = useRef<boolean>(false)
@@ -176,8 +178,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const handleConfirmEnd = async () => {
     const now = Date.now()
     setDurationSeconds(Math.floor((now - startTimestampRef.current) / 1000))
-    if (historyId) {
-      await completeWorkoutHistory(historyId, now).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (end):', e) })
+    const activeHistoryId = historyRef.current?.id || historyId
+    if (activeHistoryId) {
+      await completeWorkoutHistory(activeHistoryId, now).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (end):', e) })
     }
 
     // ── Gamification ──
@@ -331,8 +334,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   }
 
   const handleConfirmAbandon = async () => {
-    if (historyId) {
-      await completeWorkoutHistory(historyId, Date.now()).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (abandon):', e) })
+    const activeHistoryId = historyRef.current?.id || historyId
+    if (activeHistoryId) {
+      await completeWorkoutHistory(activeHistoryId, Date.now()).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (abandon):', e) })
     }
     setAbandonVisible(false)
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
@@ -417,10 +421,10 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       {/* AlertDialog — confirmation fin de seance */}
       <AlertDialog
         visible={confirmEndVisible}
-        title="Terminer la séance ?"
-        message="Les séries non validées ne seront pas enregistrées."
-        confirmText="Terminer"
-        cancelText="Continuer"
+        title={t.workout.finishTitle}
+        message={t.workout.finishMessage}
+        confirmText={t.workout.finishConfirm}
+        cancelText={t.workout.continueLabel}
         confirmColor={colors.primary}
         onConfirm={handleConfirmEnd}
         onCancel={() => setConfirmEndVisible(false)}
@@ -429,10 +433,10 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       {/* AlertDialog — abandon seance (back Android) */}
       <AlertDialog
         visible={abandonVisible}
-        title="Abandonner la séance ?"
-        message="Les séries déjà validées seront conservées."
-        confirmText="Abandonner"
-        cancelText="Continuer"
+        title={t.workout.abandonTitle}
+        message={t.workout.abandonMessage}
+        confirmText={t.workout.abandonConfirm}
+        cancelText={t.workout.continueLabel}
         confirmColor={colors.danger}
         onConfirm={handleConfirmAbandon}
         onCancel={() => setAbandonVisible(false)}
@@ -441,9 +445,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       {/* AlertDialog — erreur démarrage séance */}
       <AlertDialog
         visible={startErrorVisible}
-        title="Erreur"
-        message="Impossible de démarrer la séance. Veuillez réessayer."
-        confirmText="OK"
+        title={t.workout.errorTitle}
+        message={t.workout.errorMessage}
+        confirmText={t.common.ok}
         confirmColor={colors.primary}
         onConfirm={() => { setStartErrorVisible(false); navigation.goBack() }}
         onCancel={() => { setStartErrorVisible(false); navigation.goBack() }}

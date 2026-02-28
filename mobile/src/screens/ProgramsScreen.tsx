@@ -24,6 +24,7 @@ import { importPresetProgram, markOnboardingCompleted } from '../model/utils/dat
 import type { PresetProgram } from '../model/onboardingPrograms'
 import { fontSize, spacing, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>
@@ -39,6 +40,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const { t } = useLanguage()
   const slideAnim = useKeyboardAnimation(-150)
   const {
     // Program states
@@ -190,7 +192,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
                 })
               } catch (error) {
                 if (__DEV__) console.error('[ProgramsScreen] Drag-and-drop batch update failed:', error)
-                setErrorAlertMessage('Impossible de réorganiser les programmes.')
+                setErrorAlertMessage(t.programs.reorderError)
                 setErrorAlertVisible(true)
               }
             }}
@@ -210,7 +212,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="add-circle-outline" size={20} color={colors.text} />
-              <Text style={styles.btnText}>Créer un Programme</Text>
+              <Text style={styles.btnText}>{t.programs.createTitle}</Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
@@ -221,7 +223,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
         <BottomSheet
           visible={isCreateChoiceVisible}
           onClose={() => setIsCreateChoiceVisible(false)}
-          title="Créer un programme"
+          title={t.programs.createLabel}
         >
           <TouchableOpacity
             style={styles.sheetOption}
@@ -234,7 +236,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             }}
           >
             <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} />
-            <Text style={styles.sheetOptionText}>Soi-même</Text>
+            <Text style={styles.sheetOptionText}>{t.programs.self}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.sheetOption}
@@ -245,22 +247,22 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             }}
           >
             <Ionicons name="hardware-chip-outline" size={20} color={colors.primary} style={{ marginRight: 20, width: 30 }} />
-            <Text style={styles.sheetOptionText}>Automatique</Text>
+            <Text style={styles.sheetOptionText}>{t.programs.automatic}</Text>
           </TouchableOpacity>
         </BottomSheet>
 
         {/* Programme Modal (Création / Renommage) */}
         <CustomModal
           visible={isProgramModalVisible}
-          title={isRenamingProgram ? "Renommer le programme" : "Nouveau programme"}
+          title={isRenamingProgram ? t.programs.renameTitle : t.programs.newTitle}
           onClose={() => setIsProgramModalVisible(false)}
           buttons={
             <>
               <TouchableOpacity style={[styles.modalButton, {backgroundColor: colors.secondaryButton}]} onPress={() => setIsProgramModalVisible(false)}>
-                <Text style={styles.buttonText}>Annuler</Text>
+                <Text style={styles.buttonText}>{t.common.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalButton, {backgroundColor: colors.primary}]} onPress={handleSaveProgram}>
-                <Text style={styles.buttonText}>Valider</Text>
+                <Text style={styles.buttonText}>{t.common.validate}</Text>
               </TouchableOpacity>
             </>
           }
@@ -271,7 +273,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             onChangeText={setProgramNameInput}
             autoFocus
             placeholderTextColor={colors.textSecondary}
-            placeholder="ex : PPL ou Upper Lower"
+            placeholder={t.programs.namePlaceholder}
           />
         </CustomModal>
 
@@ -282,13 +284,13 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
           title={selectedProgram?.name}
         >
           <TouchableOpacity style={styles.sheetOption} onPress={() => { if (selectedProgram) prepareRenameProgram(selectedProgram); setIsOptionsVisible(false); if (renameTimerRef.current) clearTimeout(renameTimerRef.current); renameTimerRef.current = setTimeout(() => { setIsProgramModalVisible(true); renameTimerRef.current = null }, 300) }}>
-            <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>Renommer le Programme</Text>
+            <Ionicons name="pencil-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>{t.programs.rename}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleDuplicateProgram}>
-            <Ionicons name="copy-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>Dupliquer le Programme</Text>
+            <Ionicons name="copy-outline" size={20} color={colors.text} style={{ marginRight: 20, width: 30 }} /><Text style={styles.sheetOptionText}>{t.programs.duplicate}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); setAlertConfig({ title: `Supprimer ${selectedProgram?.name} ?`, message: "Supprimer ce programme et toutes ses séances ?", onConfirm: async () => { await deleteProgram() } }); setIsAlertVisible(true); }}>
-            <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: 20, width: 30 }} /><Text style={[styles.sheetOptionText, { color: colors.danger }]}>Supprimer le Programme</Text>
+          <TouchableOpacity style={styles.sheetOption} onPress={() => { setIsOptionsVisible(false); setAlertConfig({ title: `${t.programs.deleteTitle} ${selectedProgram?.name} ?`, message: t.programs.deleteMessage, onConfirm: async () => { await deleteProgram() } }); setIsAlertVisible(true); }}>
+            <Ionicons name="trash-outline" size={20} color={colors.danger} style={{ marginRight: 20, width: 30 }} /><Text style={[styles.sheetOptionText, { color: colors.danger }]}>{t.programs.delete}</Text>
           </TouchableOpacity>
         </BottomSheet>
 
@@ -302,18 +304,18 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
             setIsAlertVisible(false)
           }}
           onCancel={() => setIsAlertVisible(false)}
-          confirmText="Supprimer"
-          cancelText="Annuler"
+          confirmText={t.common.delete}
+          cancelText={t.common.cancel}
         />
 
         {/* Alerte Erreur */}
         <AlertDialog
           visible={errorAlertVisible}
-          title="Erreur"
+          title={t.programs.errorTitle}
           message={errorAlertMessage}
           onConfirm={() => setErrorAlertVisible(false)}
           onCancel={() => setErrorAlertVisible(false)}
-          confirmText="OK"
+          confirmText={t.common.ok}
           confirmColor={colors.primary}
           hideCancel
         />

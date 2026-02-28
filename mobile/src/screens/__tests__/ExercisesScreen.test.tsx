@@ -266,7 +266,7 @@ describe('ExercisesContent', () => {
     const { getByText } = render(<ExercisesContent exercises={exercises} />)
     fireEvent.press(getByText('•••'))
     fireEvent.press(getByText('Modifier l\'exercice'))
-    expect(getByText('Renommer l\'exercice')).toBeTruthy()
+    expect(getByText('Modifier l\'exercice')).toBeTruthy()
     expect(mockLoadExerciseForEdit).toHaveBeenCalled()
   })
 
@@ -397,6 +397,6 @@ describe('ExercisesContent', () => {
     const { getByText, queryByText } = render(<ExercisesContent exercises={exercises} />)
     fireEvent.press(getByText('•••'))
     fireEvent.press(getByText('Modifier l\'exercice'))
-    expect(getByText('Renommer l\'exercice')).toBeTruthy()
+    expect(getByText('Modifier l\'exercice')).toBeTruthy()
   })
 })

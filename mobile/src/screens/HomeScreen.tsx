@@ -30,6 +30,7 @@ import { MilestoneCelebration } from '../components/MilestoneCelebration'
 import { BadgeCelebration } from '../components/BadgeCelebration'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import { useHaptics } from '../hooks/useHaptics'
 import { LevelBadge } from '../components/LevelBadge'
@@ -61,25 +62,6 @@ interface Section {
   tiles: Tile[]
 }
 
-const SECTIONS: Section[] = [
-  {
-    title: 'Entraînement',
-    tiles: [
-      { icon: 'library-outline', label: 'Programmes', route: 'Programs' },
-      { icon: 'barbell-outline',  label: "Bibliothèque d'exercices", route: 'Exercices' },
-      { icon: 'calendar-outline', label: 'Agenda',                   route: 'StatsCalendar' },
-    ],
-  },
-  {
-    title: 'Statistiques',
-    tiles: [
-      { icon: 'time-outline',    label: 'Durée',   route: 'StatsDuration' },
-      { icon: 'barbell-outline', label: 'Volume',  route: 'StatsVolume' },
-      { icon: 'resize-outline',  label: 'Mesures', route: 'StatsMeasurements' },
-    ],
-  },
-]
-
 /** All navigable routes from the dashboard */
 
 // ─── KPI Item ─────────────────────────────────────────────────────────────────
@@ -110,6 +92,26 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
   const navigation = useNavigation<HomeNavigation>()
   const route = useRoute<HomeRoute>()
   const haptics = useHaptics()
+  const { t } = useLanguage()
+
+  const SECTIONS: Section[] = useMemo(() => [
+    {
+      title: t.home.sections.training,
+      tiles: [
+        { icon: 'library-outline', label: t.home.tiles.programs,  route: 'Programs' },
+        { icon: 'barbell-outline',  label: t.home.tiles.exercises, route: 'Exercices' },
+        { icon: 'calendar-outline', label: t.home.tiles.calendar,  route: 'StatsCalendar' },
+      ],
+    },
+    {
+      title: t.home.sections.stats,
+      tiles: [
+        { icon: 'time-outline',    label: t.home.tiles.duration, route: 'StatsDuration' },
+        { icon: 'barbell-outline', label: t.home.tiles.volume,   route: 'StatsVolume' },
+        { icon: 'resize-outline',  label: t.home.tiles.measures, route: 'StatsMeasurements' },
+      ],
+    },
+  ], [t])
 
   const [celebrationQueue, setCelebrationQueue] = useState<CelebrationItem[]>([])
   const [currentCelebration, setCurrentCelebration] = useState<CelebrationItem | null>(null)
@@ -179,7 +181,7 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
         <View style={styles.headerTopRow}>
           <View style={styles.headerTextBlock}>
             <Text style={styles.greeting}>
-              Salut, {user?.name || 'Toi'} !
+              {t.home.greeting.replace('{name}', user?.name || t.stats.defaultName)}
             </Text>
             <Text style={styles.motivation}>{motivationalPhrase}</Text>
           </View>
@@ -196,13 +198,13 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
         </View>
         <View style={styles.separator} />
         <View style={styles.kpisRow}>
-          <KpiItem label="Séances" value={String(kpis.totalSessions)} colors={colors} />
+          <KpiItem label={t.home.tiles.sessions} value={String(kpis.totalSessions)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Volume" value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
+          <KpiItem label={t.home.tiles.volume} value={formatVolume(kpis.totalVolumeKg)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Tonnage" value={formatTonnage(user?.totalTonnage ?? 0)} colors={colors} />
+          <KpiItem label={t.home.tiles.tonnage} value={formatTonnage(user?.totalTonnage ?? 0)} colors={colors} />
           <View style={styles.kpiSeparator} />
-          <KpiItem label="Records" value={String(kpis.totalPRs)} colors={colors} />
+          <KpiItem label={t.home.tiles.records} value={String(kpis.totalPRs)} colors={colors} />
         </View>
       </View>
 
@@ -229,7 +231,7 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
         >
           <View style={styles.badgesLabelRow}>
             <Ionicons name="medal-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.badgesLabel}>Mes Badges</Text>
+            <Text style={styles.badgesLabel}>{t.home.tiles.badges}</Text>
           </View>
           <Text style={styles.badgesCount}>
             {userBadges.length}/{BADGES_LIST.length} {'\u203A'}
@@ -240,15 +242,15 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
       {/* ── Card Activité Semaine ── */}
       <View style={styles.weeklyCard}>
         <View style={styles.weeklyHeader}>
-          <Text style={styles.sectionTitle}>Cette semaine</Text>
+          <Text style={styles.sectionTitle}>{t.home.weeklyActivity}</Text>
           <Text style={styles.weeklySubtitle}>
             {(() => {
               const totalSessions = weeklyActivity.reduce((acc, d) => acc + d.sessions.length, 0)
-              if (totalSessions === 0) return 'Aucune séance'
+              if (totalSessions === 0) return t.home.noSessions
               const totalVolume = weeklyActivity.reduce(
                 (acc, d) => acc + d.sessions.reduce((a, s) => a + s.volumeKg, 0), 0
               )
-              return `${totalSessions} séance${totalSessions > 1 ? 's' : ''} · ${Math.round(totalVolume)} kg`
+              return `${totalSessions} ${totalSessions > 1 ? t.home.sessions : t.home.session} · ${Math.round(totalVolume)} kg`
             })()}
           </Text>
         </View>
@@ -273,13 +275,13 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
                   <View key={idx} style={styles.sessionTag}>
                     <Text style={styles.sessionName} numberOfLines={1}>{s.sessionName}</Text>
                     <Text style={styles.sessionMeta}>
-                      {s.setCount} sér{s.durationMin !== null ? ` · ${s.durationMin}m` : ''}
+                      {s.setCount} {t.home.series}{s.durationMin !== null ? ` · ${s.durationMin}m` : ''}
                     </Text>
                   </View>
                 ))
               ) : (
                 <View style={styles.emptyDay}>
-                  <Text style={styles.emptyDayText}>{day.isPast ? 'Repos' : '—'}</Text>
+                  <Text style={styles.emptyDayText}>{day.isPast ? t.home.rest : '—'}</Text>
                 </View>
               )}
             </View>

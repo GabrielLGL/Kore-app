@@ -28,6 +28,8 @@ module.exports = {
       '<rootDir>/__mocks__/fileMock.js',
     // Mock ThemeContext pour éviter la dépendance transitoire → database → SQLiteAdapter
     '.*\\/contexts\\/ThemeContext': '<rootDir>/__mocks__/ThemeContextMock.ts',
+    // Mock LanguageContext pour éviter la dépendance transitoire → database → SQLiteAdapter
+    '.*\\/contexts\\/LanguageContext': '<rootDir>/__mocks__/LanguageContextMock.ts',
     // Mock @expo/vector-icons pour éviter loadedNativeFonts en environnement Jest
     '@expo/vector-icons': '<rootDir>/__mocks__/vectorIconsMock.js',
   },

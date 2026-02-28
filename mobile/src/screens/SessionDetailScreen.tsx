@@ -21,6 +21,7 @@ import { RootStackParamList } from '../navigation'
 import { fontSize, spacing, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
+import { useLanguage } from '../contexts/LanguageContext'
 
 interface Props {
   session: Session
@@ -35,6 +36,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const { t } = useLanguage()
   const {
     // Target inputs states
     targetSets,
@@ -96,8 +98,8 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
 
   const showRemoveAlert = (se: SessionExercise, exoName: string) => {
     setAlertConfig({
-      title: `Supprimer ${exoName} ?`,
-      message: "Voulez-vous vraiment retirer cet exercice de cette séance ?",
+      title: `${t.sessionDetail.delete} ${exoName} ?`,
+      message: t.sessionDetail.removeConfirmMessage,
       onConfirm: async () => {
         await removeExercise(se)
       }
@@ -129,7 +131,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
           )}
           onDragEnd={({ data }) => reorderExercises(data)}
           contentContainerStyle={{ paddingHorizontal: 0, paddingTop: FOOTER_PADDING_TOP, paddingBottom: LIST_PADDING_BOTTOM }}
-          ListEmptyComponent={<Text style={styles.emptyText}>Ajoutez un exercice pour commencer.</Text>}
+          ListEmptyComponent={<Text style={styles.emptyText}>{t.sessionDetail.noExercises}</Text>}
         />
       </View>
 
@@ -142,7 +144,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
           }}
           disabled={sessionExercises.length === 0}
         >
-          <Text style={styles.launchButtonText}>▶ LANCER L'ENTRAINEMENT</Text>
+          <Text style={styles.launchButtonText}>{t.sessionDetail.startWorkout}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.addButton}
@@ -151,7 +153,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
             setIsAddModalVisible(true)
           }}
         >
-          <Text style={styles.addButtonText}>+ AJOUTER UN EXERCICE</Text>
+          <Text style={styles.addButtonText}>{t.sessionDetail.addExercise}</Text>
         </TouchableOpacity>
       </View>
 
@@ -174,19 +176,19 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
           setIsAlertVisible(false)
         }}
         onCancel={() => setIsAlertVisible(false)}
-        confirmText="Supprimer"
-        cancelText="Annuler"
+        confirmText={t.common.delete}
+        cancelText={t.common.cancel}
       />
 
       {/* --- MODALE Edition (CustomModal) --- */}
       <CustomModal
         visible={isEditModalVisible}
-        title="Modifier l'objectif"
+        title={t.sessionDetail.editTarget}
         onClose={() => setIsEditModalVisible(false)}
         buttons={
             <>
-            <TouchableOpacity onPress={() => setIsEditModalVisible(false)} style={styles.cancelBtn}><Text style={styles.btnText}>Annuler</Text></TouchableOpacity>
-            <TouchableOpacity onPress={handleUpdateTargets} style={[styles.confirmBtn, !isFormValid && { opacity: 0.3 }]} disabled={!isFormValid}><Text style={styles.btnText}>Enregistrer</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setIsEditModalVisible(false)} style={styles.cancelBtn}><Text style={styles.btnText}>{t.common.cancel}</Text></TouchableOpacity>
+            <TouchableOpacity onPress={handleUpdateTargets} style={[styles.confirmBtn, !isFormValid && { opacity: 0.3 }]} disabled={!isFormValid}><Text style={styles.btnText}>{t.common.save}</Text></TouchableOpacity>
             </>
         }
       >

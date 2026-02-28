@@ -11,6 +11,8 @@ import { database } from '../model/index'
 import User from '../model/models/User'
 import { useHaptics } from '../hooks/useHaptics'
 import { useTheme } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
+import type { Language } from '../i18n'
 import { OnboardingCard } from '../components/OnboardingCard'
 import { AlertDialog } from '../components/AlertDialog'
 import { BottomSheet } from '../components/BottomSheet'
@@ -19,10 +21,6 @@ import { spacing, borderRadius, fontSize } from '../theme'
 import {
   USER_LEVELS,
   USER_GOALS,
-  USER_LEVEL_LABELS,
-  USER_LEVEL_DESCRIPTIONS,
-  USER_GOAL_LABELS,
-  USER_GOAL_DESCRIPTIONS,
   type UserLevel,
   type UserGoal,
 } from '../model/constants'
@@ -34,6 +32,7 @@ interface Props {
 const SettingsContent: React.FC<Props> = ({ user }) => {
   const haptics = useHaptics()
   const { colors, isDark, toggleTheme, neuShadow } = useTheme()
+  const { t, language, setLanguage } = useLanguage()
   const [restDuration, setRestDuration] = useState(user?.restDuration?.toString() ?? '90')
   const [timerEnabled, setTimerEnabled] = useState(user?.timerEnabled ?? true)
   const [vibrationEnabled, setVibrationEnabled] = useState(user?.vibrationEnabled ?? true)
@@ -278,6 +277,30 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       fontSize: fontSize.md,
       fontWeight: '600' as const,
     },
+    languageRow: {
+      flexDirection: 'row' as const,
+      gap: spacing.sm,
+      paddingTop: spacing.sm,
+    },
+    languageBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.sm,
+      backgroundColor: colors.cardSecondary,
+      alignItems: 'center' as const,
+    },
+    languageBtnActive: {
+      backgroundColor: colors.primary,
+    },
+    languageBtnText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
+    },
+    languageBtnTextActive: {
+      color: colors.text,
+    },
     sheetOption: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -511,14 +534,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="person-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Mon profil</Text>
+            <Text style={styles.sectionTitle}>{t.settings.profile.title}</Text>
           </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Prénom</Text>
-              <Text style={styles.settingDescription}>
-                Affiché sur votre dashboard stats
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.profile.name}</Text>
+              <Text style={styles.settingDescription}>{t.settings.profile.nameDescription}</Text>
             </View>
             <TextInput
               style={[styles.input, styles.nameInput]}
@@ -526,7 +547,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               onChangeText={setUserName}
               onBlur={handleSaveName}
               onSubmitEditing={handleSaveName}
-              placeholder="Toi"
+              placeholder={t.settings.profile.namePlaceholder}
               placeholderTextColor={colors.placeholder}
               maxLength={30}
             />
@@ -539,13 +560,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             activeOpacity={0.7}
           >
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Niveau</Text>
-              <Text style={styles.settingDescription}>
-                Influence la difficulté des exercices suggérés
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.profile.level}</Text>
+              <Text style={styles.settingDescription}>{t.settings.profile.levelDescription}</Text>
             </View>
             <Text style={styles.infoValue}>
-              {user?.userLevel ? USER_LEVEL_LABELS[user.userLevel as UserLevel] : 'Non défini'}
+              {user?.userLevel ? t.onboarding.levels[user.userLevel as UserLevel] : t.settings.profile.notDefined}
             </Text>
           </TouchableOpacity>
           {editingLevel && (
@@ -553,8 +572,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               {USER_LEVELS.map(level => (
                 <OnboardingCard
                   key={level}
-                  label={USER_LEVEL_LABELS[level]}
-                  description={USER_LEVEL_DESCRIPTIONS[level]}
+                  label={t.onboarding.levels[level]}
+                  description={t.onboarding.levelDescriptions[level]}
                   selected={user?.userLevel === level}
                   onPress={() => handleUpdateLevel(level)}
                 />
@@ -569,13 +588,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             activeOpacity={0.7}
           >
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Objectif</Text>
-              <Text style={styles.settingDescription}>
-                Influence les plages de répétitions recommandées
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.profile.goal}</Text>
+              <Text style={styles.settingDescription}>{t.settings.profile.goalDescription}</Text>
             </View>
             <Text style={styles.infoValue}>
-              {user?.userGoal ? USER_GOAL_LABELS[user.userGoal as UserGoal] : 'Non défini'}
+              {user?.userGoal ? t.onboarding.goals[user.userGoal as UserGoal] : t.settings.profile.notDefined}
             </Text>
           </TouchableOpacity>
           {editingGoal && (
@@ -583,8 +600,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               {USER_GOALS.map(goal => (
                 <OnboardingCard
                   key={goal}
-                  label={USER_GOAL_LABELS[goal]}
-                  description={USER_GOAL_DESCRIPTIONS[goal]}
+                  label={t.onboarding.goals[goal]}
+                  description={t.onboarding.goalDescriptions[goal]}
                   selected={user?.userGoal === goal}
                   onPress={() => handleUpdateGoal(goal)}
                 />
@@ -597,13 +614,15 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="color-palette-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Apparence</Text>
+            <Text style={styles.sectionTitle}>{t.settings.appearance.title}</Text>
           </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Mode {isDark ? 'sombre' : 'clair'}</Text>
+              <Text style={styles.settingLabel}>
+                {isDark ? t.settings.appearance.darkMode : t.settings.appearance.lightMode}
+              </Text>
               <Text style={styles.settingDescription}>
-                {isDark ? 'Neumorphisme dark — fond #21242b' : 'Neumorphisme light — fond #e8ecef'}
+                {isDark ? t.settings.appearance.darkDescription : t.settings.appearance.lightDescription}
               </Text>
             </View>
             <Switch
@@ -616,21 +635,43 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               thumbColor={colors.text}
             />
           </View>
+          {/* Langue */}
+          <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>{t.settings.appearance.language}</Text>
+              <Text style={styles.settingDescription}>{t.settings.appearance.languageDescription}</Text>
+            </View>
+          </View>
+          <View style={styles.languageRow}>
+            {(['fr', 'en'] as Language[]).map(lang => (
+              <TouchableOpacity
+                key={lang}
+                style={[styles.languageBtn, language === lang && styles.languageBtnActive]}
+                onPress={async () => {
+                  haptics.onSelect()
+                  await setLanguage(lang)
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.languageBtnText, language === lang && styles.languageBtnTextActive]}>
+                  {lang === 'fr' ? 'Français' : 'English'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Section Minuteur */}
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="time-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Minuteur de repos</Text>
+            <Text style={styles.sectionTitle}>{t.settings.timer.title}</Text>
           </View>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Activer le minuteur</Text>
-              <Text style={styles.settingDescription}>
-                Affiche un timer après chaque exercice ajouté
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.timer.enable}</Text>
+              <Text style={styles.settingDescription}>{t.settings.timer.enableDescription}</Text>
             </View>
             <Switch
               value={timerEnabled}
@@ -642,10 +683,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Durée de repos</Text>
-              <Text style={styles.settingDescription}>
-                Temps de repos par défaut (en secondes)
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.timer.duration}</Text>
+              <Text style={styles.settingDescription}>{t.settings.timer.durationDescription}</Text>
             </View>
             <View style={styles.inputGroup}>
               <TextInput
@@ -657,16 +696,14 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 onSubmitEditing={handleSaveRestDuration}
                 placeholderTextColor={colors.placeholder}
               />
-              <Text style={styles.inputUnit}>sec</Text>
+              <Text style={styles.inputUnit}>{t.common.seconds}</Text>
             </View>
           </View>
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Vibration fin de repos</Text>
-              <Text style={styles.settingDescription}>
-                Vibration haptic à la fin du minuteur
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.timer.vibration}</Text>
+              <Text style={styles.settingDescription}>{t.settings.timer.vibrationDescription}</Text>
             </View>
             <Switch
               value={vibrationEnabled}
@@ -678,10 +715,8 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Son fin de repos</Text>
-              <Text style={styles.settingDescription}>
-                Bip sonore à la fin du minuteur
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.timer.sound}</Text>
+              <Text style={styles.settingDescription}>{t.settings.timer.soundDescription}</Text>
             </View>
             <Switch
               value={timerSoundEnabled}
@@ -696,14 +731,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="star-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Gamification</Text>
+            <Text style={styles.sectionTitle}>{t.settings.gamification.title}</Text>
           </View>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Objectif hebdomadaire</Text>
-              <Text style={styles.settingDescription}>
-                Nombre de séances par semaine pour maintenir le streak
-              </Text>
+              <Text style={styles.settingLabel}>{t.settings.gamification.weeklyGoal}</Text>
+              <Text style={styles.settingDescription}>{t.settings.gamification.weeklyGoalDescription}</Text>
             </View>
           </View>
           <View style={styles.streakTargetRow}>
@@ -740,7 +773,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 </Text>
               </TouchableOpacity>
             ))}
-            <Text style={styles.streakTargetLabel}>séances/sem</Text>
+            <Text style={styles.streakTargetLabel}>{t.settings.gamification.sessionsPerWeek}</Text>
           </View>
         </View>
 
@@ -748,15 +781,15 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="hardware-chip-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Intelligence Artificielle</Text>
+            <Text style={styles.sectionTitle}>{t.settings.ai.title}</Text>
           </View>
 
-          <Text style={styles.aiSubLabel}>Provider</Text>
+          <Text style={styles.aiSubLabel}>{t.settings.ai.provider}</Text>
           <View style={styles.providerList}>
             <View style={[styles.providerRow, styles.providerRowActive]}>
               <View style={[styles.radioCircle, styles.radioCircleActive]} />
               <Text style={[styles.providerLabel, styles.providerLabelActive]}>
-                Offline — Génération locale
+                {t.settings.ai.offlineLabel}
               </Text>
             </View>
 
@@ -764,9 +797,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               <View style={styles.radioCircle} />
               <View style={styles.providerRowContent}>
                 <Text style={[styles.providerLabel, styles.providerLabelDisabled]}>
-                  IA cloud
+                  {t.settings.ai.cloudLabel}
                 </Text>
-                <Text style={styles.providerComingSoon}>Prochainement</Text>
+                <Text style={styles.providerComingSoon}>{t.settings.ai.comingSoon}</Text>
               </View>
             </View>
           </View>
@@ -776,7 +809,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="save-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Données</Text>
+            <Text style={styles.sectionTitle}>{t.settings.data.title}</Text>
           </View>
           <TouchableOpacity
             style={[styles.exportButton, (exporting || importing) && styles.exportButtonDisabled]}
@@ -785,7 +818,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             activeOpacity={0.7}
           >
             <Text style={styles.exportButtonText}>
-              {exporting ? 'Export en cours...' : 'Exporter mes données'}
+              {exporting ? t.settings.data.exportLoading : t.settings.data.exportLabel}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -795,30 +828,30 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             activeOpacity={0.7}
           >
             <Text style={styles.importButtonText}>
-              {importing ? 'Import en cours...' : 'Importer mes données'}
+              {importing ? t.settings.data.importLoading : t.settings.data.importLabel}
             </Text>
           </TouchableOpacity>
-          <Text style={styles.exportHint}>Vos données vous appartiennent</Text>
+          <Text style={styles.exportHint}>{t.settings.data.exportHint}</Text>
         </View>
 
         {/* BottomSheet choix d'export */}
         <BottomSheet
           visible={showExportOptions}
           onClose={() => setShowExportOptions(false)}
-          title="Exporter mes données"
+          title={t.settings.data.exportSheetTitle}
         >
           <TouchableOpacity style={styles.sheetOption} onPress={handleExportShare} activeOpacity={0.7}>
             <Ionicons name="share-outline" size={20} color={colors.primary} />
             <View style={styles.sheetOptionContent}>
-              <Text style={styles.sheetOptionTitle}>Partager</Text>
-              <Text style={styles.sheetOptionDesc}>Envoyer par email, WhatsApp, Drive…</Text>
+              <Text style={styles.sheetOptionTitle}>{t.settings.data.shareOption}</Text>
+              <Text style={styles.sheetOptionDesc}>{t.settings.data.shareDescription}</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sheetOption} onPress={handleExportDownload} activeOpacity={0.7}>
             <Ionicons name="download-outline" size={20} color={colors.primary} />
             <View style={styles.sheetOptionContent}>
-              <Text style={styles.sheetOptionTitle}>Enregistrer</Text>
-              <Text style={styles.sheetOptionDesc}>Choisir un dossier sur l'appareil</Text>
+              <Text style={styles.sheetOptionTitle}>{t.settings.data.saveOption}</Text>
+              <Text style={styles.sheetOptionDesc}>{t.settings.data.saveDescription}</Text>
             </View>
           </TouchableOpacity>
         </BottomSheet>
@@ -826,11 +859,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         {/* AlertDialog confirmation import */}
         <AlertDialog
           visible={showImportConfirm}
-          title="Importer des données ?"
-          message="Cette action remplacera TOUTES vos données actuelles par celles du fichier sélectionné. Cette opération est irréversible."
-          confirmText="Importer"
+          title={t.settings.data.importConfirmTitle}
+          message={t.settings.data.importConfirmMessage}
+          confirmText={t.settings.data.importConfirmButton}
           confirmColor={colors.danger}
-          cancelText="Annuler"
+          cancelText={t.common.cancel}
           onConfirm={handleImportConfirm}
           onCancel={() => { setShowImportConfirm(false); setPendingImportUri(null) }}
         />
@@ -838,9 +871,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         {/* AlertDialog succès import */}
         <AlertDialog
           visible={importSuccess}
-          title="Import réussi"
-          message="Vos données ont été restaurées avec succès."
-          confirmText="OK"
+          title={t.settings.data.importSuccessTitle}
+          message={t.settings.data.importSuccessMessage}
+          confirmText={t.common.ok}
           confirmColor={colors.primary}
           onConfirm={() => setImportSuccess(false)}
           onCancel={() => setImportSuccess(false)}
@@ -849,9 +882,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
 
         <AlertDialog
           visible={exportError}
-          title="Erreur d'export"
-          message="Impossible d'exporter les données. Veuillez réessayer."
-          confirmText="OK"
+          title={t.settings.data.exportErrorTitle}
+          message={t.settings.data.exportErrorMessage}
+          confirmText={t.common.ok}
           confirmColor={colors.primary}
           onConfirm={() => setExportError(false)}
           onCancel={() => setExportError(false)}
@@ -861,9 +894,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         {/* AlertDialog erreur import */}
         <AlertDialog
           visible={importError}
-          title="Erreur d'import"
-          message="Impossible d'importer les données. Vérifiez que le fichier est un export Kore valide."
-          confirmText="OK"
+          title={t.settings.data.importErrorTitle}
+          message={t.settings.data.importErrorMessage}
+          confirmText={t.common.ok}
           confirmColor={colors.primary}
           onConfirm={() => setImportError(false)}
           onCancel={() => setImportError(false)}
@@ -874,21 +907,21 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>À propos</Text>
+            <Text style={styles.sectionTitle}>{t.settings.about.title}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Application</Text>
+            <Text style={styles.infoLabel}>{t.settings.about.app}</Text>
             <Text style={styles.infoValue}>Kore</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Version</Text>
+            <Text style={styles.infoLabel}>{t.settings.about.version}</Text>
             <Text style={styles.infoValue}>1.0.0</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Développé avec</Text>
+            <Text style={styles.infoLabel}>{t.settings.about.developedWith}</Text>
             <Text style={styles.infoValue}>React Native + WatermelonDB</Text>
           </View>
         </View>
@@ -897,21 +930,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <Ionicons name="help-circle-outline" size={18} color={colors.primary} />
-            <Text style={styles.sectionTitle}>Aide</Text>
+            <Text style={styles.sectionTitle}>{t.settings.help.title}</Text>
           </View>
 
           <Text style={styles.helpText}>
-            <Text style={styles.helpBold}>Navigation :{'\n'}</Text>
-            • Onglet Bibliothèque : Gérer vos exercices{'\n'}
-            • Onglet Prog : Créer des programmes et séances{'\n'}
-            • Onglet Stats : Voir votre progression{'\n\n'}
-            <Text style={styles.helpBold}>Programmes :{'\n'}</Text>
-            • Appuyez longuement pour réorganiser{'\n'}
-            • Utilisez ⋮ pour renommer/dupliquer/supprimer{'\n\n'}
-            <Text style={styles.helpBold}>Exercices :{'\n'}</Text>
-            • Ajoutez des exercices dans une séance{'\n'}
-            • Modifiez les objectifs (séries × reps à poids){'\n'}
-            • Le PR (Personal Record) s'affiche automatiquement
+            <Text style={styles.helpBold}>{t.settings.help.navigationTitle}{'\n'}</Text>
+            {t.settings.help.navigationContent}{'\n\n'}
+            <Text style={styles.helpBold}>{t.settings.help.programsTitle}{'\n'}</Text>
+            {t.settings.help.programsContent}{'\n\n'}
+            <Text style={styles.helpBold}>{t.settings.help.exercisesTitle}{'\n'}</Text>
+            {t.settings.help.exercisesContent}
           </Text>
         </View>
       </ScrollView>
