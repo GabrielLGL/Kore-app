@@ -184,7 +184,7 @@ function useStyles(colors: ThemeColors) {
 
     // Text variants
     text_primary: {
-      color: colors.text,
+      color: colors.primaryText,
     },
     text_danger: {
       color: colors.text,

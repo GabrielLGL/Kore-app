@@ -52,6 +52,9 @@ export const colors = {
 
   // Input background
   input: '#16181e',
+
+  // Text on primary-colored surfaces (buttons, badges)
+  primaryText: '#ffffff',
 }
 
 /**
@@ -157,7 +160,7 @@ export const lightColors = {
   background: '#d8dde6',
   card: '#eef1f5',
   cardSecondary: '#e4e9f0',
-  primary: '#006d6b',
+  primary: '#6c5ce7',
   danger: '#ff6b6b',
   success: '#006d6b',
   warning: '#e17055',
@@ -171,22 +174,25 @@ export const lightColors = {
   secondaryButton: '#dde2e6',
   shadow: '#b0b8c1',
   successBg: 'rgba(0, 109, 107, 0.12)',
-  primaryBg: 'rgba(0, 109, 107, 0.12)',
+  primaryBg: 'rgba(108, 92, 231, 0.12)',
   surfaceOverlay: 'rgba(0, 0, 0, 0.06)',
   neuShadowDark: '#8a9bb0',
   neuShadowLight: '#ffffff',
-  secondaryAccent: '#6c5ce7',
+  secondaryAccent: '#a29bfe',
 
   // Gradient tokens (LinearGradient)
   cardGradientStart: '#edf1f5',
   cardGradientEnd: '#dde5ee',
   bgGradientStart: '#eaeff5',
   bgGradientEnd: '#dce4ee',
-  primaryGradientStart: '#00d9d4',
-  primaryGradientEnd: '#007a77',
+  primaryGradientStart: '#7c6ef0',
+  primaryGradientEnd: '#4a3da8',
 
   // Input background
   input: '#ffffff',
+
+  // Text on primary-colored surfaces (buttons, badges)
+  primaryText: '#ffffff',
 }
 
 /**

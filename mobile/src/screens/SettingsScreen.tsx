@@ -254,7 +254,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       opacity: 0.6,
     },
     exportButtonText: {
-      color: colors.text,
+      color: colors.primaryText,
       fontSize: fontSize.md,
       fontWeight: '600' as const,
     },
@@ -299,7 +299,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
       fontWeight: '600' as const,
     },
     languageBtnTextActive: {
-      color: colors.text,
+      color: colors.primaryText,
     },
     sheetOption: {
       flexDirection: 'row' as const,
@@ -563,9 +563,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               <Text style={styles.settingLabel}>{t.settings.profile.level}</Text>
               <Text style={styles.settingDescription}>{t.settings.profile.levelDescription}</Text>
             </View>
-            <Text style={styles.infoValue}>
-              {user?.userLevel ? t.onboarding.levels[user.userLevel as UserLevel] : t.settings.profile.notDefined}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={styles.infoValue}>
+                {user?.userLevel ? t.onboarding.levels[user.userLevel as UserLevel] : t.settings.profile.notDefined}
+              </Text>
+              <Ionicons
+                name={editingLevel ? 'chevron-down' : 'chevron-forward'}
+                size={16}
+                color={colors.primary}
+              />
+            </View>
           </TouchableOpacity>
           {editingLevel && (
             <View style={styles.profileCards}>
@@ -591,9 +598,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               <Text style={styles.settingLabel}>{t.settings.profile.goal}</Text>
               <Text style={styles.settingDescription}>{t.settings.profile.goalDescription}</Text>
             </View>
-            <Text style={styles.infoValue}>
-              {user?.userGoal ? t.onboarding.goals[user.userGoal as UserGoal] : t.settings.profile.notDefined}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={styles.infoValue}>
+                {user?.userGoal ? t.onboarding.goals[user.userGoal as UserGoal] : t.settings.profile.notDefined}
+              </Text>
+              <Ionicons
+                name={editingGoal ? 'chevron-down' : 'chevron-forward'}
+                size={16}
+                color={colors.primary}
+              />
+            </View>
           </TouchableOpacity>
           {editingGoal && (
             <View style={styles.profileCards}>
@@ -681,50 +695,54 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             />
           </View>
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>{t.settings.timer.duration}</Text>
-              <Text style={styles.settingDescription}>{t.settings.timer.durationDescription}</Text>
-            </View>
-            <View style={styles.inputGroup}>
-              <TextInput
-                style={styles.input}
-                value={restDuration}
-                onChangeText={setRestDuration}
-                keyboardType="numeric"
-                onBlur={handleSaveRestDuration}
-                onSubmitEditing={handleSaveRestDuration}
-                placeholderTextColor={colors.placeholder}
-              />
-              <Text style={styles.inputUnit}>{t.common.seconds}</Text>
-            </View>
-          </View>
+          {timerEnabled && (
+            <>
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t.settings.timer.duration}</Text>
+                  <Text style={styles.settingDescription}>{t.settings.timer.durationDescription}</Text>
+                </View>
+                <View style={styles.inputGroup}>
+                  <TextInput
+                    style={styles.input}
+                    value={restDuration}
+                    onChangeText={setRestDuration}
+                    keyboardType="numeric"
+                    onBlur={handleSaveRestDuration}
+                    onSubmitEditing={handleSaveRestDuration}
+                    placeholderTextColor={colors.placeholder}
+                  />
+                  <Text style={styles.inputUnit}>{t.common.seconds}</Text>
+                </View>
+              </View>
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>{t.settings.timer.vibration}</Text>
-              <Text style={styles.settingDescription}>{t.settings.timer.vibrationDescription}</Text>
-            </View>
-            <Switch
-              value={vibrationEnabled}
-              onValueChange={handleToggleVibration}
-              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t.settings.timer.vibration}</Text>
+                  <Text style={styles.settingDescription}>{t.settings.timer.vibrationDescription}</Text>
+                </View>
+                <Switch
+                  value={vibrationEnabled}
+                  onValueChange={handleToggleVibration}
+                  trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+                  thumbColor={colors.text}
+                />
+              </View>
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>{t.settings.timer.sound}</Text>
-              <Text style={styles.settingDescription}>{t.settings.timer.soundDescription}</Text>
-            </View>
-            <Switch
-              value={timerSoundEnabled}
-              onValueChange={handleToggleTimerSound}
-              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
-              thumbColor={colors.text}
-            />
-          </View>
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t.settings.timer.sound}</Text>
+                  <Text style={styles.settingDescription}>{t.settings.timer.soundDescription}</Text>
+                </View>
+                <Switch
+                  value={timerSoundEnabled}
+                  onValueChange={handleToggleTimerSound}
+                  trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+                  thumbColor={colors.text}
+                />
+              </View>
+            </>
+          )}
         </View>
 
         {/* Section Gamification */}
