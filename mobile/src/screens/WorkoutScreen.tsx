@@ -383,12 +383,12 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
           )}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Aucun exercice dans cette séance.</Text>
+            <Text style={styles.emptyText}>{t.workout.noExercises}</Text>
           }
         />
       ) : (
         <View style={styles.listContent}>
-          <Text style={styles.emptyText}>Chargement...</Text>
+          <Text style={styles.emptyText}>{t.workout.loading}</Text>
         </View>
       )}
 
@@ -414,7 +414,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
           }}
           activeOpacity={0.8}
         >
-          <Text style={styles.endButtonText}>Terminer la séance</Text>
+          <Text style={styles.endButtonText}>{t.workout.finishButton}</Text>
         </TouchableOpacity>
       </Animated.View>
 

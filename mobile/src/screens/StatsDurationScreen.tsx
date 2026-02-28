@@ -21,6 +21,7 @@ import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 import { useHaptics } from '../hooks/useHaptics'
+import { useLanguage } from '../contexts/LanguageContext'
 
 const chartConfig = createChartConfig({ showDots: true })
 const PAGE_SIZE = 5
@@ -49,11 +50,14 @@ interface SessionExDetail {
   name: string
   setsCount: number
   reps: number | null
+  repsList: number[]
 }
 
 export function StatsDurationScreenBase({ histories }: Props) {
   const colors = useColors()
   const styles = useStyles(colors)
+  const { t, language } = useLanguage()
+  const dateLocale = language === 'fr' ? 'fr-FR' : 'en-US'
   const { width: screenWidth } = useWindowDimensions()
   const stats = useMemo(() => computeDurationStats(histories), [histories])
   const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
@@ -72,12 +76,12 @@ export function StatsDurationScreenBase({ histories }: Props) {
     return {
       labels: stats.perSession.map((s, i) =>
         i % 5 === 0
-          ? new Date(s.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+          ? new Date(s.date).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit' })
           : ''
       ),
       datasets: [{ data: stats.perSession.map(s => s.durationMin) }],
     }
-  }, [stats.perSession])
+  }, [stats.perSession, dateLocale])
 
   const handleDataPointClick = useCallback(
     (point: { index: number; value: number; x: number; y: number }) => {
@@ -91,7 +95,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
   const tooltipData = useMemo(() => {
     if (!selectedPoint || !stats.perSession[selectedPoint.index]) return null
     const session = stats.perSession[selectedPoint.index]
-    const dateStr = new Date(session.date).toLocaleDateString('fr-FR', {
+    const dateStr = new Date(session.date).toLocaleDateString(dateLocale, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -101,7 +105,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
       date: dateStr.charAt(0).toUpperCase() + dateStr.slice(1),
       duration: `${Math.round(session.durationMin)} min`,
     }
-  }, [selectedPoint, stats.perSession])
+  }, [selectedPoint, stats.perSession, dateLocale])
 
   const totalPages = Math.max(1, Math.ceil(stats.historyAll.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
@@ -120,9 +124,9 @@ export function StatsDurationScreenBase({ histories }: Props) {
         if (!h) continue
         try {
           const session = await h.session.fetch()
-          names[entry.id] = session?.name || 'Séance'
+          names[entry.id] = session?.name || t.statsDuration.sessionFallback
         } catch {
-          names[entry.id] = 'Séance'
+          names[entry.id] = t.statsDuration.sessionFallback
         }
       }
       if (!cancelled) setSessionNames(names)
@@ -151,7 +155,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
       const exMap = new Map<string, { name: string; repsList: number[] }>()
       await Promise.all(
         sets.map(async s => {
-          let exName = 'Exercice inconnu'
+          let exName = t.statsDuration.unknownExercise
           try {
             const ex = await s.exercise.fetch()
             if (ex?.name) exName = ex.name
@@ -165,7 +169,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
       const details: SessionExDetail[] = []
       exMap.forEach(({ name, repsList }) => {
         const allSame = repsList.every(r => r === repsList[0])
-        details.push({ name, setsCount: repsList.length, reps: allSame ? repsList[0] : null })
+        details.push({ name, setsCount: repsList.length, reps: allSame ? repsList[0] : null, repsList })
       })
       setExerciseDetails(prev => ({ ...prev, [historyId]: details }))
     } catch {
@@ -180,14 +184,14 @@ export function StatsDurationScreenBase({ histories }: Props) {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.kpiGrid}>
-        <KpiCard label="Durée moyenne" value={formatDuration(stats.avgMin)} colors={colors} />
-        <KpiCard label="Total cumulé" value={`${stats.totalHours}h`} colors={colors} />
-        <KpiCard label="Plus courte" value={formatDuration(stats.minMin)} colors={colors} />
-        <KpiCard label="Plus longue" value={formatDuration(stats.maxMin)} colors={colors} />
+        <KpiCard label={t.statsDuration.avgLabel} value={formatDuration(stats.avgMin)} colors={colors} />
+        <KpiCard label={t.statsDuration.totalLabel} value={`${stats.totalHours}h`} colors={colors} />
+        <KpiCard label={t.statsDuration.minLabel} value={formatDuration(stats.minMin)} colors={colors} />
+        <KpiCard label={t.statsDuration.maxLabel} value={formatDuration(stats.maxMin)} colors={colors} />
       </View>
 
       <Text style={styles.sectionTitle}>
-        Évolution ({Math.min(stats.perSession.length, 30)} dernières séances)
+        {t.statsDuration.evolutionTitle} ({Math.min(stats.perSession.length, 30)} {t.statsDuration.lastSessions})
       </Text>
 
       {chartData ? (
@@ -226,18 +230,21 @@ export function StatsDurationScreenBase({ histories }: Props) {
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>
-            Enregistrez au moins 2 séances chronométrées pour voir l'évolution.
+            {t.statsDuration.chartEmpty}
           </Text>
         </View>
       )}
 
       <Text style={[styles.sectionTitle, styles.historySectionTitle]}>
-        Historique ({stats.historyAll.length} séances)
+        {t.statsDuration.historyTitle} ({stats.historyAll.length} {t.statsDuration.sessions})
+      </Text>
+      <Text style={styles.durationMinInfo}>
+        {t.statsDuration.durationMinInfo}
       </Text>
 
       {stats.historyAll.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Aucune séance valide enregistrée.</Text>
+          <Text style={styles.emptyText}>{t.statsDuration.noSessions}</Text>
         </View>
       ) : (
         <View style={styles.historyCard}>
@@ -253,7 +260,7 @@ export function StatsDurationScreenBase({ histories }: Props) {
                   activeOpacity={0.7}
                 >
                   <Text style={styles.historyDate}>
-                    {new Date(entry.date).toLocaleDateString('fr-FR', {
+                    {new Date(entry.date).toLocaleDateString(dateLocale, {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -273,18 +280,21 @@ export function StatsDurationScreenBase({ histories }: Props) {
                   <View style={styles.accordionContent}>
                     {details ? (
                       details.length === 0 ? (
-                        <Text style={styles.exerciseDetailText}>Aucun exercice enregistré.</Text>
+                        <Text style={styles.exerciseDetailText}>{t.statsDuration.noExercises}</Text>
                       ) : (
                         details.map((d, i) => (
                           <Text key={i} style={styles.exerciseDetailText}>
                             {d.name}
                             {' — '}
-                            {d.setsCount}×{d.reps !== null ? d.reps : '?'}
+                            {d.setsCount}{' '}{d.setsCount !== 1 ? t.statsDuration.setsPlural : t.statsDuration.sets}
+                            {d.reps !== null
+                              ? ` × ${d.reps} reps`
+                              : ` (${d.repsList.join(', ')} reps)`}
                           </Text>
                         ))
                       )
                     ) : (
-                      <Text style={styles.exerciseDetailText}>Chargement…</Text>
+                      <Text style={styles.exerciseDetailText}>{t.statsDuration.loading}</Text>
                     )}
                   </View>
                 )}
@@ -303,10 +313,10 @@ export function StatsDurationScreenBase({ histories }: Props) {
                   }
                 }}
                 disabled={!hasPrev}
-                accessibilityLabel="Page précédente"
+                accessibilityLabel={t.statsDuration.prevPageA11y}
               >
                 <Text style={[styles.paginationButtonText, !hasPrev && styles.paginationButtonTextDisabled]}>
-                  ← Précédente
+                  {t.statsDuration.prevPage}
                 </Text>
               </TouchableOpacity>
 
@@ -323,10 +333,10 @@ export function StatsDurationScreenBase({ histories }: Props) {
                   }
                 }}
                 disabled={!hasNext}
-                accessibilityLabel="Page suivante"
+                accessibilityLabel={t.statsDuration.nextPageA11y}
               >
                 <Text style={[styles.paginationButtonText, !hasNext && styles.paginationButtonTextDisabled]}>
-                  Suivante →
+                  {t.statsDuration.nextPage}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -421,6 +431,11 @@ function useStyles(colors: ThemeColors) {
     historySectionTitle: {
       marginTop: spacing.lg,
     },
+    durationMinInfo: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
     historyCard: {
       backgroundColor: colors.card,
       borderRadius: borderRadius.md,
@@ -499,7 +514,10 @@ function useStyles(colors: ThemeColors) {
 const enhance = withObservables([], () => ({
   histories: database
     .get<History>('histories')
-    .query(Q.where('deleted_at', null))
+    .query(
+      Q.where('deleted_at', null),
+      Q.where('end_time', Q.notEq(null)),
+    )
     .observe(),
 }))
 
