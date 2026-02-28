@@ -22,7 +22,7 @@ import {
   toDateKey,
   formatDuration,
 } from '../model/utils/statsHelpers'
-import { spacing, borderRadius, fontSize, intensityColors } from '../theme'
+import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
@@ -475,7 +475,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
                 bgColor = colors.primaryBg
                 textColor = colors.primary
               } else {
-                bgColor = intensityColors[0]
+                bgColor = colors.intensityColors[0]
                 textColor = colors.textSecondary
               }
 
@@ -511,7 +511,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
       {/* Légende simplifiée */}
       <View style={styles.legend}>
         <View
-          style={[styles.legendBox, { backgroundColor: intensityColors[0] }]}
+          style={[styles.legendBox, { backgroundColor: colors.intensityColors[0] }]}
         />
         <Text style={styles.legendText}>{t.statsCalendar.rest}</Text>
         <View
