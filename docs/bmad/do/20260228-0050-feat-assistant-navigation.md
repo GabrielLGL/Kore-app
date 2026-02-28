@@ -28,4 +28,4 @@ Aucune
 ✅ Résolu — 20260228-0050
 
 ## Commit
-[à remplir]
+4bf9c0a feat(assistant): redirect to Programs/ProgramDetail after AI generation
