@@ -1,7 +1,7 @@
 import React, { useRef, useMemo, useCallback } from 'react'
 import { View, Text, ScrollView, StyleSheet, type LayoutChangeEvent } from 'react-native'
 import type { HeatmapDay } from '../model/utils/statsHelpers'
-import { spacing, intensityColors } from '../theme'
+import { spacing } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import type { ThemeColors } from '../theme'
 
@@ -114,7 +114,7 @@ const HeatmapCalendarInner: React.FC<HeatmapCalendarProps> = ({ data }) => {
                     key={day.date}
                     style={[
                       styles.cell,
-                      { backgroundColor: intensityColors[Math.min(day.count, 3)] },
+                      { backgroundColor: colors.intensityColors[Math.min(day.count, 3)] },
                     ]}
                   />
                 ))}
@@ -130,7 +130,7 @@ const HeatmapCalendarInner: React.FC<HeatmapCalendarProps> = ({ data }) => {
         {[0, 1, 2, 3].map(level => (
           <View
             key={level}
-            style={[styles.legendCell, { backgroundColor: intensityColors[level] }]}
+            style={[styles.legendCell, { backgroundColor: colors.intensityColors[level] }]}
           />
         ))}
         <Text style={styles.legendText}>Plus</Text>

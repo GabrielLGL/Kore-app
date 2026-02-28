@@ -55,6 +55,9 @@ export const colors = {
 
   // Text on primary-colored surfaces (buttons, badges)
   primaryText: '#ffffff',
+
+  // Heatmap calendar intensity (index 0 = rest, 1-3 = activity levels)
+  intensityColors: ['#252830', '#004d4a', '#007875', '#00cec9'] as [string, string, string, string],
 }
 
 /**
@@ -193,6 +196,9 @@ export const lightColors = {
 
   // Text on primary-colored surfaces (buttons, badges)
   primaryText: '#ffffff',
+
+  // Heatmap calendar intensity (index 0 = rest, 1-3 = activity levels)
+  intensityColors: ['#c5cad2', '#c5bef6', '#9b90ed', '#6c5ce7'] as [string, string, string, string],
 }
 
 /**
