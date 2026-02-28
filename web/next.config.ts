@@ -35,6 +35,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, "./"),
+  webpack(config, { dev }) {
+    if (dev) {
+      // Désactive le cache filesystem en dev sur Windows (évite EPERM sur rename)
+      config.cache = false;
+    }
+    return config;
+  },
 
   async headers() {
     return [
