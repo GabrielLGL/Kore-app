@@ -44,6 +44,7 @@ const RestTimer: React.FC<Props> = ({
   const notificationIdRef = useRef<string | null>(null)
   const soundRef = useRef<Audio.Sound | null>(null)
   const progressAnimRef = useRef<Animated.CompositeAnimation | null>(null)
+  const isMountedRef = useRef(true)
   // Refs pour éviter les stale closures dans finishTimer (appelé depuis setInterval)
   const vibrationEnabledRef = useRef(vibrationEnabled)
   const soundEnabledRef = useRef(soundEnabled)
@@ -67,9 +68,10 @@ const RestTimer: React.FC<Props> = ({
     }
   }, [duration, notificationEnabled])
 
-  // Cleanup son
+  // Cleanup son + marque le composant comme démonté
   useEffect(() => {
     return () => {
+      isMountedRef.current = false
       if (soundRef.current) {
         soundRef.current.unloadAsync()
         soundRef.current = null
@@ -130,6 +132,10 @@ const RestTimer: React.FC<Props> = ({
     if (soundEnabledRef.current) {
       createBeepSound()
         .then(sound => {
+          if (!isMountedRef.current) {
+            sound.unloadAsync()
+            return
+          }
           soundRef.current = sound
           return sound.playAsync()
         })
