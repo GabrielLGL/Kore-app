@@ -36,7 +36,7 @@ export async function getMaxWeightForExercise(
  * Sauvegarde une serie reelle effectuee pendant une seance en direct.
  *
  * @param params - Donnees de la serie (historyId, exerciseId, weight, reps, setOrder, isPr)
- * @returns L'instance Set creee
+ * @returns L'instance Set créée
  */
 export async function saveWorkoutSet(params: {
   historyId: string

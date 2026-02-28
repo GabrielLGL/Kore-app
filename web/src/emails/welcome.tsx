@@ -163,7 +163,7 @@ export function WelcomeEmail({ name, email }: WelcomeEmailProps) {
                       {
                         color: teal,
                         title: "Suivi de performance",
-                        desc: "Chaque serie, chaque rep",
+                        desc: "Chaque série, chaque rep",
                       },
                       {
                         color: accent,

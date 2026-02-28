@@ -47,10 +47,10 @@ export function parseRepsTarget(
 }
 
 /**
- * Calcule la suggestion de progression basee sur la derniere performance.
+ * Calcule la suggestion de progression basée sur la dernière performance.
  *
- * @param lastWeight - Poids moyen de la derniere seance (kg)
- * @param lastReps - Reps moyennes de la derniere seance
+ * @param lastWeight - Poids moyen de la dernière séance (kg)
+ * @param lastReps - Reps moyennes de la dernière séance
  * @param repsTarget - Cible de reps ("6-8", "5", null)
  * @returns Suggestion ou null si pas applicable
  */

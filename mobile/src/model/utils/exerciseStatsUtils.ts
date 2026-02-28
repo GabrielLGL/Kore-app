@@ -25,8 +25,8 @@ export interface ExerciseSessionStat {
 }
 
 /**
- * Retourne la derniere performance enregistree pour un exercice
- * en excluant la seance en cours.
+ * Retourne la dernière performance enregistrée pour un exercice
+ * en excluant la séance en cours.
  *
  * Algorithme : fetch les sets → grouper par history_id → trouver la history
  * la plus recente → calculer maxWeight, avgReps, setsCount.
