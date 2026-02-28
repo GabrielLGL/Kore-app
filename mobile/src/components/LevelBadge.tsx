@@ -1,5 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 import { spacing, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -16,7 +17,7 @@ export function LevelBadge({ level }: LevelBadgeProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.star}>{'\u2B50'}</Text>
+      <Ionicons name="star" size={fontSize.lg} color={colors.primary} testID="level-star" />
       <Text style={styles.text}>{t.levelBadge.label} {level}</Text>
     </View>
   )
@@ -28,9 +29,6 @@ function useStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-    },
-    star: {
-      fontSize: fontSize.lg,
     },
     text: {
       fontSize: fontSize.lg,

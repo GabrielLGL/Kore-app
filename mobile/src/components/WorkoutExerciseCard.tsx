@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Animated } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
@@ -54,7 +54,7 @@ const WorkoutSetRow = React.memo(function WorkoutSetRow({
 }: WorkoutSetRowProps) {
   // Hooks AVANT tout return conditionnel (règle des hooks React)
   const { colors, neuShadow } = useTheme()
-  const styles = useStyles(colors)
+  const styles = useMemo(() => createStyles(colors), [colors])
   const [localWeight, setLocalWeight] = React.useState(input.weight)
   const [localReps, setLocalReps] = React.useState(input.reps)
   const weightTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -197,10 +197,10 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   onUnvalidateSet,
 }) => {
   const { colors, neuShadow } = useTheme()
-  const styles = useStyles(colors)
+  const styles = useMemo(() => createStyles(colors), [colors])
   const haptics = useHaptics()
   const [isEditingNote, setIsEditingNote] = React.useState(false)
-  const [noteText, setNoteText] = React.useState(exercise.notes ?? '')
+  const noteRef = React.useRef(exercise.notes ?? '')
 
   const setsCount = sessionExercise.setsTarget ?? 0
   const setOrders = Array.from({ length: setsCount }, (_, i) => i + 1)
@@ -219,11 +219,11 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
 
   const handleSaveNote = async () => {
     setIsEditingNote(false)
-    if (noteText !== (exercise.notes ?? '')) {
+    if (noteRef.current !== (exercise.notes ?? '')) {
       try {
         await database.write(async () => {
           await exercise.update(e => {
-            e.notes = noteText
+            e.notes = noteRef.current
           })
         })
       } catch (e) {
@@ -261,8 +261,8 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
       <Text style={styles.exerciseName}>{exercise.name}</Text>
       {isEditingNote ? (
         <TextInput
-          value={noteText}
-          onChangeText={setNoteText}
+          defaultValue={exercise.notes ?? ''}
+          onChangeText={val => { noteRef.current = val }}
           onBlur={handleSaveNote}
           placeholder="Ajouter une note (grip, tempo, sensation...)"
           placeholderTextColor={colors.placeholder}
@@ -352,7 +352,7 @@ export const WorkoutExerciseCard = withObservables(
 
 // --- Styles ---
 
-function useStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       backgroundColor: colors.card,

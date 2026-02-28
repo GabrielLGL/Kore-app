@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useMemo, useCallback } from 'react'
 import { View, Text, TextInput, StyleSheet, ScrollView } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheet } from './BottomSheet'
@@ -34,23 +34,16 @@ function formatDuration(seconds: number): string {
 interface StatBlockProps {
   label: string
   value: string
-  emoji?: string
-  icon?: string
+  icon: string
   colors: ThemeColors
 }
 
-const StatBlock: React.FC<StatBlockProps> = ({ label, value, emoji, icon, colors }) => {
-  const styles = useStyles(colors)
+const StatBlock: React.FC<StatBlockProps> = ({ label, value, icon, colors }) => {
+  const styles = useMemo(() => createStyles(colors), [colors])
   return (
     <View style={styles.statBlock}>
-      {icon ? (
-        <>
-          <Ionicons name={icon as any} size={20} color={colors.primary} />
-          <Text style={styles.statValue}>{value}</Text>
-        </>
-      ) : (
-        <Text style={styles.statValue}>{emoji} {value}</Text>
-      )}
+      <Ionicons name={icon as any} size={20} color={colors.primary} />
+      <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   )
@@ -85,9 +78,9 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   recapComparison,
 }) => {
   const colors = useColors()
-  const styles = useStyles(colors)
+  const styles = useMemo(() => createStyles(colors), [colors])
   const { t } = useLanguage()
-  const [note, setNote] = useState('')
+  const noteRef = useRef('')
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -97,22 +90,22 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   }, [])
 
   const handleNoteChange = (text: string) => {
-    setNote(text)
+    noteRef.current = text
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       if (historyId) updateHistoryNote(historyId, text).catch(e => { if (__DEV__) console.error('[WorkoutSummarySheet] updateHistoryNote (debounce):', e) })
     }, 500)
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current)
-      if (historyId && note) {
-        updateHistoryNote(historyId, note).catch(e => { if (__DEV__) console.error('[WorkoutSummarySheet] updateHistoryNote (flush):', e) })
+      if (historyId && noteRef.current) {
+        updateHistoryNote(historyId, noteRef.current).catch(e => { if (__DEV__) console.error('[WorkoutSummarySheet] updateHistoryNote (flush):', e) })
       }
     }
     onClose()
-  }
+  }, [historyId, onClose])
 
   const motivation = getMotivationMessage(totalPrs, recapComparison.volumeGain, colors, t.workoutSummary)
 
@@ -151,7 +144,7 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
 
         {/* Stats grid 2×2 */}
         <View style={styles.statsGrid}>
-          <StatBlock label={t.workoutSummary.duration} value={formatDuration(durationSeconds)} emoji="⏱" colors={colors} />
+          <StatBlock label={t.workoutSummary.duration} value={formatDuration(durationSeconds)} icon="timer-outline" colors={colors} />
           <StatBlock label={t.workoutSummary.volume} value={`${totalVolume.toFixed(1)} kg`} icon="barbell-outline" colors={colors} />
           <StatBlock label={t.workoutSummary.sets} value={`${totalSets} ${t.workoutSummary.setsValidated}`} icon="checkmark-circle-outline" colors={colors} />
           <StatBlock label={t.workoutSummary.records} value={`${totalPrs} PR`} icon="trophy-outline" colors={colors} />
@@ -160,16 +153,19 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
         {/* Section gamification */}
         <View style={styles.gamificationSection}>
           <View style={styles.gamRow}>
-            <Text style={styles.gamItem}>
-              {'\u2B50'} +{xpGained} XP
-            </Text>
-            <Text style={styles.gamItem}>
-              {'\uD83C\uDFAF'} {t.workoutSummary.levelLabel} {level}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="star-outline" size={14} color={colors.primary} />
+              <Text style={styles.gamItem}>+{xpGained} XP</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="navigate-outline" size={14} color={colors.primary} />
+              <Text style={styles.gamItem}>{t.workoutSummary.levelLabel} {level}</Text>
+            </View>
           </View>
-          <Text style={[styles.gamItem, styles.gamCenter]}>
-            {'\uD83D\uDD25'} {t.workoutSummary.streakLabel} {currentStreak}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <Ionicons name="flame-outline" size={14} color={colors.primary} />
+            <Text style={[styles.gamItem, styles.gamCenter]}>{t.workoutSummary.streakLabel} {currentStreak}</Text>
+          </View>
         </View>
 
         {/* Section "Ce que tu as fait" */}
@@ -263,7 +259,7 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
           style={styles.noteInput}
           multiline
           numberOfLines={3}
-          value={note}
+          defaultValue=""
           onChangeText={handleNoteChange}
           placeholder={t.workoutSummary.notePlaceholder}
           placeholderTextColor={colors.placeholder}
@@ -284,7 +280,7 @@ export const WorkoutSummarySheet: React.FC<WorkoutSummarySheetProps> = ({
   )
 }
 
-function useStyles(colors: ThemeColors) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
     motivationText: {
       fontSize: fontSize.md,

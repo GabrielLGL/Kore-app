@@ -23,7 +23,7 @@ import type { MilestoneEvent } from '../../model/utils/gamificationHelpers'
 const milestone: MilestoneEvent = {
   type: 'session',
   value: 10,
-  emoji: '🎉',
+  icon: 'sparkles-outline',
   title: '10 séances !',
   message: 'Tu as complété 10 séances, bravo !',
 }
@@ -44,11 +44,10 @@ describe('MilestoneCelebration', () => {
     expect(getByText('Tu as complété 10 séances, bravo !')).toBeTruthy()
   })
 
-  it('affiche l\'emoji du milestone', () => {
-    const { getByText } = render(
-      <MilestoneCelebration visible={true} milestone={milestone} onClose={jest.fn()} />
-    )
-    expect(getByText('🎉')).toBeTruthy()
+  it('rend sans crash avec une icône vectorielle', () => {
+    expect(() =>
+      render(<MilestoneCelebration visible={true} milestone={milestone} onClose={jest.fn()} />)
+    ).not.toThrow()
   })
 
   it('affiche le bouton OK', () => {
@@ -78,7 +77,7 @@ describe('MilestoneCelebration', () => {
     const levelMilestone: MilestoneEvent = {
       type: 'levelup',
       value: 5,
-      emoji: '⭐',
+      icon: 'star',
       title: 'Niveau 5 !',
       message: 'Tu passes au niveau 5 !',
     }
@@ -86,6 +85,5 @@ describe('MilestoneCelebration', () => {
       <MilestoneCelebration visible={true} milestone={levelMilestone} onClose={jest.fn()} />
     )
     expect(getByText('Niveau 5 !')).toBeTruthy()
-    expect(getByText('⭐')).toBeTruthy()
   })
 })

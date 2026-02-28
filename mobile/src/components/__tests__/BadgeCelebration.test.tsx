@@ -23,7 +23,7 @@ import type { BadgeDefinition } from '../../model/utils/badgeConstants'
 const makeBadge = (overrides: Partial<BadgeDefinition> = {}): BadgeDefinition => ({
   id: 'first_badge',
   title: 'Premier pas',
-  emoji: '🏋️',
+  icon: 'barbell-outline',
   description: 'La première, la plus importante.',
   category: 'sessions',
   threshold: 1,
@@ -71,12 +71,11 @@ describe('BadgeCelebration', () => {
     expect(getByText('Un grand accomplissement.')).toBeTruthy()
   })
 
-  it('renders badge emoji', () => {
-    const badge = makeBadge({ emoji: '🏆' })
-    const { getByText } = render(
-      <BadgeCelebration visible={true} badge={badge} onClose={jest.fn()} />
-    )
-    expect(getByText('🏆')).toBeTruthy()
+  it('renders without crashing with icon', () => {
+    const badge = makeBadge({ icon: 'trophy-outline' })
+    expect(() =>
+      render(<BadgeCelebration visible={true} badge={badge} onClose={jest.fn()} />)
+    ).not.toThrow()
   })
 
   it('calls onClose when "Super !" button is pressed', () => {

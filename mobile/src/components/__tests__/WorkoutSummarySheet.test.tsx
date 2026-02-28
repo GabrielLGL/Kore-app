@@ -56,8 +56,8 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} durationSeconds={3661} />
       )
 
-      // 3661 secondes = 61 minutes 1 seconde → "⏱ 61:01"
-      expect(getByText('⏱ 61:01')).toBeTruthy()
+      // 3661 secondes = 61 minutes 1 seconde → "61:01"
+      expect(getByText('61:01')).toBeTruthy()
     })
 
     it('affiche la durée zéro', () => {
@@ -65,7 +65,7 @@ describe('WorkoutSummarySheet', () => {
         <WorkoutSummarySheet {...defaultProps} durationSeconds={0} />
       )
 
-      expect(getByText('⏱ 00:00')).toBeTruthy()
+      expect(getByText('00:00')).toBeTruthy()
     })
 
     it('affiche le volume total avec décimale', () => {
@@ -115,13 +115,17 @@ describe('WorkoutSummarySheet', () => {
       expect(getByPlaceholderText('Ressenti, conditions, progrès...')).toBeTruthy()
     })
 
-    it('met à jour la note quand on tape du texte', () => {
+    it('met à jour la note quand on tape du texte', async () => {
       const { getByPlaceholderText } = render(<WorkoutSummarySheet {...defaultProps} />)
 
       const noteInput = getByPlaceholderText('Ressenti, conditions, progrès...')
       fireEvent.changeText(noteInput, 'Super séance !')
 
-      expect(noteInput.props.value).toBe('Super séance !')
+      act(() => { jest.advanceTimersByTime(500) })
+
+      await waitFor(() => {
+        expect(mockUpdateHistoryNote).toHaveBeenCalledWith('hist-test-1', 'Super séance !')
+      })
     })
 
     it('appelle updateHistoryNote après le délai de debounce', async () => {

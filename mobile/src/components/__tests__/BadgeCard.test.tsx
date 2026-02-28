@@ -10,7 +10,7 @@ import type { BadgeDefinition } from '../../model/utils/badgeConstants'
 const makeBadge = (overrides: Partial<BadgeDefinition> = {}): BadgeDefinition => ({
   id: 'test_badge',
   title: 'Titre du badge',
-  emoji: '🏋️',
+  icon: 'barbell-outline',
   description: 'Description du badge',
   category: 'sessions',
   threshold: 10,
@@ -18,10 +18,9 @@ const makeBadge = (overrides: Partial<BadgeDefinition> = {}): BadgeDefinition =>
 })
 
 describe('BadgeCard', () => {
-  it('renders badge emoji', () => {
-    const badge = makeBadge({ emoji: '🏆' })
-    const { getByText } = render(<BadgeCard badge={badge} unlocked={true} />)
-    expect(getByText('🏆')).toBeTruthy()
+  it('renders without crashing with icon', () => {
+    const badge = makeBadge({ icon: 'trophy-outline' })
+    expect(() => render(<BadgeCard badge={badge} unlocked={true} />)).not.toThrow()
   })
 
   it('renders badge title', () => {

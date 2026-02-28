@@ -18,8 +18,8 @@ describe('LevelBadge', () => {
     expect(getByText('Niveau 42')).toBeTruthy()
   })
 
-  it('affiche l\'étoile emoji', () => {
-    const { getByText } = render(<LevelBadge level={3} />)
-    expect(getByText('⭐')).toBeTruthy()
+  it('affiche l\'icône étoile', () => {
+    const { getByTestId } = render(<LevelBadge level={3} />)
+    expect(getByTestId('level-star')).toBeTruthy()
   })
 })
