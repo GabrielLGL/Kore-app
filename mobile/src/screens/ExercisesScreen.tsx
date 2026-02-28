@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react'
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, SafeAreaView, ScrollView, Animated, Platform, UIManager, BackHandler, Keyboard } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
@@ -109,19 +109,21 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
   }, [navigation])
 
   // --- GESTION BOUTON RETOUR ANDROID ---
+  const isOptionsVisibleRef = useRef(isOptionsVisible)
   useEffect(() => {
-    const backAction = () => {
-      // Si le BottomSheet Options est ouvert, le fermer au lieu de naviguer
-      if (isOptionsVisible) {
+    isOptionsVisibleRef.current = isOptionsVisible
+  }, [isOptionsVisible])
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isOptionsVisibleRef.current) {
         setIsOptionsVisible(false)
         return true // Consomme l'événement
       }
       return false // Laisse le comportement par défaut
-    }
-
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
+    })
     return () => backHandler.remove()
-  }, [isOptionsVisible])
+  }, [])
 
   // --- GESTION VISIBILITÉ CLAVIER ---
   useEffect(() => {

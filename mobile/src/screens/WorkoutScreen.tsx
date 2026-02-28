@@ -35,6 +35,7 @@ import {
 import { checkBadges, type CheckBadgesParams } from '../model/utils/badgeHelpers'
 import { type BadgeDefinition } from '../model/utils/badgeConstants'
 import UserBadge from '../model/models/UserBadge'
+import SetModel from '../model/models/Set'
 import { useWorkoutTimer } from '../hooks/useWorkoutTimer'
 import { useWorkoutState } from '../hooks/useWorkoutState'
 import { useKeyboardAnimation } from '../hooks/useKeyboardAnimation'
@@ -231,8 +232,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         const newTotalPrs = (user.totalPrs || 0) + totalPrs
         const newBestStreak = Math.max(streakResult.bestStreak, streakResult.currentStreak)
 
-        const allSetsRaw = await database.get<UserBadge>('sets').query().fetch() as unknown as Array<{ _raw: { exercise_id: string } }>
-        const distinctExerciseCount = new Set(allSetsRaw.map(s => s._raw.exercise_id)).size
+        const allSetsRaw = await database.get<SetModel>('sets').query().fetch()
+        const distinctExerciseCount = new Set(allSetsRaw.map(s => (s._raw as unknown as { exercise_id: string }).exercise_id)).size
 
         const existingBadgeRecords = await database.get<UserBadge>('user_badges').query().fetch()
         const existingBadgeIds = existingBadgeRecords.map(b => b.badgeId)

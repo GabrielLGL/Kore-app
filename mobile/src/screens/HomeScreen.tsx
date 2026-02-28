@@ -120,8 +120,8 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
     const celebrations = route.params?.celebrations
     if (!celebrations) return
     const queue: CelebrationItem[] = [
-      ...celebrations.milestones.map(m => ({ type: 'milestone' as const, data: m })),
-      ...celebrations.badges.map(b => ({ type: 'badge' as const, data: b })),
+      ...(celebrations.milestones ?? []).map(m => ({ type: 'milestone' as const, data: m })),
+      ...(celebrations.badges ?? []).map(b => ({ type: 'badge' as const, data: b })),
     ]
     if (queue.length === 0) return
     setCurrentCelebration(queue[0])
