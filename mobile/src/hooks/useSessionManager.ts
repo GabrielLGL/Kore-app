@@ -48,6 +48,7 @@ export function useSessionManager(
   const [targetSets, setTargetSets] = useState('')
   const [targetReps, setTargetReps] = useState('')
   const [targetWeight, setTargetWeight] = useState('')
+  const [targetRestTime, setTargetRestTime] = useState('')
 
   // --- SELECTED EXERCISE ---
   const [selectedSessionExercise, setSelectedSessionExercise] = useState<SessionExercise | null>(null)
@@ -125,11 +126,17 @@ export function useSessionManager(
       const weightVal = Math.min(Math.max(parseNumericInput(targetWeight), 0), 999)
       const repsVal = parseIntegerInput(targetReps)
 
+      const restTimeParsed = targetRestTime.trim() === '' ? null : parseInt(targetRestTime, 10)
+      const restTimeVal = restTimeParsed !== null && !isNaN(restTimeParsed)
+        ? Math.min(Math.max(restTimeParsed, 10), 600)
+        : null
+
       await database.write(async () => {
         await selectedSessionExercise.update((se) => {
           se.setsTarget = setsVal
           se.repsTarget = targetReps
           se.weightTarget = weightVal
+          se.restTime = restTimeVal
         })
 
         await database.get<PerformanceLog>('performance_logs').create((log) => {
@@ -204,6 +211,7 @@ export function useSessionManager(
     setTargetSets(sessionExercise.setsTarget?.toString() || '')
     setTargetReps(sessionExercise.repsTarget || '')
     setTargetWeight(sessionExercise.weightTarget?.toString() || '')
+    setTargetRestTime(sessionExercise.restTime?.toString() || '')
   }
 
   /**
@@ -213,6 +221,7 @@ export function useSessionManager(
     setTargetSets('')
     setTargetReps('')
     setTargetWeight('')
+    setTargetRestTime('')
   }
 
   /**
@@ -339,6 +348,8 @@ export function useSessionManager(
     setTargetReps,
     targetWeight,
     setTargetWeight,
+    targetRestTime,
+    setTargetRestTime,
     isFormValid,
 
     // Selected exercise

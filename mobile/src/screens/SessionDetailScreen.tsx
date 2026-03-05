@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native'
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native'
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
@@ -47,6 +47,8 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
     setTargetReps,
     targetWeight,
     setTargetWeight,
+    targetRestTime,
+    setTargetRestTime,
     isFormValid,
     // Selected exercise
     selectedSessionExercise,
@@ -306,6 +308,18 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
           onWeightChange={setTargetWeight}
           autoFocus
         />
+        <View>
+          <Text style={styles.restTimeLabel}>{t.sessionDetail.restTime}</Text>
+          <TextInput
+            style={styles.restTimeInput}
+            keyboardType="numeric"
+            value={targetRestTime}
+            onChangeText={setTargetRestTime}
+            placeholder={t.sessionDetail.restTimePlaceholder}
+            placeholderTextColor={colors.placeholder}
+          />
+          <Text style={styles.restTimeHelper}>{t.sessionDetail.restTimeHelper}</Text>
+        </View>
       </CustomModal>
 
       {/* --- BOTTOM SHEET TYPE DE GROUPE --- */}
@@ -408,6 +422,11 @@ function useStyles(colors: ThemeColors) {
     sheetOptionText: { flex: 1 },
     sheetOptionTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: '600' },
     sheetOptionDesc: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
+
+    // Rest time input
+    restTimeLabel: { color: colors.textSecondary, marginBottom: spacing.xs, fontSize: fontSize.xs },
+    restTimeInput: { backgroundColor: colors.cardSecondary, color: colors.text, padding: spacing.ms, borderRadius: borderRadius.sm, fontSize: fontSize.md, marginBottom: spacing.xs },
+    restTimeHelper: { color: colors.placeholder, fontSize: fontSize.caption, marginBottom: spacing.md },
 
     // Modal Edit Styles
     confirmBtn: { flex: 0.48, backgroundColor: colors.primary, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },
