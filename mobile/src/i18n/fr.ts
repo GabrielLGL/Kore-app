@@ -105,6 +105,8 @@ export const fr = {
       permissionNeeded: 'Les notifications doivent être autorisées pour les rappels',
       hours: 'Heures',
       minutes: 'Minutes',
+      notifTitle: "C'est l'heure de s'entraîner !",
+      notifBody: 'Ton programme t\'attend sur Kore',
     },
     gamification: {
       title: 'Gamification',

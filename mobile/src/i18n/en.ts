@@ -107,6 +107,8 @@ export const en: typeof fr = {
       permissionNeeded: 'Notifications must be allowed for reminders',
       hours: 'Hours',
       minutes: 'Minutes',
+      notifTitle: "Time to train!",
+      notifBody: 'Your program awaits on Kore',
     },
     gamification: {
       title: 'Gamification',

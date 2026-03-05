@@ -204,6 +204,11 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   const [isEditingSessionNote, setIsEditingSessionNote] = React.useState(false)
   const sessionNoteRef = React.useRef(sessionExercise.notes ?? '')
 
+  // Sync ref when sessionExercise changes (FlatList recycles views)
+  React.useEffect(() => {
+    sessionNoteRef.current = sessionExercise.notes ?? ''
+  }, [sessionExercise.id, sessionExercise.notes])
+
   const setsCount = sessionExercise.setsTarget ?? 0
   const setOrders = Array.from({ length: setsCount }, (_, i) => i + 1)
   const completedCount = setOrders.filter(
