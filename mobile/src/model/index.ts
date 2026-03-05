@@ -1,6 +1,7 @@
 import { Database } from '@nozbe/watermelondb'
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite'
 import { mySchema } from './schema'
+import { migrations } from './migrations'
 
 import Program from './models/Program'
 import Session from './models/Session'
@@ -15,6 +16,7 @@ import UserBadge from './models/UserBadge'
 
 const adapter = new SQLiteAdapter({
   schema: mySchema,
+  migrations,
   // JSI désactivé : incompatible avec Bridgeless (New Architecture Expo 52).
   // WatermelonDB 0.28.x utilise l'ancienne bridge registration (non-TurboModule) —
   // elle ne fonctionne pas en mode Bridgeless (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED).

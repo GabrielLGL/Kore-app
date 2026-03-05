@@ -48,6 +48,9 @@ export default class User extends Model {
   // Langue — version 26
   @text('language_mode') languageMode!: string | null
 
+  // Tutoriel contextuel — version 28
+  @field('tutorial_completed') tutorialCompleted!: boolean
+
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
 }

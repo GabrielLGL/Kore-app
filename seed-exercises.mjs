@@ -57,7 +57,11 @@ if (!SUPABASE_KEY) {
 }
 
 const BUCKET = 'exercise-gifs'
-const EXERCISEDB_API = 'https://exercisedb.dev/api/v1/exercises?limit=0&offset=0'
+// free-exercise-db (GitHub, sans API key) — même source que build-exercise-animations.mjs
+const FREE_EXERCISE_DB_URL =
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json'
+const FREE_EXERCISE_IMG_BASE =
+  'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises'
 const BATCH_SIZE = 5
 const BATCH_DELAY_MS = 300
 
@@ -71,7 +75,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
  * @param {string} storagePath
  * @returns {Promise<boolean>}
  */
-async function gifExistsInStorage(storagePath) {
+async function imageExistsInStorage(storagePath) {
   const filename = storagePath.split('/').at(-1)
   const folder = storagePath.split('/').slice(0, -1).join('/') || ''
   const { data, error } = await supabase.storage
@@ -82,27 +86,27 @@ async function gifExistsInStorage(storagePath) {
 }
 
 /**
- * Download un GIF depuis une URL et retourne le Buffer.
+ * Download une image depuis une URL et retourne le Buffer.
  * @param {string} url
  * @returns {Promise<Buffer>}
  */
-async function downloadGif(url) {
+async function downloadImage(url) {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Download failed ${res.status}: ${url}`)
   return Buffer.from(await res.arrayBuffer())
 }
 
 /**
- * Upload un GIF dans Supabase Storage et retourne l'URL publique.
+ * Upload une image dans Supabase Storage et retourne l'URL publique.
  * @param {string} storagePath
  * @param {Buffer} buffer
  * @returns {Promise<string>}
  */
-async function uploadGif(storagePath, buffer) {
+async function uploadImage(storagePath, buffer) {
   const { error } = await supabase.storage
     .from(BUCKET)
     .upload(storagePath, buffer, {
-      contentType: 'image/gif',
+      contentType: 'image/jpeg',
       upsert: true,
     })
   if (error) throw new Error(`Storage upload: ${error.message}`)
@@ -113,21 +117,24 @@ async function uploadGif(storagePath, buffer) {
 
 /**
  * Upsert les métadonnées d'un exercice dans la table exercises.
+ * Structure free-exercise-db : primaryMuscles[], secondaryMuscles[], category, equipment, images[].
  * @param {object} exercise
- * @param {string} gifUrl
+ * @param {string} imageUrl
  */
-async function upsertExercise(exercise, gifUrl) {
+async function upsertExercise(exercise, imageUrl) {
   const { error } = await supabase.from('exercises').upsert(
     {
       id: exercise.id,
       name: exercise.name,
-      body_part: exercise.bodyPart,
-      equipment: exercise.equipment,
-      target: exercise.target,
+      body_part: exercise.category ?? 'other',
+      equipment: exercise.equipment ?? 'body only',
+      target: exercise.primaryMuscles?.[0] ?? 'other',
       secondary_muscles: exercise.secondaryMuscles ?? [],
       instructions: exercise.instructions ?? [],
-      gif_url: gifUrl,
-      gif_original_url: exercise.gifUrl ?? null,
+      gif_url: imageUrl,
+      gif_original_url: exercise.images?.[0]
+        ? `${FREE_EXERCISE_IMG_BASE}/${exercise.images[0]}`
+        : null,
     },
     { onConflict: 'id' }
   )
@@ -142,11 +149,11 @@ async function upsertExercise(exercise, gifUrl) {
  */
 async function processExercise(exercise, index, total) {
   const label = `[${index}/${total}] ${exercise.name}`
-  const storagePath = `${exercise.id}.gif`
+  const storagePath = `${exercise.id}.jpg`
 
   try {
     // 1. Skip si déjà uploadé (idempotent)
-    const exists = await gifExistsInStorage(storagePath)
+    const exists = await imageExistsInStorage(storagePath)
     if (exists) {
       const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath)
       await upsertExercise(exercise, data.publicUrl)
@@ -154,18 +161,19 @@ async function processExercise(exercise, index, total) {
       return
     }
 
-    // 2. Download le GIF
-    if (!exercise.gifUrl) {
-      console.log(`${label} ⚠ pas de gifUrl → skipped`)
+    // 2. Récupérer la première image disponible
+    if (!exercise.images || exercise.images.length === 0) {
+      console.log(`${label} ⚠ pas d'image → skipped`)
       return
     }
-    const buffer = await downloadGif(exercise.gifUrl)
+    const imageUrl = `${FREE_EXERCISE_IMG_BASE}/${exercise.images[0]}`
+    const buffer = await downloadImage(imageUrl)
 
     // 3. Upload dans Storage
-    const gifUrl = await uploadGif(storagePath, buffer)
+    const publicUrl = await uploadImage(storagePath, buffer)
 
     // 4. Upsert dans la table exercises
-    await upsertExercise(exercise, gifUrl)
+    await upsertExercise(exercise, publicUrl)
 
     console.log(`${label} ✅`)
   } catch (err) {
@@ -175,10 +183,10 @@ async function processExercise(exercise, index, total) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('[info] Fetching exercisedb.dev...')
-  const res = await fetch(EXERCISEDB_API)
+  console.log('[info] Fetching free-exercise-db dataset (GitHub)...')
+  const res = await fetch(FREE_EXERCISE_DB_URL)
   if (!res.ok) {
-    console.error(`[fatal] exercisedb.dev fetch failed: ${res.status}`)
+    console.error(`[fatal] free-exercise-db fetch failed: ${res.status}`)
     process.exit(1)
   }
 
@@ -201,7 +209,7 @@ async function main() {
   console.log('')
   console.log(`[done] ${total} exercices traités`)
   console.log('[done] Vérifier dans Supabase Dashboard :')
-  console.log(`       Storage → exercise-gifs → ${total} fichiers .gif`)
+  console.log(`       Storage → exercise-gifs → fichiers .jpg`)
   console.log(`       Table Editor → exercises → ${total} lignes`)
 }
 

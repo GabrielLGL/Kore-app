@@ -98,6 +98,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
+          testID="globe-catalog-button"
           onPress={() => {
             haptics.onPress()
             navigation.navigate('ExerciseCatalog')

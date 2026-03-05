@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 26, // v26 : language_mode
+  version: 28, // v28 : tutorial_completed
   tables: [
     tableSchema({
       name: 'programs',
@@ -35,6 +35,9 @@ export const mySchema = appSchema({
         { name: 'sets_target_max', type: 'number', isOptional: true },
         { name: 'reps_target', type: 'string', isOptional: true },
         { name: 'weight_target', type: 'number', isOptional: true },
+        { name: 'superset_id', type: 'string', isOptional: true },
+        { name: 'superset_type', type: 'string', isOptional: true },
+        { name: 'superset_position', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ]
@@ -87,6 +90,7 @@ export const mySchema = appSchema({
             {name: 'total_prs', type: 'number'},
             {name: 'theme_mode', type: 'string', isOptional: true},
             {name: 'language_mode', type: 'string', isOptional: true},
+            {name: 'tutorial_completed', type: 'boolean'},
             {name: 'created_at', type: 'number'},
             {name: 'updated_at', type: 'number'}
         ]
