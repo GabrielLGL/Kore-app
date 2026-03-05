@@ -8,6 +8,7 @@ import { useHaptics } from '../hooks/useHaptics'
 import { useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import { AlertDialog } from '../components/AlertDialog'
+import { validateExerciseInput } from '../model/utils/validationHelpers'
 import { fontSize, spacing, borderRadius } from '../theme'
 import type { ThemeColors } from '../theme'
 
@@ -59,7 +60,7 @@ export default function CreateExerciseScreen() {
   const [isErrorVisible, setIsErrorVisible] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const isFormValid = name.trim() !== '' && muscles.length > 0 && equipment !== ''
+  const isFormValid = validateExerciseInput(name, muscles, equipment).valid
 
   const toggleMuscle = (muscle: string) => {
     setMuscles(prev =>
