@@ -4,14 +4,16 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
   useWindowDimensions,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
 import { LineChart } from 'react-native-chart-kit'
-import { useRoute } from '@react-navigation/native'
+import { useRoute, useNavigation } from '@react-navigation/native'
 import type { RouteProp } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 
 import { database } from '../model'
 import Exercise from '../model/models/Exercise'
@@ -19,6 +21,7 @@ import WorkoutSet from '../model/models/Set'
 import History from '../model/models/History'
 import Session from '../model/models/Session'
 import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
+import { useHaptics } from '../hooks/useHaptics'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -45,6 +48,8 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
   const chartConfig = createChartConfig({ showDots: true, colors })
   const { t, language } = useLanguage()
   const { width: screenWidth } = useWindowDimensions()
+  const haptics = useHaptics()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const dateLocale = language === 'fr' ? 'fr-FR' : 'en-US'
 
   const statsForExercise = useMemo(
@@ -164,6 +169,16 @@ function ExerciseHistoryContent({ exercise, setsForExercise, histories, sessions
                     </Text>
                   ))}
                 </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    haptics.onSelect()
+                    navigation.navigate('HistoryDetail', { historyId: stat.historyId })
+                  }}
+                  style={styles.editBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="create-outline" size={18} color={colors.primary} />
+                </TouchableOpacity>
               </View>
             </View>
           ))}
@@ -294,6 +309,10 @@ function useStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.sm,
       paddingVertical: 2,
       borderRadius: borderRadius.sm,
+    },
+    editBtn: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
     },
     separator: {
       height: 1,

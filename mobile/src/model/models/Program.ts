@@ -44,9 +44,18 @@ export default class Program extends Model {
           .query(Q.where('session_id', session.id))
           .fetch()
 
+        // Map old superset IDs to new ones so grouped exercises stay together
+        const supersetIdMap = new Map<string, string>()
         for (const se of sessionExos) {
           const exercise = await se.exercise.fetch()
           if (exercise) {
+            let newSupersetId: string | null = null
+            if (se.supersetId) {
+              if (!supersetIdMap.has(se.supersetId)) {
+                supersetIdMap.set(se.supersetId, `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`)
+              }
+              newSupersetId = supersetIdMap.get(se.supersetId)!
+            }
             await db.get<SessionExercise>('session_exercises').create(newSE => {
               newSE.session.set(newSession)
               newSE.exercise.set(exercise)
@@ -54,6 +63,9 @@ export default class Program extends Model {
               newSE.setsTarget = se.setsTarget
               newSE.repsTarget = se.repsTarget
               newSE.weightTarget = se.weightTarget
+              newSE.supersetId = newSupersetId
+              newSE.supersetType = se.supersetType ?? null
+              newSE.supersetPosition = se.supersetPosition ?? null
             })
           }
         }

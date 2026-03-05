@@ -15,6 +15,9 @@ export default class SessionExercise extends Model {
   @field('sets_target_max') setsTargetMax?: number
   @field('reps_target') repsTarget?: string
   @field('weight_target') weightTarget?: number
+  @field('superset_id') supersetId?: string | null
+  @field('superset_type') supersetType?: string | null
+  @field('superset_position') supersetPosition?: number | null
 
   @relation('sessions', 'session_id') session!: Relation<Session>
   @relation('exercises', 'exercise_id') exercise!: Relation<Exercise>

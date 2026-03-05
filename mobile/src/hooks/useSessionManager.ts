@@ -215,6 +215,99 @@ export function useSessionManager(
     }
   }
 
+  /**
+   * Groupe des exercices en superset ou circuit
+   * @param items - SessionExercises à grouper (minimum 2)
+   * @param type - 'superset' ou 'circuit'
+   * @returns true si succès
+   */
+  const groupExercises = async (
+    items: SessionExercise[],
+    type: 'superset' | 'circuit'
+  ): Promise<boolean> => {
+    if (items.length < 2) return false
+
+    try {
+      const supersetId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+
+      await database.write(async () => {
+        await database.batch(
+          ...items.map((item, index) =>
+            item.prepareUpdate((se) => {
+              se.supersetId = supersetId
+              se.supersetType = type
+              se.supersetPosition = index
+            })
+          )
+        )
+      })
+
+      if (onSuccess) onSuccess()
+      return true
+    } catch (error) {
+      if (__DEV__) console.error('[useSessionManager] groupExercises failed:', error)
+      return false
+    }
+  }
+
+  /**
+   * Dissocie un exercice de son superset/circuit
+   * Si le groupe restant n'a plus qu'1 exercice, dissocie tout le groupe
+   * @param sessionExercise - L'exercice à dissocier
+   * @param allSessionExercises - Tous les exercices de la session (pour trouver les voisins)
+   * @returns true si succès
+   */
+  const ungroupExercise = async (
+    sessionExercise: SessionExercise,
+    allSessionExercises: SessionExercise[]
+  ): Promise<boolean> => {
+    if (!sessionExercise.supersetId) return false
+
+    try {
+      const groupId = sessionExercise.supersetId
+      const groupMembers = allSessionExercises.filter(se => se.supersetId === groupId)
+
+      await database.write(async () => {
+        if (groupMembers.length <= 2) {
+          // Dissocier tout le groupe (il ne resterait qu'1 exercice)
+          await database.batch(
+            ...groupMembers.map(item =>
+              item.prepareUpdate((se) => {
+                se.supersetId = null
+                se.supersetType = null
+                se.supersetPosition = null
+              })
+            )
+          )
+        } else {
+          // Retirer seulement cet exercice du groupe
+          await sessionExercise.update((se) => {
+            se.supersetId = null
+            se.supersetType = null
+            se.supersetPosition = null
+          })
+          // Recalculer les positions des restants
+          const remaining = groupMembers
+            .filter(se => se.id !== sessionExercise.id)
+            .sort((a, b) => (a.supersetPosition ?? 0) - (b.supersetPosition ?? 0))
+          await database.batch(
+            ...remaining.map((item, index) =>
+              item.prepareUpdate((se) => {
+                se.supersetPosition = index
+              })
+            )
+          )
+        }
+      })
+
+      if (onSuccess) onSuccess()
+      return true
+    } catch (error) {
+      if (__DEV__) console.error('[useSessionManager] ungroupExercise failed:', error)
+      return false
+    }
+  }
+
   return {
     // Target inputs states
     targetSets,
@@ -236,5 +329,7 @@ export function useSessionManager(
     prepareEditTargets,
     resetTargets,
     reorderExercises,
+    groupExercises,
+    ungroupExercise,
   }
 }

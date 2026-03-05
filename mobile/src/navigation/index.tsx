@@ -37,6 +37,7 @@ import type { GeneratedPlan } from '../services/ai/types'
 import AssistantPreviewScreen from '../screens/AssistantPreviewScreen'
 import CreateExerciseScreen from '../screens/CreateExerciseScreen'
 import ExerciseCatalogScreen from '../screens/ExerciseCatalogScreen'
+import HistoryDetailScreen from '../screens/HistoryDetailScreen'
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -60,6 +61,7 @@ export type RootStackParamList = {
   AssistantPreview: { plan: GeneratedPlan; mode: 'program' | 'session'; targetProgramId?: string };
   CreateExercise: undefined;
   ExerciseCatalog: undefined;
+  HistoryDetail: { historyId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -191,7 +193,8 @@ function AppContent() {
         <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} options={{ title: '' }} />
         <Stack.Screen name="AssistantPreview" component={AssistantPreviewScreen} options={{ title: t.navigation.assistantPreview }} />
         <Stack.Screen name="CreateExercise" component={CreateExerciseScreen} options={{ title: t.exercises.newTitle }} />
-        <Stack.Screen name="ExerciseCatalog" component={ExerciseCatalogScreen} options={{ title: 'Catalogue global' }} />
+        <Stack.Screen name="ExerciseCatalog" component={ExerciseCatalogScreen} options={{ title: t.navigation.catalogueGlobal }} />
+        <Stack.Screen name="HistoryDetail" component={HistoryDetailScreen} options={{ title: '' }} />
       </Stack.Navigator>
     </NavigationContainer>
   )

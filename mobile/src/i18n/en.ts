@@ -131,6 +131,16 @@ export const en: typeof fr = {
       exportErrorMessage: 'Unable to export data. Please try again.',
       importErrorTitle: 'Import error',
       importErrorMessage: 'Unable to import data. Make sure the file is a valid Kore export.',
+      deleteAllLabel: 'Delete all my data',
+      deleteAllLoading: 'Deleting...',
+      deleteAllConfirmTitle: 'Delete all your data?',
+      deleteAllConfirmMessage:
+        'This action is IRREVERSIBLE. All your data will be deleted:\n\n• Programs and sessions\n• Training history\n• Statistics and records\n• Body measurements\n• Unlocked badges\n• Custom exercises\n• AI API key\n\nCatalog exercises will be kept.',
+      deleteAllConfirmButton: 'Delete everything',
+      deleteAllSuccessTitle: 'Data deleted',
+      deleteAllSuccessMessage: 'All your personal data has been deleted.',
+      deleteAllErrorTitle: 'Deletion error',
+      deleteAllErrorMessage: 'Unable to delete data. Please try again.',
     },
     about: {
       title: 'About',
@@ -177,6 +187,12 @@ export const en: typeof fr = {
     series: 'sets',
     rest: 'Rest',
     dayLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    quickStart: {
+      title: 'Resume',
+      subtitle: 'Last session',
+      go: 'Go',
+      noSession: 'No recent session',
+    },
     motivational: {
       streak: '🔥 {n} days in a row — keep it up!',
       weeklyRecord: "💥 New weekly record — you're improving!",
@@ -202,6 +218,7 @@ export const en: typeof fr = {
     statsHistory: 'History',
     badges: 'My Badges',
     assistantPreview: 'Generated program',
+    catalogueGlobal: 'Global catalog',
   },
 
   programs: {
@@ -230,6 +247,20 @@ export const en: typeof fr = {
     removeConfirmTitle: 'Remove exercise?',
     removeConfirmMessage: 'Are you sure you want to remove this exercise from this session?',
     editTarget: 'Edit target',
+    superset: {
+      createSuperset: 'Create superset',
+      createCircuit: 'Create circuit',
+      supersetLabel: 'Superset',
+      circuitLabel: 'Circuit',
+      ungroup: 'Ungroup',
+      selectExercises: 'Select 2+ exercises',
+      groupCreated: 'Group created',
+      groupRemoved: 'Group removed',
+      minExercises: 'Select at least 2 exercises',
+      groupTypeTitle: 'Group type',
+      supersetDesc: '2 exercises alternating',
+      circuitDesc: '3+ exercises in rotation',
+    },
   },
 
   exercises: {
@@ -342,6 +373,9 @@ export const en: typeof fr = {
     errorMessage: 'Unable to start the session. Please try again.',
     noExercises: 'No exercises in this session.',
     loading: 'Loading...',
+    supersetRound: 'Superset',
+    circuitRound: 'Circuit',
+    noRestSuperset: 'No rest — next exercise in group',
   },
 
   programDetail: {
@@ -670,6 +704,39 @@ export const en: typeof fr = {
       t500000: 'The weight of a plane.',
       t1000000: 'Interstellar.',
     },
+  },
+
+  coachMarks: {
+    skip: 'Skip',
+    next: 'Next',
+    finish: 'Got it!',
+    steps: {
+      kpis: 'Your global stats appear here: sessions, volume, tonnage and personal records.',
+      gamification: 'Earn XP with every workout. Level up and unlock badges!',
+      weeklyActivity: 'Your weekly activity at a glance.',
+      programs: 'Start by creating your first training program.',
+      settings: 'Change your preferences at any time.',
+    },
+  },
+
+  historyDetail: {
+    title: 'Workout detail',
+    sessionFallback: 'Session',
+    duration: 'Duration',
+    noteLabel: 'Session note',
+    notePlaceholder: 'How it felt, conditions, progress...',
+    set: 'Set',
+    weight: 'Weight',
+    reps: 'Reps',
+    addSet: '+ Add a set',
+    saveChanges: 'Save changes',
+    deleteWorkout: 'Delete workout',
+    deleteWorkoutTitle: 'Delete this workout?',
+    deleteWorkoutMessage: 'This action is irreversible. The workout will be deleted.',
+    deleteSetTitle: 'Delete this set?',
+    deleteSetMessage: 'This action is irreversible.',
+    noSets: 'No sets',
+    bodyweight: 'BW',
   },
 
   exerciseInfoSheet: {

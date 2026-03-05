@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useLayoutEffect, useState } from 'react'
+import React, { useEffect, useRef, useLayoutEffect, useState, useMemo } from 'react'
 import {
   View,
   Text,
@@ -57,6 +57,31 @@ import {
   requestNotificationPermission,
 } from '../services/notificationService'
 
+type WorkoutListItem =
+  | { type: 'exercise'; data: SessionExercise; supersetId: string | null }
+  | { type: 'supersetHeader'; supersetId: string; supersetType: string; count: number }
+
+function buildWorkoutList(sessionExercises: SessionExercise[]): WorkoutListItem[] {
+  const result: WorkoutListItem[] = []
+  const seenGroups = new Set<string>()
+
+  for (const se of sessionExercises) {
+    const groupId = se.supersetId
+    if (groupId && !seenGroups.has(groupId)) {
+      seenGroups.add(groupId)
+      const groupMembers = sessionExercises.filter(s => s.supersetId === groupId)
+      result.push({
+        type: 'supersetHeader',
+        supersetId: groupId,
+        supersetType: se.supersetType ?? 'superset',
+        count: groupMembers.length,
+      })
+    }
+    result.push({ type: 'exercise', data: se, supersetId: groupId ?? null })
+  }
+  return result
+}
+
 interface WorkoutContentProps {
   session: Session
   sessionExercises: SessionExercise[]
@@ -102,6 +127,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   const { formattedTime } = useWorkoutTimer(startTimestampRef.current)
   const { setInputs, validatedSets, totalVolume, updateSetInput, validateSet, unvalidateSet } =
     useWorkoutState(sessionExercises, historyId)
+
+  const workoutList = useMemo(() => buildWorkoutList(sessionExercises), [sessionExercises])
 
   // Quand le résumé se ferme : naviguer vers Home avec les célébrations en params
   useEffect(() => {
@@ -349,8 +376,23 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   ) => {
     const success = await validateSet(sessionExercise, setOrder)
     if (success) {
-      if (user?.timerEnabled) {
-        setShowRestTimer(true)
+      const currentSupersetId = sessionExercise.supersetId
+      if (currentSupersetId) {
+        // In a superset: check if all OTHER exercises in the group already have this set validated
+        // (the current one was just validated but setState is async, so it's not in validatedSets yet)
+        const groupMembers = sessionExercises.filter(se => se.supersetId === currentSupersetId)
+        const allGroupSetsDone = groupMembers.every(
+          se => se.id === sessionExercise.id || validatedSets[`${se.id}_${setOrder}`]
+        )
+        // Show rest timer only after completing a full round of the superset
+        if (user?.timerEnabled && allGroupSetsDone) {
+          setShowRestTimer(true)
+        }
+      } else {
+        // Not in a superset: normal rest timer behavior
+        if (user?.timerEnabled) {
+          setShowRestTimer(true)
+        }
       }
     } else {
       haptics.onError()
@@ -368,20 +410,43 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
 
       {historyId ? (
         <FlatList
-          data={sessionExercises}
-          keyExtractor={item => item.id}
+          data={workoutList}
+          keyExtractor={(item, index) =>
+            item.type === 'supersetHeader'
+              ? `header_${item.supersetId}`
+              : `exercise_${item.data.id}`
+          }
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => (
-            <WorkoutExerciseCard
-              sessionExercise={item}
-              historyId={historyId}
-              setInputs={setInputs}
-              validatedSets={validatedSets}
-              onUpdateInput={updateSetInput}
-              onValidateSet={handleValidateSet}
-              onUnvalidateSet={unvalidateSet}
-            />
-          )}
+          renderItem={({ item: listItem }) => {
+            if (listItem.type === 'supersetHeader') {
+              const label = listItem.supersetType === 'circuit'
+                ? t.workout.circuitRound
+                : t.workout.supersetRound
+              const color = listItem.supersetType === 'circuit'
+                ? colors.warning
+                : colors.primary
+              return (
+                <View style={styles.supersetHeader}>
+                  <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
+                  <Text style={[styles.supersetHeaderText, { color }]}>
+                    {label} ({listItem.count})
+                  </Text>
+                  <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
+                </View>
+              )
+            }
+            return (
+              <WorkoutExerciseCard
+                sessionExercise={listItem.data}
+                historyId={historyId}
+                setInputs={setInputs}
+                validatedSets={validatedSets}
+                onUpdateInput={updateSetInput}
+                onValidateSet={handleValidateSet}
+                onUnvalidateSet={unvalidateSet}
+              />
+            )
+          }}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <Text style={styles.emptyText}>{t.workout.noExercises}</Text>
@@ -495,6 +560,22 @@ function useStyles(colors: ThemeColors) {
       borderTopWidth: 1,
       borderTopColor: colors.card,
       backgroundColor: colors.background,
+    },
+    supersetHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+    },
+    supersetHeaderLine: {
+      flex: 1,
+      height: 1,
+    },
+    supersetHeaderText: {
+      fontSize: fontSize.xs,
+      fontWeight: '800',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
     },
   })
 }

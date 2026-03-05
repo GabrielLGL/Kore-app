@@ -16,6 +16,8 @@ import { CustomModal } from '../components/CustomModal'
 import { AlertDialog } from '../components/AlertDialog'
 import { useHaptics } from '../hooks/useHaptics'
 import { useSessionManager } from '../hooks/useSessionManager'
+import { Ionicons } from '@expo/vector-icons'
+import { BottomSheet } from '../components/BottomSheet'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { RootStackParamList } from '../navigation'
 import { fontSize, spacing, borderRadius } from '../theme'
@@ -56,6 +58,8 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
     prepareEditTargets,
     resetTargets,
     reorderExercises,
+    groupExercises,
+    ungroupExercise,
   } = useSessionManager(session, haptics.onSuccess)
 
   // --- ÉTATS LOCAUX ---
@@ -67,6 +71,60 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
     message: string
     onConfirm: () => void | Promise<void>
   }>({ title: '', message: '', onConfirm: async () => {} })
+
+  // --- SUPERSET SELECTION MODE ---
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
+  const [isGroupTypeVisible, setIsGroupTypeVisible] = useState(false)
+
+  const toggleSelection = (se: SessionExercise) => {
+    if (!selectionMode) {
+      setSelectionMode(true)
+      setSelectedItems(new Set([se.id]))
+      return
+    }
+    setSelectedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(se.id)) {
+        next.delete(se.id)
+      } else {
+        next.add(se.id)
+      }
+      if (next.size === 0) setSelectionMode(false)
+      return next
+    })
+  }
+
+  const cancelSelection = () => {
+    setSelectionMode(false)
+    setSelectedItems(new Set())
+  }
+
+  const handleCreateGroup = async (type: 'superset' | 'circuit') => {
+    const items = sessionExercises.filter(se => selectedItems.has(se.id))
+    if (items.length < 2) return
+    await groupExercises(items, type)
+    setIsGroupTypeVisible(false)
+    cancelSelection()
+  }
+
+  const handleUngroup = async (se: SessionExercise) => {
+    haptics.onPress()
+    await ungroupExercise(se, sessionExercises)
+  }
+
+  const getGroupInfo = (se: SessionExercise): { type: string; isFirst: boolean; isLast: boolean } | undefined => {
+    if (!se.supersetId) return undefined
+    const groupMembers = sessionExercises
+      .filter(s => s.supersetId === se.supersetId)
+      .sort((a, b) => (a.supersetPosition ?? 0) - (b.supersetPosition ?? 0))
+    const idx = groupMembers.findIndex(s => s.id === se.id)
+    return {
+      type: se.supersetType ?? 'superset',
+      isFirst: idx === 0,
+      isLast: idx === groupMembers.length - 1,
+    }
+  }
 
   useLayoutEffect(() => { navigation.setOptions({ title: session.name, headerStyle: { backgroundColor: colors.background }, headerTintColor: colors.text }) }, [navigation, session.name, colors])
 
@@ -109,6 +167,28 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* --- BARRE DE SÉLECTION SUPERSET --- */}
+      {selectionMode && (
+        <View style={styles.selectionBar}>
+          <TouchableOpacity onPress={cancelSelection} style={styles.selectionBarBtn}>
+            <Ionicons name="close" size={20} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.selectionBarText}>
+            {selectedItems.size} {t.sessionDetail.superset.selectExercises}
+          </Text>
+          <TouchableOpacity
+            onPress={() => {
+              if (selectedItems.size < 2) return
+              setIsGroupTypeVisible(true)
+            }}
+            style={[styles.selectionBarCreateBtn, selectedItems.size < 2 && { opacity: 0.4 }]}
+            disabled={selectedItems.size < 2}
+          >
+            <Ionicons name="link" size={18} color={colors.background} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.listWrapper}>
         <DraggableFlatList
           data={sessionExercises}
@@ -118,6 +198,11 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
               item={item}
               drag={drag}
               dragActive={isActive}
+              selectionMode={selectionMode}
+              isSelected={selectedItems.has(item.id)}
+              onSelect={toggleSelection}
+              groupInfo={getGroupInfo(item)}
+              onUngroup={handleUngroup}
               onEditTargets={(se: SessionExercise) => {
                 haptics.onPress()
                 prepareEditTargets(se)
@@ -136,25 +221,42 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
       </View>
 
       <View style={styles.footerContainer}>
-        <TouchableOpacity
-          style={[styles.launchButton, sessionExercises.length === 0 && { opacity: 0.4 }]}
-          onPress={() => {
-            haptics.onPress()
-            navigation.navigate('Workout', { sessionId: session.id })
-          }}
-          disabled={sessionExercises.length === 0}
-        >
-          <Text style={styles.launchButtonText}>{t.sessionDetail.startWorkout}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => {
-            haptics.onPress()
-            setIsAddModalVisible(true)
-          }}
-        >
-          <Text style={styles.addButtonText}>{t.sessionDetail.addExercise}</Text>
-        </TouchableOpacity>
+        {!selectionMode && (
+          <>
+            <TouchableOpacity
+              style={[styles.launchButton, sessionExercises.length === 0 && { opacity: 0.4 }]}
+              onPress={() => {
+                haptics.onPress()
+                navigation.navigate('Workout', { sessionId: session.id })
+              }}
+              disabled={sessionExercises.length === 0}
+            >
+              <Text style={styles.launchButtonText}>{t.sessionDetail.startWorkout}</Text>
+            </TouchableOpacity>
+            <View style={styles.footerRow}>
+              <TouchableOpacity
+                style={[styles.addButton, { flex: 1 }]}
+                onPress={() => {
+                  haptics.onPress()
+                  setIsAddModalVisible(true)
+                }}
+              >
+                <Text style={styles.addButtonText}>{t.sessionDetail.addExercise}</Text>
+              </TouchableOpacity>
+              {sessionExercises.length >= 2 && (
+                <TouchableOpacity
+                  style={styles.supersetButton}
+                  onPress={() => {
+                    haptics.onPress()
+                    setSelectionMode(true)
+                  }}
+                >
+                  <Ionicons name="link" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </>
+        )}
       </View>
 
       {/* --- MODALE AJOUT EXERCICE --- */}
@@ -206,6 +308,34 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
         />
       </CustomModal>
 
+      {/* --- BOTTOM SHEET TYPE DE GROUPE --- */}
+      <BottomSheet
+        visible={isGroupTypeVisible}
+        onClose={() => setIsGroupTypeVisible(false)}
+        title={t.sessionDetail.superset.groupTypeTitle}
+      >
+        <TouchableOpacity
+          style={styles.sheetOption}
+          onPress={() => handleCreateGroup('superset')}
+        >
+          <Ionicons name="swap-horizontal" size={22} color={colors.primary} />
+          <View style={styles.sheetOptionText}>
+            <Text style={styles.sheetOptionTitle}>{t.sessionDetail.superset.supersetLabel}</Text>
+            <Text style={styles.sheetOptionDesc}>{t.sessionDetail.superset.supersetDesc}</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.sheetOption}
+          onPress={() => handleCreateGroup('circuit')}
+        >
+          <Ionicons name="repeat" size={22} color={colors.warning} />
+          <View style={styles.sheetOptionText}>
+            <Text style={styles.sheetOptionTitle}>{t.sessionDetail.superset.circuitLabel}</Text>
+            <Text style={styles.sheetOptionDesc}>{t.sessionDetail.superset.circuitDesc}</Text>
+          </View>
+        </TouchableOpacity>
+      </BottomSheet>
+
     </SafeAreaView>
   )
 }
@@ -228,6 +358,56 @@ function useStyles(colors: ThemeColors) {
     launchButtonText: { color: colors.text, fontWeight: 'bold', fontSize: fontSize.sm },
     addButton: { backgroundColor: colors.cardSecondary, padding: BTN_PADDING, borderRadius: borderRadius.md, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
     addButtonText: { color: colors.primary, fontWeight: 'bold', fontSize: fontSize.sm },
+
+    // Selection bar
+    selectionBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    selectionBarBtn: { padding: spacing.sm },
+    selectionBarText: { flex: 1, color: colors.text, fontSize: fontSize.sm, marginLeft: spacing.sm },
+    selectionBarCreateBtn: {
+      backgroundColor: colors.primary,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    // Footer row
+    footerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    supersetButton: {
+      backgroundColor: colors.cardSecondary,
+      width: 50,
+      height: 50,
+      borderRadius: borderRadius.md,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+
+    // Group type sheet
+    sheetOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      gap: spacing.md,
+    },
+    sheetOptionText: { flex: 1 },
+    sheetOptionTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: '600' },
+    sheetOptionDesc: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
 
     // Modal Edit Styles
     confirmBtn: { flex: 0.48, backgroundColor: colors.primary, padding: spacing.ms, borderRadius: borderRadius.sm, alignItems: 'center' },

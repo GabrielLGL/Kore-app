@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -36,6 +36,9 @@ import { useHaptics } from '../hooks/useHaptics'
 import { LevelBadge } from '../components/LevelBadge'
 import { XPProgressBar } from '../components/XPProgressBar'
 import { StreakIndicator } from '../components/StreakIndicator'
+import { CoachMarks } from '../components/CoachMarks'
+import type { CoachMarkStep } from '../components/CoachMarks'
+import { useCoachMarks } from '../hooks/useCoachMarks'
 import type { RootStackParamList } from '../navigation'
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -94,6 +97,13 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
   const haptics = useHaptics()
   const { t, language } = useLanguage()
 
+  // Coach marks refs
+  const headerCardRef = useRef<View>(null)
+  const gamificationCardRef = useRef<View>(null)
+  const weeklyCardRef = useRef<View>(null)
+  const trainingGridRef = useRef<View>(null)
+  const settingsBtnRef = useRef<View>(null)
+
   const SECTIONS: Section[] = useMemo(() => [
     {
       title: t.home.sections.training,
@@ -141,11 +151,37 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
   }
 
   const user = users[0] ?? null
+
+  // Coach marks
+  const { shouldShow: shouldShowCoachMarks, markCompleted: markTutorialCompleted } = useCoachMarks(user)
+  const showCoachMarks = shouldShowCoachMarks && currentCelebration === null
+
+  const coachMarkSteps: CoachMarkStep[] = useMemo(() => [
+    { key: 'kpis', targetRef: headerCardRef, text: t.coachMarks.steps.kpis, position: 'bottom' },
+    { key: 'gamification', targetRef: gamificationCardRef, text: t.coachMarks.steps.gamification, position: 'bottom' },
+    { key: 'weeklyActivity', targetRef: weeklyCardRef, text: t.coachMarks.steps.weeklyActivity, position: 'bottom' },
+    { key: 'programs', targetRef: trainingGridRef, text: t.coachMarks.steps.programs, position: 'top' },
+    { key: 'settings', targetRef: settingsBtnRef, text: t.coachMarks.steps.settings, position: 'bottom' },
+  ], [t])
+
   const kpis = useMemo(() => computeGlobalKPIs(histories, sets), [histories, sets])
   const xpProgress = useMemo(
     () => xpToNextLevel(user?.totalXp ?? 0, user?.level ?? 1),
     [user?.totalXp, user?.level],
   )
+  const lastCompletedHistory = useMemo(() => {
+    const completed = histories.filter(h => h.endTime)
+    if (completed.length === 0) return null
+    return completed.sort((a, b) => b.startTime.getTime() - a.startTime.getTime())[0]
+  }, [histories])
+
+  const lastSessionName = useMemo(() => {
+    if (!lastCompletedHistory) return null
+    const sessionId = lastCompletedHistory.session.id
+    const session = sessions.find(s => s.id === sessionId)
+    return session?.name ?? null
+  }, [lastCompletedHistory, sessions])
+
   const motivationalPhrase = useMemo(
     () => computeMotivationalPhrase(histories, sets, language),
     [histories, sets, language],
@@ -177,7 +213,7 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
       showsVerticalScrollIndicator={false}
     >
       {/* ── Header Card ── */}
-      <View style={styles.headerCard}>
+      <View ref={headerCardRef} style={styles.headerCard}>
         <View style={styles.headerTopRow}>
           <View style={styles.headerTextBlock}>
             <Text style={styles.greeting}>
@@ -186,6 +222,7 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
             <Text style={styles.motivation}>{motivationalPhrase}</Text>
           </View>
           <TouchableOpacity
+            ref={settingsBtnRef}
             style={styles.settingsBtn}
             activeOpacity={0.6}
             onPress={() => {
@@ -209,7 +246,7 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
       </View>
 
       {/* ── Card Gamification ── */}
-      <View style={styles.gamificationCard}>
+      <View ref={gamificationCardRef} style={styles.gamificationCard}>
         <LevelBadge level={user?.level ?? 1} />
         <XPProgressBar
           currentXP={xpProgress.current}
@@ -239,8 +276,29 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
         </TouchableOpacity>
       </View>
 
+      {/* ── Quick-start ── */}
+      {lastCompletedHistory && lastSessionName && (
+        <TouchableOpacity
+          style={styles.quickStartCard}
+          activeOpacity={0.7}
+          onPress={() => {
+            haptics.onPress()
+            navigation.navigate('Workout', { sessionId: lastCompletedHistory.session.id })
+          }}
+        >
+          <Ionicons name="play-circle-outline" size={32} color={colors.primary} />
+          <View style={styles.quickStartTextBlock}>
+            <Text style={styles.quickStartTitle}>{lastSessionName}</Text>
+            <Text style={styles.quickStartSubtitle}>{t.home.quickStart.subtitle}</Text>
+          </View>
+          <View style={styles.quickStartGoBtn}>
+            <Text style={styles.quickStartGoText}>{t.home.quickStart.go}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
+
       {/* ── Card Activité Semaine ── */}
-      <View style={styles.weeklyCard}>
+      <View ref={weeklyCardRef} style={styles.weeklyCard}>
         <View style={styles.weeklyHeader}>
           <Text style={styles.sectionTitle}>{t.home.weeklyActivity}</Text>
           <Text style={styles.weeklySubtitle}>
@@ -290,10 +348,10 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
       </View>
 
       {/* ── Sections de tuiles ── */}
-      {SECTIONS.map(section => (
+      {SECTIONS.map((section, sectionIndex) => (
         <View key={section.title} style={styles.section}>
           <Text style={styles.sectionTitle}>{section.title}</Text>
-          <View style={styles.grid}>
+          <View ref={sectionIndex === 0 ? trainingGridRef : undefined} style={styles.grid}>
             {section.tiles.map(tile => (
               <TouchableOpacity
                 key={tile.route}
@@ -320,6 +378,12 @@ function HomeScreenBase({ users, histories, sets, sessions, userBadges }: Props)
       visible={currentCelebration?.type === 'badge'}
       badge={currentCelebration?.type === 'badge' ? currentCelebration.data : null}
       onClose={handleCloseCelebration}
+    />
+
+    <CoachMarks
+      visible={showCoachMarks}
+      steps={coachMarkSteps}
+      onComplete={markTutorialCompleted}
     />
 
     </LinearGradient>
@@ -429,6 +493,40 @@ function useStyles(colors: ThemeColors) {
       fontSize: fontSize.sm,
       fontWeight: '700',
       color: colors.primary,
+    },
+    // Quick-start Card
+    quickStartCard: {
+      backgroundColor: colors.card,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.ms,
+    },
+    quickStartTextBlock: {
+      flex: 1,
+    },
+    quickStartTitle: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    quickStartSubtitle: {
+      fontSize: fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    quickStartGoBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    quickStartGoText: {
+      fontSize: fontSize.sm,
+      fontWeight: '700',
+      color: colors.primaryText,
     },
     // Weekly Activity Card
     weeklyCard: {

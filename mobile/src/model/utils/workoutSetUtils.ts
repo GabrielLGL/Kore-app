@@ -89,3 +89,92 @@ export async function deleteWorkoutSet(
     await sets[0].destroyPermanently()
   })
 }
+
+/**
+ * Ajoute un set rétroactivement à une séance terminée.
+ *
+ * @param params - historyId, exerciseId, weight, reps, setOrder
+ * @returns L'instance Set créée
+ */
+export async function addRetroactiveSet(params: {
+  historyId: string
+  exerciseId: string
+  weight: number
+  reps: number
+  setOrder: number
+}): Promise<WorkoutSet> {
+  return await database.write(async () => {
+    const history = await database.get<History>('histories').find(params.historyId)
+    const exercise = await database.get<Exercise>('exercises').find(params.exerciseId)
+    return await database.get<WorkoutSet>('sets').create(record => {
+      record.history.set(history)
+      record.exercise.set(exercise)
+      record.weight = params.weight
+      record.reps = params.reps
+      record.setOrder = params.setOrder
+      record.isPr = false
+    })
+  })
+}
+
+/**
+ * Recalcule les flags isPr sur TOUS les sets d'un exercice donné.
+ * Pour chaque set (trié chronologiquement), isPr = true si c'est le poids max
+ * jamais atteint jusqu'à cette date.
+ *
+ * IMPORTANT : Contient son propre database.write() — NE JAMAIS appeler
+ * depuis un autre database.write() (nested write = crash WatermelonDB).
+ *
+ * @param exerciseId - ID de l'exercice à recalculer
+ */
+export async function recalculateSetPrs(exerciseId: string): Promise<void> {
+  const allSets = await database
+    .get<WorkoutSet>('sets')
+    .query(Q.where('exercise_id', exerciseId))
+    .fetch()
+
+  const histories = await database
+    .get<History>('histories')
+    .query(Q.where('deleted_at', null))
+    .fetch()
+
+  const activeHistoryIds = new Set(histories.map(h => h.id))
+
+  type RawSet = { history_id: string; exercise_id: string }
+  const getRaw = (s: WorkoutSet): RawSet =>
+    (s as unknown as { _raw: RawSet })._raw
+
+  // Filter to sets belonging to non-deleted histories, then sort chronologically
+  const activeSets = allSets.filter(s => activeHistoryIds.has(getRaw(s).history_id))
+
+  // We need history start times for sorting
+  const historyMap = new Map(histories.map(h => [h.id, h.startTime.getTime()]))
+
+  activeSets.sort((a, b) => {
+    const timeA = historyMap.get(getRaw(a).history_id) ?? 0
+    const timeB = historyMap.get(getRaw(b).history_id) ?? 0
+    if (timeA !== timeB) return timeA - timeB
+    return a.setOrder - b.setOrder
+  })
+
+  let maxWeight = 0
+  const updates: { set: WorkoutSet; shouldBePr: boolean }[] = []
+
+  for (const s of activeSets) {
+    const shouldBePr = s.weight > maxWeight
+    if (shouldBePr) maxWeight = s.weight
+    if (s.isPr !== shouldBePr) {
+      updates.push({ set: s, shouldBePr })
+    }
+  }
+
+  if (updates.length === 0) return
+
+  await database.write(async () => {
+    await database.batch(
+      updates.map(({ set, shouldBePr }) =>
+        set.prepareUpdate(s => { s.isPr = shouldBePr })
+      )
+    )
+  })
+}

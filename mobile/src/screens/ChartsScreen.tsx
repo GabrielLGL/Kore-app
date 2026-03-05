@@ -10,6 +10,8 @@ import {
   FlatList,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
 import { Q } from '@nozbe/watermelondb'
@@ -29,6 +31,7 @@ import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
 import type { ExerciseSessionStat } from '../model/utils/databaseHelpers'
+import type { RootStackParamList } from '../navigation'
 
 const screenWidth = Dimensions.get('window').width
 
@@ -50,6 +53,7 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
   const colors = useColors()
   const styles = useStyles(colors)
   const haptics = useHaptics()
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const [isAlertVisible, setIsAlertVisible] = useState(false)
   const [selectedStat, setSelectedStat] = useState<ExerciseSessionStat | null>(null)
 
@@ -110,17 +114,29 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
           </Text>
         ))}
       </View>
-      <TouchableOpacity
-        onPress={() => {
-          haptics.onPress()
-          setSelectedStat(item)
-          setIsAlertVisible(true)
-        }}
-        style={styles.deleteBtn}
-        testID="delete-btn"
-      >
-        <Ionicons name="trash-outline" size={20} color={colors.danger} />
-      </TouchableOpacity>
+      <View style={styles.actionBtns}>
+        <TouchableOpacity
+          onPress={() => {
+            haptics.onSelect()
+            navigation.navigate('HistoryDetail', { historyId: item.historyId })
+          }}
+          style={styles.actionBtn}
+          testID="edit-btn"
+        >
+          <Ionicons name="create-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            haptics.onPress()
+            setSelectedStat(item)
+            setIsAlertVisible(true)
+          }}
+          style={styles.actionBtn}
+          testID="delete-btn"
+        >
+          <Ionicons name="trash-outline" size={20} color={colors.danger} />
+        </TouchableOpacity>
+      </View>
     </View>
   )
 
@@ -332,7 +348,8 @@ function useStyles(colors: ThemeColors) {
     logMainText: { color: colors.text, fontSize: fontSize.bodyMd, fontWeight: 'bold' },
     logDate: { color: colors.placeholder, fontSize: fontSize.caption, marginTop: 2, marginBottom: 6 },
     setDetailText: { color: colors.textSecondary, fontSize: fontSize.xs, marginTop: 2 },
-    deleteBtn: { padding: CHIP_MARGIN_RIGHT },
+    actionBtns: { flexDirection: 'row', gap: spacing.sm },
+    actionBtn: { padding: CHIP_MARGIN_RIGHT },
     emptyState: { marginTop: 50, paddingHorizontal: spacing.xxl },
     emptyText: {
       color: colors.placeholder,

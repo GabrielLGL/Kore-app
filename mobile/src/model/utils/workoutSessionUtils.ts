@@ -104,3 +104,18 @@ export async function getLastSessionVolume(
 
   return sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
 }
+
+/**
+ * Soft-delete un historique (met deletedAt = new Date()).
+ * La séance disparaîtra des listes filtrées par deleted_at = null.
+ *
+ * @param historyId - ID de la History à soft-delete
+ */
+export async function softDeleteHistory(historyId: string): Promise<void> {
+  await database.write(async () => {
+    const history = await database.get<History>('histories').find(historyId)
+    await history.update(h => {
+      h.deletedAt = new Date()
+    })
+  })
+}

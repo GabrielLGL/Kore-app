@@ -130,6 +130,16 @@ export const fr = {
       importErrorTitle: "Erreur d'import",
       importErrorMessage:
         "Impossible d'importer les données. Vérifiez que le fichier est un export Kore valide.",
+      deleteAllLabel: 'Supprimer toutes mes données',
+      deleteAllLoading: 'Suppression en cours...',
+      deleteAllConfirmTitle: 'Supprimer toutes vos données ?',
+      deleteAllConfirmMessage:
+        'Cette action est IRRÉVERSIBLE. Toutes vos données seront supprimées :\n\n• Programmes et séances\n• Historique d\'entraînement\n• Statistiques et records\n• Mensurations corporelles\n• Badges débloqués\n• Exercices personnalisés\n• Clé API IA\n\nLes exercices du catalogue seront conservés.',
+      deleteAllConfirmButton: 'Tout supprimer',
+      deleteAllSuccessTitle: 'Données supprimées',
+      deleteAllSuccessMessage: 'Toutes vos données personnelles ont été supprimées.',
+      deleteAllErrorTitle: 'Erreur de suppression',
+      deleteAllErrorMessage: 'Impossible de supprimer les données. Veuillez réessayer.',
     },
     about: {
       title: 'À propos',
@@ -177,6 +187,12 @@ export const fr = {
     series: 'sér',
     rest: 'Repos',
     dayLabels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+    quickStart: {
+      title: 'Reprendre',
+      subtitle: 'Dernière séance',
+      go: 'Go',
+      noSession: 'Aucune séance récente',
+    },
     motivational: {
       streak: '🔥 {n} jours consécutifs — ne lâche rien !',
       weeklyRecord: '💥 Nouveau record cette semaine — tu progresses !',
@@ -202,6 +218,7 @@ export const fr = {
     statsHistory: 'Historique',
     badges: 'Mes Badges',
     assistantPreview: 'Programme généré',
+    catalogueGlobal: 'Catalogue global',
   },
 
   programs: {
@@ -230,6 +247,20 @@ export const fr = {
     removeConfirmTitle: "Retirer l'exercice ?",
     removeConfirmMessage: "Voulez-vous vraiment retirer cet exercice de cette séance ?",
     editTarget: "Modifier l'objectif",
+    superset: {
+      createSuperset: 'Créer un superset',
+      createCircuit: 'Créer un circuit',
+      supersetLabel: 'Superset',
+      circuitLabel: 'Circuit',
+      ungroup: 'Dissocier le groupe',
+      selectExercises: 'Sélectionnez 2+ exercices',
+      groupCreated: 'Groupe créé',
+      groupRemoved: 'Groupe dissocié',
+      minExercises: 'Sélectionnez au moins 2 exercices',
+      groupTypeTitle: 'Type de groupe',
+      supersetDesc: '2 exercices en alternance',
+      circuitDesc: '3+ exercices en rotation',
+    },
   },
 
   exercises: {
@@ -343,6 +374,9 @@ export const fr = {
     errorMessage: 'Impossible de démarrer la séance. Veuillez réessayer.',
     noExercises: 'Aucun exercice dans cette séance.',
     loading: 'Chargement...',
+    supersetRound: 'Superset',
+    circuitRound: 'Circuit',
+    noRestSuperset: 'Pas de repos — exercice suivant du groupe',
   },
 
   programDetail: {
@@ -671,6 +705,39 @@ export const fr = {
       t500000: "Le poids d'un avion.",
       t1000000: 'Interstellaire.',
     },
+  },
+
+  coachMarks: {
+    skip: 'Passer',
+    next: 'Suivant',
+    finish: 'Compris !',
+    steps: {
+      kpis: 'Tes stats globales apparaissent ici : séances, volume, tonnage et records personnels.',
+      gamification: "Gagne de l'XP à chaque séance. Monte de niveau et débloque des badges !",
+      weeklyActivity: "Ton activité de la semaine en un coup d'œil.",
+      programs: "Commence par créer ton premier programme d'entraînement.",
+      settings: 'Modifie tes préférences à tout moment.',
+    },
+  },
+
+  historyDetail: {
+    title: 'Détail de la séance',
+    sessionFallback: 'Séance',
+    duration: 'Durée',
+    noteLabel: 'Note de séance',
+    notePlaceholder: 'Ressenti, conditions, progrès...',
+    set: 'Série',
+    weight: 'Poids',
+    reps: 'Reps',
+    addSet: '+ Ajouter une série',
+    saveChanges: 'Enregistrer les modifications',
+    deleteWorkout: 'Supprimer la séance',
+    deleteWorkoutTitle: 'Supprimer cette séance ?',
+    deleteWorkoutMessage: 'Cette action est irréversible. La séance sera supprimée.',
+    deleteSetTitle: 'Supprimer cette série ?',
+    deleteSetMessage: 'Cette action est irréversible.',
+    noSets: 'Aucune série',
+    bodyweight: 'PC',
   },
 
   exerciseInfoSheet: {

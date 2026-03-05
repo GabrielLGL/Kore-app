@@ -16,15 +16,23 @@ interface SessionExerciseItemProps {
   item: SessionExercise
   onEditTargets: (se: SessionExercise) => void
   onRemove: (se: SessionExercise, exoName: string) => void
+  onUngroup?: (se: SessionExercise) => void
   drag?: () => void
   dragActive?: boolean
+  isSelected?: boolean
+  onSelect?: (se: SessionExercise) => void
+  selectionMode?: boolean
+  groupInfo?: { type: string; isFirst: boolean; isLast: boolean }
 }
 
 interface EnhancedProps extends SessionExerciseItemProps {
   exercise: Exercise | null
 }
 
-const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise, onEditTargets, onRemove, drag, dragActive }) => {
+const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({
+  item, exercise, onEditTargets, onRemove, onUngroup,
+  drag, dragActive, isSelected, onSelect, selectionMode, groupInfo,
+}) => {
   const colors = useColors()
   const styles = useStyles(colors)
   const [infoVisible, setInfoVisible] = useState(false)
@@ -37,45 +45,107 @@ const SessionExerciseItemComponent: React.FC<EnhancedProps> = ({ item, exercise,
     setInfoVisible(true)
   }
 
+  const handlePress = () => {
+    if (selectionMode && onSelect) {
+      haptics.onSelect()
+      onSelect(item)
+    }
+  }
+
+  const handleLongPress = () => {
+    if (!selectionMode && onSelect) {
+      haptics.onPress()
+      onSelect(item)
+    }
+  }
+
+  const groupBorderColor = groupInfo
+    ? (groupInfo.type === 'superset' ? colors.primary : colors.warning)
+    : 'transparent'
+
   return (
-    <View style={[styles.itemContainer, dragActive && styles.itemContainerDragging]}>
-      {drag && (
-        <TouchableOpacity style={styles.dragHandle} onPressIn={drag}>
-          <View style={styles.dragBar} />
-          <View style={styles.dragBar} />
-          <View style={styles.dragBar} />
-        </TouchableOpacity>
-      )}
-      <View style={styles.itemInfo}>
-        <View style={styles.titleRow}>
-          <Text style={styles.itemTitle} numberOfLines={2}>{exercise.name}</Text>
-          <TouchableOpacity onPress={handleInfoPress} style={styles.infoBtn} testID="info-button">
-            <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+    <TouchableOpacity
+      activeOpacity={selectionMode ? 0.7 : 1}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
+      delayLongPress={400}
+    >
+      <View style={[
+        styles.itemContainer,
+        dragActive && styles.itemContainerDragging,
+        isSelected && { borderColor: colors.primary, borderWidth: 2 },
+        groupInfo && {
+          borderLeftWidth: 4,
+          borderLeftColor: groupBorderColor,
+          marginTop: groupInfo.isFirst ? spacing.sm : 2,
+          marginBottom: groupInfo.isLast ? spacing.sm : 0,
+          borderTopLeftRadius: groupInfo.isFirst ? borderRadius.md : 4,
+          borderTopRightRadius: groupInfo.isFirst ? borderRadius.md : 4,
+          borderBottomLeftRadius: groupInfo.isLast ? borderRadius.md : 4,
+          borderBottomRightRadius: groupInfo.isLast ? borderRadius.md : 4,
+        },
+      ]}>
+        {groupInfo?.isFirst && (
+          <View style={[styles.groupBadge, { backgroundColor: groupBorderColor + '20' }]}>
+            <Text style={[styles.groupBadgeText, { color: groupBorderColor }]}>
+              {groupInfo.type === 'superset' ? 'SS' : 'CIR'}
+            </Text>
+            {onUngroup && (
+              <TouchableOpacity
+                onPress={() => onUngroup(item)}
+                style={styles.ungroupBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close-circle" size={16} color={groupBorderColor} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        {drag && !selectionMode && (
+          <TouchableOpacity style={styles.dragHandle} onPressIn={drag}>
+            <View style={styles.dragBar} />
+            <View style={styles.dragBar} />
+            <View style={styles.dragBar} />
+          </TouchableOpacity>
+        )}
+        {selectionMode && (
+          <View style={[styles.checkbox, isSelected && { backgroundColor: colors.primary, borderColor: colors.primary }]}>
+            {isSelected && <Ionicons name="checkmark" size={14} color={colors.background} />}
+          </View>
+        )}
+        <View style={styles.itemInfo}>
+          <View style={styles.titleRow}>
+            <Text style={styles.itemTitle} numberOfLines={2}>{exercise.name}</Text>
+            <TouchableOpacity onPress={handleInfoPress} style={styles.infoBtn} testID="info-button">
+              <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.itemTags}>{exercise.muscles?.join(', ')} • {exercise.equipment}</Text>
+          {exercise.notes ? <Text style={styles.noteIndicator}>Notes</Text> : null}
+          <TouchableOpacity style={styles.targetRow} onPress={() => onEditTargets(item)}>
+            <View style={styles.targetBox}>
+              <Text style={styles.targetValue}>{item.setsTarget || 0}</Text>
+              <Text style={styles.targetLabel}>Séries</Text>
+            </View>
+            <Text style={styles.targetSeparator}>×</Text>
+            <View style={styles.targetBox}>
+              <Text style={styles.targetValue}>{item.repsTarget || '0'}</Text>
+              <Text style={styles.targetLabel}>Reps</Text>
+            </View>
           </TouchableOpacity>
         </View>
-        <Text style={styles.itemTags}>{exercise.muscles?.join(', ')} • {exercise.equipment}</Text>
-        {exercise.notes ? <Text style={styles.noteIndicator}>Notes</Text> : null}
-        <TouchableOpacity style={styles.targetRow} onPress={() => onEditTargets(item)}>
-          <View style={styles.targetBox}>
-            <Text style={styles.targetValue}>{item.setsTarget || 0}</Text>
-            <Text style={styles.targetLabel}>Séries</Text>
-          </View>
-          <Text style={styles.targetSeparator}>×</Text>
-          <View style={styles.targetBox}>
-            <Text style={styles.targetValue}>{item.repsTarget || '0'}</Text>
-            <Text style={styles.targetLabel}>Reps</Text>
-          </View>
-        </TouchableOpacity>
+        {!selectionMode && (
+          <TouchableOpacity style={styles.deleteBtn} onPress={() => onRemove(item, exercise.name)} testID="delete-btn">
+            <Ionicons name="trash-outline" size={20} color={colors.danger} />
+          </TouchableOpacity>
+        )}
+        <ExerciseInfoSheet
+          exercise={exercise}
+          visible={infoVisible}
+          onClose={() => setInfoVisible(false)}
+        />
       </View>
-      <TouchableOpacity style={styles.deleteBtn} onPress={() => onRemove(item, exercise.name)} testID="delete-btn">
-        <Ionicons name="trash-outline" size={20} color={colors.danger} />
-      </TouchableOpacity>
-      <ExerciseInfoSheet
-        exercise={exercise}
-        visible={infoVisible}
-        onClose={() => setInfoVisible(false)}
-      />
-    </View>
+    </TouchableOpacity>
   )
 }
 
@@ -171,5 +241,35 @@ function useStyles(colors: ThemeColors) {
       fontWeight: '300',
     },
     deleteBtn: { padding: spacing.md },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: borderRadius.sm,
+      borderWidth: 2,
+      borderColor: colors.border,
+      marginRight: spacing.sm,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    groupBadge: {
+      position: 'absolute',
+      top: -1,
+      left: spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderBottomLeftRadius: borderRadius.sm,
+      borderBottomRightRadius: borderRadius.sm,
+      gap: spacing.xs,
+    },
+    groupBadgeText: {
+      fontSize: fontSize.caption,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    ungroupBtn: {
+      marginLeft: 2,
+    },
   })
 }
