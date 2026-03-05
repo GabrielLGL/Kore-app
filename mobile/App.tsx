@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
 import AppNavigator from './src/navigation';
+import AnimatedSplash from './src/components/AnimatedSplash';
 import { seedExercises } from './src/model/seed';
 import { seedDevData } from './src/model/seedDevData';
 import { seedExerciseDescriptions } from './src/model/utils/exerciseDescriptions';
@@ -11,20 +13,37 @@ import { migrateKeyFromDB } from './src/services/secureKeyStore';
 // Initialiser Sentry dès le démarrage de l'app
 initSentry();
 
+// Retenir le splash natif jusqu'à ce que l'app soit prête
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function App() {
+  const [appReady, setAppReady] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+
   useEffect(() => {
-    // Charge les exercices de base au démarrage si la DB est vide
-    seedExercises().then(() => {
-      seedExerciseDescriptions(database);
-      if (__DEV__) seedDevData();
-    });
-    // Migrate API key from SQLite to secure storage (one-time)
-    migrateKeyFromDB();
+    Promise.all([
+      seedExercises().then(() => {
+        seedExerciseDescriptions(database);
+        if (__DEV__) seedDevData();
+      }),
+      migrateKeyFromDB(),
+    ]).finally(() => setAppReady(true));
   }, []);
+
+  // Quand l'app est prête, cacher le splash natif et laisser l'animé prendre le relai
+  useEffect(() => {
+    if (appReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [appReady]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppNavigator />
+      {splashDone ? (
+        <AppNavigator />
+      ) : (
+        <AnimatedSplash appReady={appReady} onFinish={() => setSplashDone(true)} />
+      )}
     </GestureHandlerRootView>
   );
 }
