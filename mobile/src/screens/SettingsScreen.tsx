@@ -7,8 +7,13 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as Sharing from 'expo-sharing'
 import * as FileSystem from 'expo-file-system'
 import * as DocumentPicker from 'expo-document-picker'
+import { useNavigation } from '@react-navigation/native'
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { Q } from '@nozbe/watermelondb'
+import type { RootStackParamList } from '../navigation'
 import { database } from '../model/index'
 import User from '../model/models/User'
+import { deleteApiKey } from '../services/secureKeyStore'
 import { useHaptics } from '../hooks/useHaptics'
 import { useTheme } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -49,6 +54,11 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const [importSuccess, setImportSuccess] = useState(false)
   const [showImportConfirm, setShowImportConfirm] = useState(false)
   const [pendingImportUri, setPendingImportUri] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteSuccess, setDeleteSuccess] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
 
   const styles = useMemo(() => createStyles(colors, neuShadow), [colors, neuShadow])
 
@@ -193,6 +203,73 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     } finally {
       setImporting(false)
       setPendingImportUri(null)
+    }
+  }
+
+  const handleDeleteAllData = async () => {
+    setShowDeleteConfirm(false)
+    setDeleting(true)
+    try {
+      await database.write(async () => {
+        const programs = await database.get('programs').query().fetch()
+        const sessions = await database.get('sessions').query().fetch()
+        const sessionExercises = await database.get('session_exercises').query().fetch()
+        const histories = await database.get('histories').query().fetch()
+        const sets = await database.get('sets').query().fetch()
+        const performanceLogs = await database.get('performance_logs').query().fetch()
+        const bodyMeasurements = await database.get('body_measurements').query().fetch()
+        const userBadges = await database.get('user_badges').query().fetch()
+        const customExercises = await database.get('exercises').query(Q.where('is_custom', true)).fetch()
+
+        const allRecords = [
+          ...programs,
+          ...sessions,
+          ...sessionExercises,
+          ...histories,
+          ...sets,
+          ...performanceLogs,
+          ...bodyMeasurements,
+          ...userBadges,
+          ...customExercises,
+        ]
+
+        await database.batch(
+          ...allRecords.map(record => record.prepareDestroyPermanently()),
+          ...(user ? [user.prepareUpdate(u => {
+            u.name = null
+            u.email = ''
+            u.totalXp = 0
+            u.level = 1
+            u.currentStreak = 0
+            u.bestStreak = 0
+            u.totalTonnage = 0
+            u.totalPrs = 0
+            u.onboardingCompleted = false
+            u.userLevel = null
+            u.userGoal = null
+            u.lastWorkoutWeek = null
+          })] : []),
+        )
+      })
+
+      await deleteApiKey()
+
+      // Delete export files from documentDirectory
+      if (FileSystem.documentDirectory) {
+        const files = await FileSystem.readDirectoryAsync(FileSystem.documentDirectory)
+        const exportFiles = files.filter(f => f.startsWith('kore-export-') && f.endsWith('.json'))
+        for (const file of exportFiles) {
+          await FileSystem.deleteAsync(`${FileSystem.documentDirectory}${file}`, { idempotent: true })
+        }
+      }
+
+      haptics.onSuccess()
+      setDeleteSuccess(true)
+    } catch (error) {
+      if (__DEV__) console.error('Delete all data failed:', error)
+      setDeleteError(true)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -570,6 +647,16 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               {importing ? t.settings.data.importLoading : t.settings.data.importLabel}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.deleteAllButton, (exporting || importing || deleting) && styles.exportButtonDisabled]}
+            onPress={() => { haptics.onPress(); setShowDeleteConfirm(true) }}
+            disabled={exporting || importing || deleting}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.deleteAllButtonText}>
+              {deleting ? t.settings.data.deleteAllLoading : t.settings.data.deleteAllLabel}
+            </Text>
+          </TouchableOpacity>
           <Text style={styles.exportHint}>{t.settings.data.exportHint}</Text>
         </View>
 
@@ -639,6 +726,48 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
           confirmColor={colors.primary}
           onConfirm={() => setImportError(false)}
           onCancel={() => setImportError(false)}
+          hideCancel
+        />
+
+        {/* AlertDialog confirmation suppression totale */}
+        <AlertDialog
+          visible={showDeleteConfirm}
+          title={t.settings.data.deleteAllConfirmTitle}
+          message={t.settings.data.deleteAllConfirmMessage}
+          confirmText={t.settings.data.deleteAllConfirmButton}
+          confirmColor={colors.danger}
+          cancelText={t.common.cancel}
+          onConfirm={handleDeleteAllData}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+
+        {/* AlertDialog succès suppression */}
+        <AlertDialog
+          visible={deleteSuccess}
+          title={t.settings.data.deleteAllSuccessTitle}
+          message={t.settings.data.deleteAllSuccessMessage}
+          confirmText={t.common.ok}
+          confirmColor={colors.primary}
+          onConfirm={() => {
+            setDeleteSuccess(false)
+            navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] })
+          }}
+          onCancel={() => {
+            setDeleteSuccess(false)
+            navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] })
+          }}
+          hideCancel
+        />
+
+        {/* AlertDialog erreur suppression */}
+        <AlertDialog
+          visible={deleteError}
+          title={t.settings.data.deleteAllErrorTitle}
+          message={t.settings.data.deleteAllErrorMessage}
+          confirmText={t.common.ok}
+          confirmColor={colors.primary}
+          onConfirm={() => setDeleteError(false)}
+          onCancel={() => setDeleteError(false)}
           hideCancel
         />
 
@@ -912,6 +1041,19 @@ function createStyles(colors: ThemeColors, neuShadow: ReturnType<typeof getTheme
     },
     importButtonText: {
       color: colors.text,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
+    },
+    deleteAllButton: {
+      backgroundColor: colors.danger,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      alignItems: 'center' as const,
+      marginTop: spacing.sm,
+      ...neuShadow.elevatedSm,
+    },
+    deleteAllButtonText: {
+      color: colors.primaryText,
       fontSize: fontSize.md,
       fontWeight: '600' as const,
     },
