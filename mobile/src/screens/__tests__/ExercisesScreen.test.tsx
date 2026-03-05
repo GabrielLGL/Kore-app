@@ -324,4 +324,16 @@ describe('ExercisesContent', () => {
     fireEvent.press(getByText("Modifier l'exercice"))
     expect(getByText("Modifier l'exercice")).toBeTruthy()
   })
+
+  it('le bouton globe navigue vers ExerciseCatalog', () => {
+    render(<ExercisesContent exercises={[]} />)
+
+    expect(mockNavigation.setOptions).toHaveBeenCalled()
+    const options = mockNavigation.setOptions.mock.calls[0][0]
+    const { getByTestId } = render(options.headerRight())
+
+    fireEvent.press(getByTestId('globe-catalog-button'))
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('ExerciseCatalog')
+  })
 })

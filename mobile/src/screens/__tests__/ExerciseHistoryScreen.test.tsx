@@ -57,6 +57,7 @@ jest.mock('../../theme/chartConfig', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: { exerciseId: 'ex1' } }),
+  useNavigation: () => ({ navigate: jest.fn() }),
 }))
 
 import React from 'react'

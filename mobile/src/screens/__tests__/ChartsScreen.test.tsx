@@ -1,6 +1,10 @@
 import React from 'react'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+}))
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),
   notificationAsync: jest.fn(),

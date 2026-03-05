@@ -24,6 +24,19 @@ jest.mock('../../contexts/ThemeContext', () => {
   }
 })
 
+const mockNavigationReset = jest.fn()
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    reset: mockNavigationReset,
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+  }),
+}))
+
+jest.mock('../../services/secureKeyStore', () => ({
+  deleteApiKey: jest.fn().mockResolvedValue(undefined),
+}))
+
 jest.mock('../../model/index', () => ({
   database: {
     write: jest.fn(),
