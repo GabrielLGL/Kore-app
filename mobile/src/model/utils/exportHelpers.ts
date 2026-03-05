@@ -44,7 +44,7 @@ export async function exportAllData(): Promise<string> {
     metadata: {
       exportDate: new Date().toISOString(),
       appVersion: '1.0.0',
-      schemaVersion: 20,
+      schemaVersion: 31,
       tables: {},
     },
   }
