@@ -13,6 +13,7 @@ import { database } from '../model/index'
 import { useHaptics } from '../hooks/useHaptics'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useTheme } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import type { SetInputData, ValidatedSetData, LastPerformance } from '../types/workout'
 
@@ -199,8 +200,9 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
   const { colors, neuShadow } = useTheme()
   const styles = useMemo(() => createStyles(colors), [colors])
   const haptics = useHaptics()
-  const [isEditingNote, setIsEditingNote] = React.useState(false)
-  const noteRef = React.useRef(exercise.notes ?? '')
+  const { t } = useLanguage()
+  const [isEditingSessionNote, setIsEditingSessionNote] = React.useState(false)
+  const sessionNoteRef = React.useRef(sessionExercise.notes ?? '')
 
   const setsCount = sessionExercise.setsTarget ?? 0
   const setOrders = Array.from({ length: setsCount }, (_, i) => i + 1)
@@ -217,17 +219,17 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
       )
     : null
 
-  const handleSaveNote = async () => {
-    setIsEditingNote(false)
-    if (noteRef.current !== (exercise.notes ?? '')) {
+  const handleSaveSessionNote = async () => {
+    setIsEditingSessionNote(false)
+    if (sessionNoteRef.current !== (sessionExercise.notes ?? '')) {
       try {
         await database.write(async () => {
-          await exercise.update(e => {
-            e.notes = noteRef.current
+          await sessionExercise.update(se => {
+            se.notes = sessionNoteRef.current
           })
         })
       } catch (e) {
-        if (__DEV__) console.error('handleSaveNote error:', e)
+        if (__DEV__) console.error('handleSaveSessionNote error:', e)
       }
     }
   }
@@ -259,29 +261,34 @@ const WorkoutExerciseCardContent: React.FC<WorkoutExerciseCardContentProps> = ({
       ]}
     >
       <Text style={styles.exerciseName}>{exercise.name}</Text>
-      {isEditingNote ? (
+      {exercise.notes ? (
+        <Text style={styles.exerciseNoteText}>
+          {t.workout.exerciseNote} : {exercise.notes}
+        </Text>
+      ) : null}
+      {isEditingSessionNote ? (
         <TextInput
-          defaultValue={exercise.notes ?? ''}
-          onChangeText={val => { noteRef.current = val }}
-          onBlur={handleSaveNote}
-          placeholder="Ajouter une note (grip, tempo, sensation...)"
+          defaultValue={sessionExercise.notes ?? ''}
+          onChangeText={val => { sessionNoteRef.current = val }}
+          onBlur={handleSaveSessionNote}
+          placeholder={t.workout.sessionNotePlaceholder}
           placeholderTextColor={colors.placeholder}
           style={styles.noteInput}
           autoFocus
           multiline
         />
-      ) : exercise.notes ? (
-        <TouchableOpacity onPress={() => setIsEditingNote(true)}>
-          <Text style={styles.noteText}>{exercise.notes}</Text>
+      ) : sessionExercise.notes ? (
+        <TouchableOpacity onPress={() => setIsEditingSessionNote(true)}>
+          <Text style={styles.noteText}>{sessionExercise.notes}</Text>
         </TouchableOpacity>
       ) : (
         <TouchableOpacity
-          onPress={() => setIsEditingNote(true)}
+          onPress={() => { haptics.onPress(); setIsEditingSessionNote(true) }}
           style={styles.addNoteButton}
           activeOpacity={0.7}
         >
           <Ionicons name="create-outline" size={12} color={colors.primary} />
-          <Text style={styles.addNoteLink}>Ajouter une note</Text>
+          <Text style={styles.addNoteLink}>{t.workout.addSessionNote}</Text>
         </TouchableOpacity>
       )}
       {sessionExercise.setsTarget != null && (
@@ -382,6 +389,12 @@ function createStyles(colors: ThemeColors) {
       fontSize: fontSize.xs,
       fontWeight: '600',
       marginBottom: spacing.sm,
+    },
+    exerciseNoteText: {
+      color: colors.placeholder,
+      fontSize: fontSize.xs,
+      fontStyle: 'italic',
+      marginBottom: spacing.xs,
     },
     noteText: {
       color: colors.textSecondary,

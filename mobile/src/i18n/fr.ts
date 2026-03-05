@@ -94,6 +94,18 @@ export const fr = {
       sound: 'Son fin de repos',
       soundDescription: 'Bip sonore à la fin du minuteur',
     },
+    reminders: {
+      title: 'Rappels d\'entraînement',
+      enable: 'Activer les rappels',
+      enableDescription: 'Notification les jours d\'entraînement choisis',
+      days: 'Jours d\'entraînement',
+      time: 'Heure du rappel',
+      timeSheetTitle: 'Choisir l\'heure',
+      dayLabels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+      permissionNeeded: 'Les notifications doivent être autorisées pour les rappels',
+      hours: 'Heures',
+      minutes: 'Minutes',
+    },
     gamification: {
       title: 'Gamification',
       weeklyGoal: 'Objectif hebdomadaire',
@@ -377,6 +389,10 @@ export const fr = {
     supersetRound: 'Superset',
     circuitRound: 'Circuit',
     noRestSuperset: 'Pas de repos — exercice suivant du groupe',
+    exerciseNote: 'Note exercice',
+    sessionNote: 'Note séance',
+    addSessionNote: 'Ajouter une note',
+    sessionNotePlaceholder: 'Grip, tempo, sensation, ajustement...',
   },
 
   programDetail: {

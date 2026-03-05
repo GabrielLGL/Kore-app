@@ -96,6 +96,18 @@ export const en: typeof fr = {
       sound: 'End of rest sound',
       soundDescription: 'Beep sound when timer ends',
     },
+    reminders: {
+      title: 'Training Reminders',
+      enable: 'Enable reminders',
+      enableDescription: 'Notification on selected training days',
+      days: 'Training days',
+      time: 'Reminder time',
+      timeSheetTitle: 'Choose time',
+      dayLabels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      permissionNeeded: 'Notifications must be allowed for reminders',
+      hours: 'Hours',
+      minutes: 'Minutes',
+    },
     gamification: {
       title: 'Gamification',
       weeklyGoal: 'Weekly goal',
@@ -376,6 +388,10 @@ export const en: typeof fr = {
     supersetRound: 'Superset',
     circuitRound: 'Circuit',
     noRestSuperset: 'No rest — next exercise in group',
+    exerciseNote: 'Exercise note',
+    sessionNote: 'Session note',
+    addSessionNote: 'Add a note',
+    sessionNotePlaceholder: 'Grip, tempo, feel, adjustment...',
   },
 
   programDetail: {

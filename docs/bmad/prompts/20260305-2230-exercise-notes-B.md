@@ -59,4 +59,7 @@ Ajouter l'UI pour éditer et afficher les notes par exercice pendant le workout.
 Ce groupe dépend de : **Groupe A** (schema + model + hooks data layer)
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260305-2300
+
+## Résolution
+Rapport do : docs/bmad/do/20260305-2300-feat-exercise-notes-ui.md
