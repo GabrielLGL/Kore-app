@@ -51,6 +51,12 @@ export default class User extends Model {
   // Tutoriel contextuel — version 28
   @field('tutorial_completed') tutorialCompleted!: boolean
 
+  // Rappels d'entraînement — version 31
+  @field('reminders_enabled') remindersEnabled!: boolean
+  @text('reminder_days') reminderDays!: string | null  // JSON: "[1,3,5]" (ISO weekday)
+  @field('reminder_hour') reminderHour!: number         // 0-23, default 18
+  @field('reminder_minute') reminderMinute!: number     // 0-59, default 0
+
   @readonly @date('created_at') createdAt!: Date
   @readonly @date('updated_at') updatedAt!: Date
 }

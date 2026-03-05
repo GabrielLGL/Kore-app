@@ -105,6 +105,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
 
   const [historyId, setHistoryId] = useState<string>('')
   const [showRestTimer, setShowRestTimer] = useState(false)
+  const [currentRestDuration, setCurrentRestDuration] = useState(user?.restDuration ?? 90)
   const [confirmEndVisible, setConfirmEndVisible] = useState(false)
   const [summaryVisible, setSummaryVisible] = useState(false)
   const [abandonVisible, setAbandonVisible] = useState(false)
@@ -386,11 +387,13 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         )
         // Show rest timer only after completing a full round of the superset
         if (user?.timerEnabled && allGroupSetsDone) {
+          setCurrentRestDuration(sessionExercise.restTime ?? user?.restDuration ?? 90)
           setShowRestTimer(true)
         }
       } else {
         // Not in a superset: normal rest timer behavior
         if (user?.timerEnabled) {
+          setCurrentRestDuration(sessionExercise.restTime ?? user?.restDuration ?? 90)
           setShowRestTimer(true)
         }
       }
@@ -461,7 +464,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       {showRestTimer && (
         <View style={styles.timerContainer}>
           <RestTimer
-            duration={user?.restDuration ?? 90}
+            duration={currentRestDuration}
             onClose={() => setShowRestTimer(false)}
             notificationEnabled={notificationPermissionRef.current}
             vibrationEnabled={user?.vibrationEnabled ?? true}
