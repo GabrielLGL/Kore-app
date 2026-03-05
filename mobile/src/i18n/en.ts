@@ -259,6 +259,9 @@ export const en: typeof fr = {
     removeConfirmTitle: 'Remove exercise?',
     removeConfirmMessage: 'Are you sure you want to remove this exercise from this session?',
     editTarget: 'Edit target',
+    restTime: 'Rest (sec)',
+    restTimePlaceholder: 'Default',
+    restTimeHelper: 'Empty = global timer',
     superset: {
       createSuperset: 'Create superset',
       createCircuit: 'Create circuit',

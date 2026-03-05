@@ -259,6 +259,9 @@ export const fr = {
     removeConfirmTitle: "Retirer l'exercice ?",
     removeConfirmMessage: "Voulez-vous vraiment retirer cet exercice de cette séance ?",
     editTarget: "Modifier l'objectif",
+    restTime: 'Repos (sec)',
+    restTimePlaceholder: 'Par défaut',
+    restTimeHelper: 'Vide = timer global',
     superset: {
       createSuperset: 'Créer un superset',
       createCircuit: 'Créer un circuit',

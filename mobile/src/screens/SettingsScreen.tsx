@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, TextInput, SafeAreaView, ScrollView, Switch, TouchableOpacity, LayoutAnimation, UIManager, Platform, FlatList } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { map } from 'rxjs/operators'
@@ -14,6 +14,11 @@ import type { RootStackParamList } from '../navigation'
 import { database } from '../model/index'
 import User from '../model/models/User'
 import { deleteApiKey } from '../services/secureKeyStore'
+import {
+  requestNotificationPermission,
+  setupReminderChannel,
+  updateReminders,
+} from '../services/notificationService'
 import { useHaptics } from '../hooks/useHaptics'
 import { useTheme } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -58,6 +63,17 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteSuccess, setDeleteSuccess] = useState(false)
   const [deleteError, setDeleteError] = useState(false)
+  // Reminders state
+  const [remindersEnabled, setRemindersEnabled] = useState(user?.remindersEnabled ?? false)
+  const [reminderDays, setReminderDays] = useState<number[]>(() => {
+    try { return user?.reminderDays ? JSON.parse(user.reminderDays) : [1, 3, 5] } catch { return [1, 3, 5] }
+  })
+  const [reminderHour, setReminderHour] = useState(user?.reminderHour ?? 18)
+  const [reminderMinute, setReminderMinute] = useState(user?.reminderMinute ?? 0)
+  const [showTimePicker, setShowTimePicker] = useState(false)
+  const [tempHour, setTempHour] = useState(user?.reminderHour ?? 18)
+  const [tempMinute, setTempMinute] = useState(user?.reminderMinute ?? 0)
+  const [permissionDenied, setPermissionDenied] = useState(false)
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
 
   const styles = useMemo(() => createStyles(colors, neuShadow), [colors, neuShadow])
@@ -68,6 +84,12 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     setVibrationEnabled(user.vibrationEnabled ?? true)
     setTimerSoundEnabled(user.timerSoundEnabled ?? true)
     setStreakTarget(user.streakTarget ?? 3)
+    setRemindersEnabled(user.remindersEnabled ?? false)
+    try {
+      setReminderDays(user.reminderDays ? JSON.parse(user.reminderDays) : [1, 3, 5])
+    } catch { setReminderDays([1, 3, 5]) }
+    setReminderHour(user.reminderHour ?? 18)
+    setReminderMinute(user.reminderMinute ?? 0)
   }, [user])
 
   const handleSaveRestDuration = useCallback(async () => {
@@ -319,6 +341,59 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
     }
   }
 
+  const saveReminders = useCallback(async (enabled: boolean, days: number[], hour: number, minute: number) => {
+    if (!user) return
+    try {
+      await database.write(async () => {
+        await user.update(u => {
+          u.remindersEnabled = enabled
+          u.reminderDays = JSON.stringify(days)
+          u.reminderHour = hour
+          u.reminderMinute = minute
+        })
+      })
+      await updateReminders(enabled, days, hour, minute)
+    } catch (error) {
+      if (__DEV__) console.error('Failed to save reminders:', error)
+    }
+  }, [user])
+
+  const handleToggleReminders = async (enabled: boolean) => {
+    if (enabled) {
+      const granted = await requestNotificationPermission()
+      if (!granted) {
+        setPermissionDenied(true)
+        return
+      }
+      await setupReminderChannel()
+      setPermissionDenied(false)
+    }
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut)
+    setRemindersEnabled(enabled)
+    haptics.onPress()
+    await saveReminders(enabled, reminderDays, reminderHour, reminderMinute)
+  }
+
+  const handleToggleDay = async (isoDay: number) => {
+    const newDays = reminderDays.includes(isoDay)
+      ? reminderDays.filter(d => d !== isoDay)
+      : [...reminderDays, isoDay].sort((a, b) => a - b)
+    setReminderDays(newDays)
+    haptics.onSelect()
+    await saveReminders(remindersEnabled, newDays, reminderHour, reminderMinute)
+  }
+
+  const handleConfirmTime = async () => {
+    setShowTimePicker(false)
+    setReminderHour(tempHour)
+    setReminderMinute(tempMinute)
+    haptics.onSuccess()
+    await saveReminders(remindersEnabled, reminderDays, tempHour, tempMinute)
+  }
+
+  const HOURS = useMemo(() => Array.from({ length: 24 }, (_, i) => i), [])
+  const MINUTES = useMemo(() => Array.from({ length: 12 }, (_, i) => i * 5), [])
+
   return (
     <LinearGradient
       colors={[colors.bgGradientStart, colors.bgGradientEnd]}
@@ -542,6 +617,158 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
             </>
           )}
         </View>
+
+        {/* Section Rappels */}
+        <View style={styles.section}>
+          <View style={styles.sectionTitleRow}>
+            <Ionicons name="notifications-outline" size={18} color={colors.primary} />
+            <Text style={styles.sectionTitle}>{t.settings.reminders.title}</Text>
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>{t.settings.reminders.enable}</Text>
+              <Text style={styles.settingDescription}>{t.settings.reminders.enableDescription}</Text>
+            </View>
+            <Switch
+              value={remindersEnabled}
+              onValueChange={handleToggleReminders}
+              trackColor={{ false: colors.cardSecondary, true: colors.primary }}
+              thumbColor={colors.text}
+            />
+          </View>
+
+          {permissionDenied && (
+            <Text style={styles.reminderPermissionMsg}>{t.settings.reminders.permissionNeeded}</Text>
+          )}
+
+          {remindersEnabled && (
+            <>
+              <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t.settings.reminders.days}</Text>
+                </View>
+              </View>
+              <View style={styles.reminderDaysRow}>
+                {([1, 2, 3, 4, 5, 6, 7] as const).map((isoDay, index) => (
+                  <TouchableOpacity
+                    key={isoDay}
+                    style={[
+                      styles.reminderDayBtn,
+                      reminderDays.includes(isoDay) && styles.reminderDayBtnActive,
+                    ]}
+                    onPress={() => handleToggleDay(isoDay)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.reminderDayText,
+                        reminderDays.includes(isoDay) && styles.reminderDayTextActive,
+                      ]}
+                    >
+                      {t.settings.reminders.dayLabels[index]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={styles.settingRow}
+                onPress={() => {
+                  setTempHour(reminderHour)
+                  setTempMinute(reminderMinute)
+                  setShowTimePicker(true)
+                  haptics.onPress()
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingLabel}>{t.settings.reminders.time}</Text>
+                </View>
+                <View style={styles.reminderTimeDisplay}>
+                  <Text style={styles.reminderTimeText}>
+                    {String(reminderHour).padStart(2, '0')}:{String(reminderMinute).padStart(2, '0')}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
+        {/* BottomSheet time picker */}
+        <BottomSheet
+          visible={showTimePicker}
+          onClose={() => setShowTimePicker(false)}
+          title={t.settings.reminders.timeSheetTitle}
+        >
+          <View style={styles.timePickerContainer}>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timePickerLabel}>{t.settings.reminders.hours}</Text>
+              <FlatList
+                data={HOURS}
+                keyExtractor={item => `h-${item}`}
+                style={styles.timePickerList}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.timePickerItem,
+                      tempHour === item && styles.timePickerItemActive,
+                    ]}
+                    onPress={() => { setTempHour(item); haptics.onSelect() }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.timePickerItemText,
+                        tempHour === item && styles.timePickerItemTextActive,
+                      ]}
+                    >
+                      {String(item).padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+            <Text style={styles.timePickerSeparator}>:</Text>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timePickerLabel}>{t.settings.reminders.minutes}</Text>
+              <FlatList
+                data={MINUTES}
+                keyExtractor={item => `m-${item}`}
+                style={styles.timePickerList}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.timePickerItem,
+                      tempMinute === item && styles.timePickerItemActive,
+                    ]}
+                    onPress={() => { setTempMinute(item); haptics.onSelect() }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.timePickerItemText,
+                        tempMinute === item && styles.timePickerItemTextActive,
+                      ]}
+                    >
+                      {String(item).padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.timePickerConfirmBtn}
+            onPress={handleConfirmTime}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.timePickerConfirmText}>{t.common.confirm}</Text>
+          </TouchableOpacity>
+        </BottomSheet>
 
         {/* Section Gamification */}
         <View style={styles.section}>
@@ -1101,6 +1328,104 @@ function createStyles(colors: ThemeColors, neuShadow: ReturnType<typeof getTheme
       color: colors.textSecondary,
       fontSize: fontSize.sm,
       marginTop: 2,
+    },
+    // Reminders styles
+    reminderPermissionMsg: {
+      color: colors.danger,
+      fontSize: fontSize.sm,
+      paddingVertical: spacing.sm,
+    },
+    reminderDaysRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      gap: spacing.xs,
+      paddingBottom: spacing.sm,
+    },
+    reminderDayBtn: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.ms,
+      borderRadius: borderRadius.sm,
+      backgroundColor: colors.cardSecondary,
+      ...neuShadow.pressed,
+    },
+    reminderDayBtnActive: {
+      backgroundColor: colors.primary,
+      ...neuShadow.elevatedSm,
+    },
+    reminderDayText: {
+      fontSize: fontSize.sm,
+      fontWeight: '600' as const,
+      color: colors.textSecondary,
+    },
+    reminderDayTextActive: {
+      color: colors.primaryText,
+    },
+    reminderTimeDisplay: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: spacing.xs,
+    },
+    reminderTimeText: {
+      color: colors.text,
+      fontSize: fontSize.lg,
+      fontWeight: 'bold' as const,
+    },
+    // Time picker styles
+    timePickerContainer: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      justifyContent: 'center' as const,
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+    },
+    timePickerColumn: {
+      flex: 1,
+      alignItems: 'center' as const,
+    },
+    timePickerLabel: {
+      color: colors.textSecondary,
+      fontSize: fontSize.sm,
+      fontWeight: '600' as const,
+      marginBottom: spacing.sm,
+    },
+    timePickerList: {
+      maxHeight: 200,
+    },
+    timePickerItem: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: borderRadius.sm,
+      marginVertical: 2,
+      alignItems: 'center' as const,
+    },
+    timePickerItemActive: {
+      backgroundColor: colors.primary,
+    },
+    timePickerItemText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.lg,
+      fontWeight: '600' as const,
+    },
+    timePickerItemTextActive: {
+      color: colors.primaryText,
+    },
+    timePickerSeparator: {
+      color: colors.text,
+      fontSize: fontSize.xxl,
+      fontWeight: 'bold' as const,
+      marginTop: spacing.xl,
+    },
+    timePickerConfirmBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+      padding: spacing.md,
+      alignItems: 'center' as const,
+      marginTop: spacing.md,
+    },
+    timePickerConfirmText: {
+      color: colors.primaryText,
+      fontSize: fontSize.md,
+      fontWeight: '600' as const,
     },
   })
 }
