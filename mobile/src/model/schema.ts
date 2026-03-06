@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb'
 
 export const mySchema = appSchema({
-  version: 31, // v31 : training reminders
+  version: 32, // v32 : remove ai_api_key from SQLite (moved to expo-secure-store)
   tables: [
     tableSchema({
       name: 'programs',
@@ -81,7 +81,7 @@ export const mySchema = appSchema({
             {name: 'user_level', type: 'string', isOptional: true},
             {name: 'user_goal', type: 'string', isOptional: true},
             {name: 'ai_provider', type: 'string', isOptional: true},
-            {name: 'ai_api_key', type: 'string', isOptional: true},
+
             {name: 'total_xp', type: 'number'},
             {name: 'level', type: 'number'},
             {name: 'current_streak', type: 'number'},

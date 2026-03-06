@@ -1,5 +1,4 @@
 import { database } from '../model'
-import User from '../model/models/User'
 
 const API_KEY_STORE_KEY = 'kore_ai_api_key'
 
@@ -70,23 +69,28 @@ export async function deleteApiKey(): Promise<void> {
 /**
  * One-time migration: if the User row still has an ai_api_key in SQLite,
  * move it to secure storage and clear the SQLite field.
+ * Note: ai_api_key was removed from the model/schema in v32 but the column
+ * remains in SQLite — we access it via _raw for backward compat.
  */
 export async function migrateKeyFromDB(): Promise<void> {
   try {
-    const users = await database.get<User>('users').query().fetch()
+    const users = await database.get('users').query().fetch()
     const user = users[0]
-    if (!user?.aiApiKey) return
+    if (!user) return
+
+    const rawKey = (user._raw as Record<string, unknown>)['ai_api_key'] as string | null
+    if (!rawKey) return
 
     // Already migrated?
     const existing = await getApiKey()
     if (!existing) {
-      await setApiKey(user.aiApiKey)
+      await setApiKey(rawKey)
     }
 
     // Clear the plain-text key from SQLite
     await database.write(async () => {
-      await user.update(u => {
-        u.aiApiKey = null
+      await user.update(() => {
+        ;(user._raw as Record<string, unknown>)['ai_api_key'] = null
       })
     })
   } catch {

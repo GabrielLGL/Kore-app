@@ -60,7 +60,6 @@ const makeUser = (overrides = {}) => ({
   timerEnabled: true,
   streakTarget: 3,
   aiProvider: 'offline',
-  aiApiKey: null,
   name: 'Jean',
   update: jest.fn(),
   ...overrides,

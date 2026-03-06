@@ -44,7 +44,6 @@ const mockUser = (overrides = {}) =>
     id: 'u1',
     name: 'Test',
     aiProvider: 'offline',
-    aiApiKey: null,
     userLevel: 'intermediate',
     ...overrides,
   }) as never

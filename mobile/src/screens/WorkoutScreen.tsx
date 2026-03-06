@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useLayoutEffect, useState, useMemo } from 'react'
+import React, { useEffect, useRef, useLayoutEffect, useState, useMemo, useCallback } from 'react'
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   BackHandler,
   Animated,
+  Platform,
 } from 'react-native'
 import withObservables from '@nozbe/with-observables'
 import { database } from '../model/index'
@@ -46,6 +47,7 @@ import { AlertDialog } from '../components/AlertDialog'
 import { Button } from '../components/Button'
 import RestTimer from '../components/RestTimer'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation'
 import { spacing, fontSize, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
@@ -198,11 +200,11 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
 
   // --- Handlers ---
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     haptics.onPress()
     setSummaryVisible(false)
     // La navigation vers Home (avec célébrations) est gérée par le useEffect ci-dessus
-  }
+  }, [haptics])
 
   const handleConfirmEnd = async () => {
     const now = Date.now()
@@ -229,15 +231,13 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         // Streak : compter les seances de la semaine courante
         const currentWeek = getCurrentISOWeek()
         const weekStart = getWeekStartTimestamp(currentWeek)
-        const weekHistories = await database
+        const weekSessionCount = await database
           .get<History>('histories')
           .query(
             Q.where('deleted_at', null),
             Q.where('start_time', Q.gte(weekStart)),
           )
-          .fetch()
-        // +1 pour inclure la seance en cours
-        const weekSessionCount = weekHistories.length
+          .fetchCount()
 
         const streakResult = updateStreak(
           user.lastWorkoutWeek,
@@ -260,8 +260,8 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
         const newTotalPrs = (user.totalPrs || 0) + totalPrs
         const newBestStreak = Math.max(streakResult.bestStreak, streakResult.currentStreak)
 
-        const allSetsRaw = await database.get<SetModel>('sets').query().fetch()
-        const distinctExerciseCount = new Set(allSetsRaw.map(s => (s._raw as unknown as { exercise_id: string }).exercise_id)).size
+        const allSetsRaw = await database.get<SetModel>('sets').query().unsafeFetchRaw()
+        const distinctExerciseCount = new Set(allSetsRaw.map(s => (s as Record<string, unknown>).exercise_id as string)).size
 
         const existingBadgeRecords = await database.get<UserBadge>('user_badges').query().fetch()
         const existingBadgeIds = existingBadgeRecords.map(b => b.badgeId)
@@ -362,16 +362,16 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
     return target.getTime()
   }
 
-  const handleConfirmAbandon = async () => {
+  const handleConfirmAbandon = useCallback(async () => {
     const activeHistoryId = historyRef.current?.id || historyId
     if (activeHistoryId) {
       await completeWorkoutHistory(activeHistoryId, Date.now()).catch(e => { if (__DEV__) console.error('[WorkoutScreen] completeWorkoutHistory (abandon):', e) })
     }
     setAbandonVisible(false)
     navigation.reset({ index: 0, routes: [{ name: 'Home' }] })
-  }
+  }, [historyId, navigation])
 
-  const handleValidateSet = async (
+  const handleValidateSet = useCallback(async (
     sessionExercise: SessionExercise,
     setOrder: number
   ) => {
@@ -400,7 +400,38 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
     } else {
       haptics.onError()
     }
-  }
+  }, [validateSet, sessionExercises, validatedSets, user?.timerEnabled, user?.restDuration, haptics])
+
+  const renderWorkoutItem = useCallback(({ item: listItem }: { item: WorkoutListItem }) => {
+    if (listItem.type === 'supersetHeader') {
+      const label = listItem.supersetType === 'circuit'
+        ? t.workout.circuitRound
+        : t.workout.supersetRound
+      const color = listItem.supersetType === 'circuit'
+        ? colors.warning
+        : colors.primary
+      return (
+        <View style={styles.supersetHeader}>
+          <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
+          <Text style={[styles.supersetHeaderText, { color }]}>
+            {label} ({listItem.count})
+          </Text>
+          <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
+        </View>
+      )
+    }
+    return (
+      <WorkoutExerciseCard
+        sessionExercise={listItem.data}
+        historyId={historyId}
+        setInputs={setInputs}
+        validatedSets={validatedSets}
+        onUpdateInput={updateSetInput}
+        onValidateSet={handleValidateSet}
+        onUnvalidateSet={unvalidateSet}
+      />
+    )
+  }, [t, colors, styles, historyId, setInputs, validatedSets, updateSetInput, handleValidateSet, unvalidateSet])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -420,40 +451,15 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
               : `exercise_${item.data.id}`
           }
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item: listItem }) => {
-            if (listItem.type === 'supersetHeader') {
-              const label = listItem.supersetType === 'circuit'
-                ? t.workout.circuitRound
-                : t.workout.supersetRound
-              const color = listItem.supersetType === 'circuit'
-                ? colors.warning
-                : colors.primary
-              return (
-                <View style={styles.supersetHeader}>
-                  <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
-                  <Text style={[styles.supersetHeaderText, { color }]}>
-                    {label} ({listItem.count})
-                  </Text>
-                  <View style={[styles.supersetHeaderLine, { backgroundColor: color }]} />
-                </View>
-              )
-            }
-            return (
-              <WorkoutExerciseCard
-                sessionExercise={listItem.data}
-                historyId={historyId}
-                setInputs={setInputs}
-                validatedSets={validatedSets}
-                onUpdateInput={updateSetInput}
-                onValidateSet={handleValidateSet}
-                onUnvalidateSet={unvalidateSet}
-              />
-            )
-          }}
+          renderItem={renderWorkoutItem}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <Text style={styles.emptyText}>{t.workout.noExercises}</Text>
           }
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
       ) : (
         <View style={styles.listContent}>
@@ -583,7 +589,7 @@ function useStyles(colors: ThemeColors) {
   })
 }
 
-export default withObservables(['route'], ({ route }) => ({
+const ObservableWorkoutContent = withObservables(['route'], ({ route }: { route: RouteProp<RootStackParamList, 'Workout'> }) => ({
   session: database.get<Session>('sessions').findAndObserve(route.params.sessionId),
   sessionExercises: database
     .get<SessionExercise>('session_exercises')
@@ -591,3 +597,19 @@ export default withObservables(['route'], ({ route }) => ({
     .observe(),
   user: database.get<User>('users').query().observe().pipe(map(list => list[0] || null)),
 }))(WorkoutContent)
+
+const WorkoutScreen = ({ route, navigation }: {
+  route: RouteProp<RootStackParamList, 'Workout'>
+  navigation: NativeStackNavigationProp<RootStackParamList>
+}) => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableWorkoutContent route={route} navigation={navigation} />}
+    </View>
+  )
+}
+
+export default WorkoutScreen

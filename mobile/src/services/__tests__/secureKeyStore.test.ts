@@ -117,7 +117,7 @@ describe('secureKeyStore', () => {
       const mockUpdate = jest.fn()
       database.get.mockReturnValue({
         query: () => ({
-          fetch: jest.fn().mockResolvedValue([{ aiApiKey: 'db-key-123', update: mockUpdate }]),
+          fetch: jest.fn().mockResolvedValue([{ _raw: { ai_api_key: 'db-key-123' }, update: mockUpdate }]),
         }),
       })
       database.write.mockImplementation(async (fn: () => Promise<void>) => fn())
@@ -137,7 +137,7 @@ describe('secureKeyStore', () => {
       const mockUpdate = jest.fn()
       database.get.mockReturnValue({
         query: () => ({
-          fetch: jest.fn().mockResolvedValue([{ aiApiKey: 'old-key', update: mockUpdate }]),
+          fetch: jest.fn().mockResolvedValue([{ _raw: { ai_api_key: 'old-key' }, update: mockUpdate }]),
         }),
       })
       database.write.mockImplementation(async (fn: () => Promise<void>) => fn())
@@ -163,11 +163,11 @@ describe('secureKeyStore', () => {
       expect(mockSetItemAsync).not.toHaveBeenCalled()
     })
 
-    it('returns early if user has no aiApiKey', async () => {
+    it('returns early if user has no ai_api_key in _raw', async () => {
       const { database } = require('../../model')
       database.get.mockReturnValue({
         query: () => ({
-          fetch: jest.fn().mockResolvedValue([{ aiApiKey: null }]),
+          fetch: jest.fn().mockResolvedValue([{ _raw: { ai_api_key: null } }]),
         }),
       })
 

@@ -62,5 +62,11 @@ export const migrations = schemaMigrations({
         }),
       ],
     },
+    {
+      // v32: ai_api_key removed from schema (column stays in SQLite, ignored by model)
+      // Data already migrated to expo-secure-store via secureKeyStore.migrateKeyFromDB()
+      toVersion: 32,
+      steps: [],
+    },
   ],
 })
