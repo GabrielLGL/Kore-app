@@ -242,8 +242,8 @@ function useStyles(colors: ThemeColors) {
     },
     deleteBtn: { padding: spacing.md },
     checkbox: {
-      width: 24,
-      height: 24,
+      width: spacing.lg,
+      height: spacing.lg,
       borderRadius: borderRadius.sm,
       borderWidth: 2,
       borderColor: colors.border,

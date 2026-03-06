@@ -298,7 +298,7 @@ function useStyles(colors: ThemeColors) {
     historySets: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 4,
+      gap: spacing.xs,
       flex: 1,
       justifyContent: 'flex-end',
     },

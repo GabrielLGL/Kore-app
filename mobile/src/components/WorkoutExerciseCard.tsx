@@ -422,7 +422,7 @@ function createStyles(colors: ThemeColors) {
       gap: spacing.xs,
       alignSelf: 'flex-start',
       marginBottom: spacing.xs,
-      paddingVertical: 4,
+      paddingVertical: spacing.xs,
       paddingHorizontal: spacing.sm,
       borderRadius: borderRadius.sm,
       borderWidth: 1,
@@ -508,8 +508,8 @@ function createStyles(colors: ThemeColors) {
 
     // Validate button (not validated)
     validateBtn: {
-      width: 32,
-      height: 32,
+      width: spacing.xl,
+      height: spacing.xl,
       borderRadius: borderRadius.lg,
       backgroundColor: 'transparent',
       borderWidth: 1.5,
@@ -523,8 +523,8 @@ function createStyles(colors: ThemeColors) {
       backgroundColor: 'transparent',
     },
     validateBtnActive: {
-      width: 32,
-      height: 32,
+      width: spacing.xl,
+      height: spacing.xl,
       borderRadius: borderRadius.lg,
       backgroundColor: colors.successBg,
       borderWidth: 1,

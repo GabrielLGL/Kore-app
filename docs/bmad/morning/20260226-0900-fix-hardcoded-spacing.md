@@ -34,4 +34,7 @@ Fichiers connus : 10+ composants dans mobile/src/components/ et mobile/src/scree
 - Qualité score → 20/20 (plus de hardcoded spacing signalé)
 
 ## Statut
-⏳ En attente
+✅ Résolu — 20260307-1500
+
+## Résolution
+Rapport do : docs/bmad/do/20260307-1500-style-hardcoded-spacing.md

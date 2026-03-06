@@ -486,7 +486,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               <Text style={styles.settingLabel}>{t.settings.profile.level}</Text>
               <Text style={styles.settingDescription}>{t.settings.profile.levelDescription}</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <Text style={styles.infoValue}>
                 {user?.userLevel ? t.onboarding.levels[user.userLevel as UserLevel] : t.settings.profile.notDefined}
               </Text>
@@ -521,7 +521,7 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
               <Text style={styles.settingLabel}>{t.settings.profile.goal}</Text>
               <Text style={styles.settingDescription}>{t.settings.profile.goalDescription}</Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <Text style={styles.infoValue}>
                 {user?.userGoal ? t.onboarding.goals[user.userGoal as UserGoal] : t.settings.profile.notDefined}
               </Text>
@@ -1104,7 +1104,7 @@ function createStyles(colors: ThemeColors, neuShadow: ReturnType<typeof getTheme
       color: colors.text,
       fontSize: fontSize.md,
       fontWeight: '600',
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     settingDescription: {
       color: colors.textSecondary,

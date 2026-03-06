@@ -210,7 +210,7 @@ const ProgramsScreen: React.FC<Props> = ({ programs, user, navigation }) => {
               setIsCreateChoiceVisible(true)
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <Ionicons name="add-circle-outline" size={20} color={colors.primaryText} />
               <Text style={styles.btnText}>{t.programs.createTitle}</Text>
             </View>

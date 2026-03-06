@@ -197,7 +197,7 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
                 }}
                 style={styles.searchFakeInput}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                   <Ionicons name="search-outline" size={16} color={colors.placeholder} />
                   <Text style={styles.searchFakeText}>{t.exercises.search}</Text>
                 </View>

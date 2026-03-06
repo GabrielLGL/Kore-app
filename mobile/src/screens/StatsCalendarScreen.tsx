@@ -602,7 +602,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
                           <Text style={styles.detailExerciseName}>{ex.exerciseName}</Text>
                           <View style={styles.detailSetsRow}>
                             {ex.sets.map((s, si) => (
-                              <View key={si} style={[styles.detailSetChip, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                              <View key={si} style={[styles.detailSetChip, { flexDirection: 'row', alignItems: 'center', gap: spacing.xs }]}>
                                 <Text
                                   style={[
                                     styles.detailSetText,
@@ -760,17 +760,17 @@ function useStyles(colors: ThemeColors) {
       fontSize: fontSize.sm,
       color: colors.text,
       fontWeight: '600',
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     detailSetsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 4,
+      gap: spacing.xs,
     },
     detailSetChip: {
       backgroundColor: colors.cardSecondary,
       borderRadius: 6,
-      paddingHorizontal: 8,
+      paddingHorizontal: spacing.sm,
       paddingVertical: 3,
     },
     detailSetText: {
@@ -834,9 +834,9 @@ function useStyles(colors: ThemeColors) {
       gap: spacing.xs,
     },
     legendBox: {
-      width: 16,
-      height: 16,
-      borderRadius: 4,
+      width: spacing.md,
+      height: spacing.md,
+      borderRadius: borderRadius.xs,
     },
     legendText: {
       fontSize: fontSize.xs,

@@ -548,7 +548,7 @@ function useStyles(colors: ThemeColors) {
     weekRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      gap: 4,
+      gap: spacing.xs,
     },
     dayChip: {
       flex: 1,
@@ -578,7 +578,7 @@ function useStyles(colors: ThemeColors) {
       fontSize: fontSize.xs,
       fontWeight: '700',
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     dayNumberToday: {
       color: colors.primary,

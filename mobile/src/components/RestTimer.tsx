@@ -196,7 +196,7 @@ function useStyles(colors: ThemeColors) {
       overflow: 'hidden',
     },
     progressBarWrapper: {
-      height: 4,
+      height: spacing.xs,
       backgroundColor: colors.cardSecondary,
       overflow: 'hidden',
     },

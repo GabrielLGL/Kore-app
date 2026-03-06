@@ -150,8 +150,8 @@ function useStyles(colors: ThemeColors) {
       paddingHorizontal: spacing.lg,
     },
     dragHandle: {
-      width: 40,
-      height: 4,
+      width: spacing.xxl,
+      height: spacing.xs,
       backgroundColor: colors.separator,
       borderRadius: borderRadius.xxs,
       alignSelf: 'center',

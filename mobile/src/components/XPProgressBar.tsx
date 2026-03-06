@@ -32,7 +32,7 @@ function useStyles(colors: ThemeColors) {
       gap: spacing.xs,
     },
     barBackground: {
-      height: 8,
+      height: spacing.sm,
       backgroundColor: colors.cardSecondary,
       borderRadius: borderRadius.sm,
       overflow: 'hidden',

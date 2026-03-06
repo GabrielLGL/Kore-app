@@ -197,8 +197,8 @@ function useStyles(colors: ThemeColors) {
       paddingBottom: spacing.sm,
     },
     backBtn: {
-      width: 40,
-      height: 40,
+      width: spacing.xxl,
+      height: spacing.xxl,
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: borderRadius.md,
@@ -210,8 +210,8 @@ function useStyles(colors: ThemeColors) {
       fontWeight: '600',
     },
     backBtnPlaceholder: {
-      width: 40,
-      height: 40,
+      width: spacing.xxl,
+      height: spacing.xxl,
     },
     stepCounter: {
       color: colors.text,
@@ -227,7 +227,7 @@ function useStyles(colors: ThemeColors) {
     badgeContent: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: spacing.xs,
     },
     badgeText: {
       color: colors.text,
