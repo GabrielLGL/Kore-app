@@ -61,6 +61,7 @@ export default class Program extends Model {
               newSE.exercise.set(exercise)
               newSE.position = se.position
               newSE.setsTarget = se.setsTarget
+              newSE.setsTargetMax = se.setsTargetMax
               newSE.repsTarget = se.repsTarget
               newSE.weightTarget = se.weightTarget
               newSE.supersetId = newSupersetId
