@@ -1,7 +1,7 @@
 /**
  * Tests for statsDateUtils.ts — pure functions, no mocks needed.
  */
-import { toDateKey, labelToPeriod, getPeriodStart } from '../statsDateUtils'
+import { toDateKey, getPeriodStart } from '../statsDateUtils'
 
 // ─── toDateKey ────────────────────────────────────────────────────────────────
 
@@ -24,30 +24,6 @@ describe('toDateKey', () => {
 
   it('handles middle of year', () => {
     expect(toDateKey(new Date(2024, 6, 4))).toBe('2024-07-04')
-  })
-})
-
-// ─── labelToPeriod ────────────────────────────────────────────────────────────
-
-describe('labelToPeriod', () => {
-  it('returns "1m" by default for unrecognised label', () => {
-    expect(labelToPeriod('unknown')).toBe('1m')
-  })
-
-  it('returns "1m" for null', () => {
-    expect(labelToPeriod(null)).toBe('1m')
-  })
-
-  it('returns "3m" for "3 mois"', () => {
-    expect(labelToPeriod('3 mois')).toBe('3m')
-  })
-
-  it('returns "all" for "Tout"', () => {
-    expect(labelToPeriod('Tout')).toBe('all')
-  })
-
-  it('returns "1m" for empty string', () => {
-    expect(labelToPeriod('')).toBe('1m')
   })
 })
 

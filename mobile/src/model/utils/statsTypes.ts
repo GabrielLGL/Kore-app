@@ -2,7 +2,8 @@
 
 export type StatsPeriod = '1m' | '3m' | 'all'
 
-export const PERIOD_LABELS = ['1 mois', '3 mois', 'Tout'] as const
+export const PERIOD_KEYS = ['1m', '3m', 'all'] as const
+export type PeriodKey = typeof PERIOD_KEYS[number]
 
 export interface GlobalKPIs {
   totalSessions: number
@@ -105,3 +106,9 @@ export interface WeekDayActivity {
 }
 
 export type WeeklyActivityData = WeekDayActivity[]
+
+export interface StatsContext {
+  historyDates: Map<string, number>       // historyId -> timestamp ms
+  historyIds: Set<string>                 // IDs actifs (deletedAt === null)
+  exerciseMuscles: Map<string, string[]>  // exerciseId -> muscles[]
+}

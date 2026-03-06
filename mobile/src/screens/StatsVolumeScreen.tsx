@@ -20,9 +20,10 @@ import {
   computeWeeklySetsChart,
   computeMonthlySetsChart,
   getMondayOfCurrentWeek,
-  PERIOD_LABELS,
-  labelToPeriod,
+  PERIOD_KEYS,
+  prepareStatsContext,
 } from '../model/utils/statsHelpers'
+import type { PeriodKey, StatsPeriod } from '../model/utils/statsHelpers'
 import { ChipSelector } from '../components/ChipSelector'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
@@ -30,13 +31,13 @@ import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import { createChartConfig } from '../theme/chartConfig'
 
-const BAR_PERIOD_LABELS = ['Semaine', '1 mois', '3 mois', 'Tout'] as const
-type BarPeriodLabel = typeof BAR_PERIOD_LABELS[number]
+const BAR_PERIOD_KEYS = ['week', '1m', '3m', 'all'] as const
+type BarPeriodKey = typeof BAR_PERIOD_KEYS[number]
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
 function computeBarWindow(
-  barPeriod: BarPeriodLabel,
+  barPeriod: BarPeriodKey,
   offset: number,
   monthAbbr: string[],
   monthFull: string[],
@@ -50,11 +51,11 @@ function computeBarWindow(
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000
   const now = new Date()
 
-  if (barPeriod === 'Tout') {
+  if (barPeriod === 'all') {
     return { windowStart: 0, windowEnd: Date.now() + 1, windowLabel: labelAll, showNav: false }
   }
 
-  if (barPeriod === 'Semaine') {
+  if (barPeriod === 'week') {
     const monday = getMondayOfCurrentWeek()
     const windowStart = monday + offset * WEEK_MS
     const windowEnd = windowStart + WEEK_MS
@@ -64,7 +65,7 @@ function computeBarWindow(
     return { windowStart, windowEnd, windowLabel, showNav: true }
   }
 
-  if (barPeriod === '1 mois') {
+  if (barPeriod === '1m') {
     const target = new Date(now.getFullYear(), now.getMonth() + offset, 1)
     const windowStart = target.getTime()
     const windowEnd = new Date(target.getFullYear(), target.getMonth() + 1, 1).getTime()
@@ -72,7 +73,7 @@ function computeBarWindow(
     return { windowStart, windowEnd, windowLabel, showNav: true }
   }
 
-  // '3 mois'
+  // '3m'
   const endDate = new Date(now.getFullYear(), now.getMonth() + 1 + offset * 3, 1)
   const startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 3, 1)
   const windowStart = startDate.getTime()
@@ -100,8 +101,8 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
   const { width: screenWidth } = useWindowDimensions()
 
   // ── Graphique ────────────────────────────────────────────────────────────
-  const [periodLabel, setPeriodLabel] = useState<string>('1 mois')
-  const period = labelToPeriod(periodLabel)
+  const [periodKey, setPeriodKey] = useState<PeriodKey>(PERIOD_KEYS[0])
+  const period: StatsPeriod = periodKey
 
   const [muscleLabel, setMuscleLabel] = useState<string>('Total')
 
@@ -118,37 +119,44 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
   const muscleFilter = muscleLabel === t.statsVolume.total ? null : muscleLabel
   const muscleLabelMap = useMemo(() => ({ [t.statsVolume.total]: t.statsVolume.total, ...t.muscleNames }), [t])
 
-  const periodLabelMap = useMemo<Record<string, string>>(() => ({
-    '1 mois': t.statsVolume.periodMonth,
-    '3 mois': t.statsVolume.period3Months,
-    'Tout': t.statsVolume.periodAll,
+  const periodLabelMap = useMemo<Record<PeriodKey, string>>(() => ({
+    '1m': t.statsVolume.periodMonth,
+    '3m': t.statsVolume.period3Months,
+    'all': t.statsVolume.periodAll,
   }), [t])
 
-  const barPeriodLabelMap = useMemo<Record<string, string>>(() => ({
-    'Semaine': t.statsVolume.periodWeek,
-    '1 mois': t.statsVolume.periodMonth,
-    '3 mois': t.statsVolume.period3Months,
-    'Tout': t.statsVolume.periodAll,
+  const barPeriodLabelMap = useMemo<Record<BarPeriodKey, string>>(() => ({
+    'week': t.statsVolume.periodWeek,
+    '1m': t.statsVolume.periodMonth,
+    '3m': t.statsVolume.period3Months,
+    'all': t.statsVolume.periodAll,
   }), [t])
 
   // ── Progress bars ────────────────────────────────────────────────────────
-  const [barPeriodLabel, setBarPeriodLabel] = useState<BarPeriodLabel>('Semaine')
+  const [barPeriodKey, setBarPeriodKey] = useState<BarPeriodKey>('week')
   const [timeOffset, setTimeOffset] = useState(0)
 
-  useEffect(() => { setTimeOffset(0) }, [barPeriodLabel])
+  useEffect(() => { setTimeOffset(0) }, [barPeriodKey])
+
+  // ── Contexte partagé ────────────────────────────────────────────────────
+  const ctx = useMemo(
+    () => prepareStatsContext(histories, exercises),
+    [histories, exercises]
+  )
 
   // ── Données line chart ───────────────────────────────────────────────────
   const chartResult = useMemo(() => {
     if (period === 'all') {
-      return computeMonthlySetsChart(sets, exercises, histories, muscleFilter)
+      return computeMonthlySetsChart(sets, exercises, histories, muscleFilter, ctx)
     }
     const weeksToShow = period === '3m' ? 12 : 4
     return computeWeeklySetsChart(sets, exercises, histories, {
       muscleFilter,
       weekOffset: 0,
       weeksToShow,
+      ctx,
     })
-  }, [sets, exercises, histories, period, muscleFilter])
+  }, [sets, exercises, histories, period, muscleFilter, ctx])
 
   const chartLabels = useMemo(() => {
     if (period === '3m') {
@@ -165,35 +173,33 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
   }), [chartLabels, chartResult.data])
 
   // ── Données progress bars ────────────────────────────────────────────────
-  const { windowLabel, setsPerMuscle, hasNext, showNav } = useMemo(() => {
-    const { windowStart, windowEnd, windowLabel: label, showNav } = computeBarWindow(barPeriodLabel, timeOffset, t.statsVolume.monthAbbr, t.statsVolume.monthFull, t.statsVolume.totalGlobal)
+  const monthAbbr = t.statsVolume.monthAbbr
+  const monthFull = t.statsVolume.monthFull
+  const totalGlobal = t.statsVolume.totalGlobal
 
-    const activeHistories = histories.filter(h => h.deletedAt === null)
-    const historyDates = new Map(activeHistories.map(h => [h.id, h.startTime.getTime()]))
-    const activeHistoryIds = new Set(activeHistories.map(h => h.id))
-    const exerciseMuscles = new Map<string, string[]>(
-      exercises.map(e => [e.id, e.muscles] as [string, string[]])
-    )
+  const { windowLabel, setsPerMuscle, hasNext, showNav } = useMemo(() => {
+    const { windowStart, windowEnd, windowLabel: label, showNav } = computeBarWindow(barPeriodKey, timeOffset, monthAbbr, monthFull, totalGlobal)
 
     const muscleSets = new Map<string, number>()
-    sets.forEach(s => {
-      if (!activeHistoryIds.has(s.history.id)) return
-      const d = historyDates.get(s.history.id) ?? 0
-      if (d < windowStart || d >= windowEnd) return
-      const muscles = exerciseMuscles.get(s.exercise.id) ?? []
-      muscles.forEach(m => {
+    for (const s of sets) {
+      const hId = s.history.id
+      if (!ctx.historyIds.has(hId)) continue
+      const d = ctx.historyDates.get(hId) ?? 0
+      if (d < windowStart || d >= windowEnd) continue
+      const muscles = ctx.exerciseMuscles.get(s.exercise.id) ?? []
+      for (const m of muscles) {
         const trimmed = m.trim()
-        if (!trimmed) return
+        if (!trimmed) continue
         muscleSets.set(trimmed, (muscleSets.get(trimmed) ?? 0) + 1)
-      })
-    })
+      }
+    }
 
     const result = Array.from(muscleSets.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([muscle, count]) => ({ muscle, sets: count }))
 
     return { windowLabel: label, setsPerMuscle: result, hasNext: timeOffset < 0, showNav }
-  }, [sets, exercises, histories, barPeriodLabel, timeOffset, t])
+  }, [sets, ctx, barPeriodKey, timeOffset, monthAbbr, monthFull, totalGlobal])
 
   const maxSets = setsPerMuscle[0]?.sets ?? 1
 
@@ -205,9 +211,9 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
     >
       {/* ── Graphique ── */}
       <ChipSelector
-        items={PERIOD_LABELS}
-        selectedValue={periodLabel}
-        onChange={label => { if (label) setPeriodLabel(label) }}
+        items={PERIOD_KEYS}
+        selectedValue={periodKey}
+        onChange={key => { if (key) setPeriodKey(key as PeriodKey) }}
         allowNone={false}
         noneLabel=""
         labelMap={periodLabelMap}
@@ -243,9 +249,9 @@ export function StatsVolumeScreenBase({ sets, exercises, histories }: Props) {
 
       {/* ── Progress bars ── */}
       <ChipSelector
-        items={BAR_PERIOD_LABELS}
-        selectedValue={barPeriodLabel}
-        onChange={label => { if (label) setBarPeriodLabel(label as BarPeriodLabel) }}
+        items={BAR_PERIOD_KEYS}
+        selectedValue={barPeriodKey}
+        onChange={key => { if (key) setBarPeriodKey(key as BarPeriodKey) }}
         allowNone={false}
         noneLabel=""
         labelMap={barPeriodLabelMap}

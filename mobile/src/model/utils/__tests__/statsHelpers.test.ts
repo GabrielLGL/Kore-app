@@ -17,8 +17,7 @@ import {
   formatDuration,
   formatVolume,
   toDateKey,
-  labelToPeriod,
-  PERIOD_LABELS,
+  PERIOD_KEYS,
   computeWeeklySetsChart,
   computeMonthlySetsChart,
 } from '../statsHelpers'
@@ -126,31 +125,13 @@ describe('toDateKey', () => {
   })
 })
 
-// ─── labelToPeriod / PERIOD_LABELS ───────────────────────────────────────────
+// ─── PERIOD_KEYS ─────────────────────────────────────────────────────────────
 
-describe('labelToPeriod', () => {
-  it('returns "1m" for "1 mois"', () => {
-    expect(labelToPeriod('1 mois')).toBe('1m')
-  })
-
-  it('returns "1m" for null (default)', () => {
-    expect(labelToPeriod(null)).toBe('1m')
-  })
-
-  it('returns "3m" for "3 mois"', () => {
-    expect(labelToPeriod('3 mois')).toBe('3m')
-  })
-
-  it('returns "all" for "Tout"', () => {
-    expect(labelToPeriod('Tout')).toBe('all')
-  })
-})
-
-describe('PERIOD_LABELS', () => {
-  it('contains the three expected labels', () => {
-    expect(PERIOD_LABELS).toContain('1 mois')
-    expect(PERIOD_LABELS).toContain('3 mois')
-    expect(PERIOD_LABELS).toContain('Tout')
+describe('PERIOD_KEYS', () => {
+  it('contains the three expected language-agnostic keys', () => {
+    expect(PERIOD_KEYS).toContain('1m')
+    expect(PERIOD_KEYS).toContain('3m')
+    expect(PERIOD_KEYS).toContain('all')
   })
 })
 

@@ -2,7 +2,7 @@
 // Tous les imports existants restent compatibles via ce barrel.
 // Le code est découpé en sous-modules thématiques :
 //   statsTypes.ts      — types & interfaces
-//   statsDateUtils.ts  — toDateKey, labelToPeriod, getPeriodStart
+//   statsDateUtils.ts  — toDateKey, getPeriodStart
 //   statsKPIs.ts       — computeGlobalKPIs, streaks, computeMotivationalPhrase
 //   statsDuration.ts   — computeDurationStats, formatDuration
 //   statsVolume.ts     — computeVolumeStats, buildHeatmapData, formatVolume
@@ -10,6 +10,7 @@
 //   statsPRs.ts        — computePRsByExercise, computeTopExercisesByFrequency
 
 export * from './statsTypes'
+export { prepareStatsContext } from './statsContext'
 export * from './statsDateUtils'
 export * from './statsKPIs'
 export * from './statsDuration'
