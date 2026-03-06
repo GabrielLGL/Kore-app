@@ -392,4 +392,17 @@ const enhance = withObservables([], () => ({
   histories: database.get<History>('histories').query(Q.where('deleted_at', null)).observe(),
 }))
 
-export default enhance(StatsVolumeScreenBase)
+const ObservableStatsVolumeContent = enhance(StatsVolumeScreenBase)
+
+const StatsVolumeScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableStatsVolumeContent />}
+    </View>
+  )
+}
+
+export default StatsVolumeScreen

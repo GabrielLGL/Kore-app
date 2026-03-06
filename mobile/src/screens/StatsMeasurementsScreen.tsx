@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
@@ -452,4 +452,17 @@ const enhance = withObservables([], () => ({
     .observe(),
 }))
 
-export default enhance(StatsMeasurementsScreenBase)
+const ObservableStatsMeasurementsContent = enhance(StatsMeasurementsScreenBase)
+
+const StatsMeasurementsScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableStatsMeasurementsContent />}
+    </View>
+  )
+}
+
+export default StatsMeasurementsScreen

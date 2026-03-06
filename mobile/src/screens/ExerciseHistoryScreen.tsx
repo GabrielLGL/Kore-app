@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -348,10 +348,12 @@ export default function ExerciseHistoryScreen() {
   const route = useRoute<ExerciseHistoryRouteProp>()
   const { exerciseId } = route.params
   const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <EnhancedContent exerciseId={exerciseId} />
+      {mounted && <EnhancedContent exerciseId={exerciseId} />}
     </View>
   )
 }

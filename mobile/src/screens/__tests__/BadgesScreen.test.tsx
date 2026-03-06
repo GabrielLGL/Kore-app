@@ -39,7 +39,7 @@ jest.mock('../../contexts/LanguageContext', () => {
 
 import React from 'react'
 import { render } from '@testing-library/react-native'
-import BadgesScreen from '../BadgesScreen'
+import { BadgesScreenBase as BadgesScreen } from '../BadgesScreen'
 import { BADGES_LIST, BADGE_CATEGORY_LABELS } from '../../model/utils/badgeConstants'
 import type UserBadge from '../../model/models/UserBadge'
 

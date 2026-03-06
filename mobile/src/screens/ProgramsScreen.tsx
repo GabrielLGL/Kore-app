@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Animated, BackHandler } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, Animated, BackHandler, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { database } from '../model/index'
 import withObservables from '@nozbe/with-observables'
@@ -413,9 +413,20 @@ function useStyles(colors: ThemeColors) {
 
 export { ProgramsScreen as ProgramsContent }
 
-const EnhancedProgramsScreen = withObservables([], () => ({
+const ObservableProgramsContent = withObservables([], () => ({
   programs: database.get<Program>('programs').query(Q.sortBy('position', Q.asc)).observe(),
   user: database.get<User>('users').query().observe().pipe(map(list => list[0] || null)),
 }))(ProgramsScreen)
 
-export default EnhancedProgramsScreen
+const ProgramsScreenWrapper = ({ navigation }: { navigation: NavigationProp }) => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableProgramsContent navigation={navigation} />}
+    </View>
+  )
+}
+
+export default ProgramsScreenWrapper

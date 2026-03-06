@@ -521,4 +521,17 @@ const enhance = withObservables([], () => ({
     .observe(),
 }))
 
-export default enhance(StatsDurationScreenBase)
+const ObservableStatsDurationContent = enhance(StatsDurationScreenBase)
+
+const StatsDurationScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableStatsDurationContent />}
+    </View>
+  )
+}
+
+export default StatsDurationScreen

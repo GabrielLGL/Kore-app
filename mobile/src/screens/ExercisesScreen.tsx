@@ -94,23 +94,6 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
     loadExerciseForEdit
   } = useExerciseManager(haptics.onSuccess, haptics.onDelete)
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          testID="globe-catalog-button"
-          onPress={() => {
-            haptics.onPress()
-            navigation.navigate('ExerciseCatalog')
-          }}
-          style={{ marginRight: spacing.md }}
-        >
-          <Ionicons name="globe-outline" size={24} color={colors.primary} />
-        </TouchableOpacity>
-      ),
-    })
-  }, [navigation, colors.primary, haptics])
-
   const infoSheet = useModalState()
   const [infoSheetExercise, setInfoSheetExercise] = useState<Exercise | null>(null)
 
@@ -269,6 +252,10 @@ const ExercisesContent: React.FC<Props> = ({ exercises }) => {
               contentContainerStyle={{ paddingHorizontal: SCREEN_PADDING_H, paddingBottom: LIST_PADDING_BOTTOM }}
               ItemSeparatorComponent={renderSeparator}
               ListEmptyComponent={<Text style={styles.emptyList}>{t.exercises.noExercises}</Text>}
+              initialNumToRender={15}
+              maxToRenderPerBatch={10}
+              windowSize={5}
+              removeClippedSubviews={Platform.OS === 'android'}
             />
           </View>
 
@@ -423,7 +410,36 @@ const ObservableContent = withObservables([], () => ({
 
 const ExercisesScreen = () => {
   const colors = useColors()
-  return <View style={{ flex: 1, backgroundColor: colors.background }}><ObservableContent /></View>
+  const navigation = useNavigation<ExercisesNavigation>()
+  const haptics = useHaptics()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          testID="globe-catalog-button"
+          onPress={() => {
+            haptics.onPress()
+            navigation.navigate('ExerciseCatalog')
+          }}
+          style={{ marginRight: spacing.md }}
+        >
+          <Ionicons name="globe-outline" size={24} color={colors.primary} />
+        </TouchableOpacity>
+      ),
+    })
+  }, [navigation, colors.primary, haptics])
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableContent />}
+    </View>
+  )
 }
 
 export { ExercisesContent }

@@ -21,7 +21,7 @@ import {
   cancelAllReminders,
 } from '../services/notificationService'
 import { useHaptics } from '../hooks/useHaptics'
-import { useTheme } from '../contexts/ThemeContext'
+import { useTheme, useColors } from '../contexts/ThemeContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import type { Language } from '../i18n'
 import { OnboardingCard } from '../components/OnboardingCard'
@@ -404,6 +404,46 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
   const HOURS = useMemo(() => Array.from({ length: 24 }, (_, i) => i), [])
   const MINUTES = useMemo(() => Array.from({ length: 12 }, (_, i) => i * 5), [])
 
+  const renderHourItem = useCallback(({ item }: { item: number }) => (
+    <TouchableOpacity
+      style={[
+        styles.timePickerItem,
+        tempHour === item && styles.timePickerItemActive,
+      ]}
+      onPress={() => { setTempHour(item); haptics.onSelect() }}
+      activeOpacity={0.7}
+    >
+      <Text
+        style={[
+          styles.timePickerItemText,
+          tempHour === item && styles.timePickerItemTextActive,
+        ]}
+      >
+        {String(item).padStart(2, '0')}
+      </Text>
+    </TouchableOpacity>
+  ), [tempHour, styles, haptics])
+
+  const renderMinuteItem = useCallback(({ item }: { item: number }) => (
+    <TouchableOpacity
+      style={[
+        styles.timePickerItem,
+        tempMinute === item && styles.timePickerItemActive,
+      ]}
+      onPress={() => { setTempMinute(item); haptics.onSelect() }}
+      activeOpacity={0.7}
+    >
+      <Text
+        style={[
+          styles.timePickerItemText,
+          tempMinute === item && styles.timePickerItemTextActive,
+        ]}
+      >
+        {String(item).padStart(2, '0')}
+      </Text>
+    </TouchableOpacity>
+  ), [tempMinute, styles, haptics])
+
   return (
     <LinearGradient
       colors={[colors.bgGradientStart, colors.bgGradientEnd]}
@@ -720,25 +760,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 keyExtractor={item => `h-${item}`}
                 style={styles.timePickerList}
                 showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.timePickerItem,
-                      tempHour === item && styles.timePickerItemActive,
-                    ]}
-                    onPress={() => { setTempHour(item); haptics.onSelect() }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.timePickerItemText,
-                        tempHour === item && styles.timePickerItemTextActive,
-                      ]}
-                    >
-                      {String(item).padStart(2, '0')}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                renderItem={renderHourItem}
+                initialNumToRender={24}
+                removeClippedSubviews={Platform.OS === 'android'}
               />
             </View>
             <Text style={styles.timePickerSeparator}>:</Text>
@@ -749,25 +773,9 @@ const SettingsContent: React.FC<Props> = ({ user }) => {
                 keyExtractor={item => `m-${item}`}
                 style={styles.timePickerList}
                 showsVerticalScrollIndicator={false}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.timePickerItem,
-                      tempMinute === item && styles.timePickerItemActive,
-                    ]}
-                    onPress={() => { setTempMinute(item); haptics.onSelect() }}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.timePickerItemText,
-                        tempMinute === item && styles.timePickerItemTextActive,
-                      ]}
-                    >
-                      {String(item).padStart(2, '0')}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                renderItem={renderMinuteItem}
+                initialNumToRender={12}
+                removeClippedSubviews={Platform.OS === 'android'}
               />
             </View>
           </View>
@@ -1442,8 +1450,21 @@ function createStyles(colors: ThemeColors, neuShadow: ReturnType<typeof getTheme
 
 export { SettingsContent }
 
-export default withObservables([], () => ({
+const ObservableContent = withObservables([], () => ({
   user: database.get<User>('users').query().observe().pipe(
     map((list: User[]) => list[0] || null)
   ),
 }))(SettingsContent)
+
+const SettingsScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableContent />}
+    </View>
+  )
+}
+
+export default SettingsScreen

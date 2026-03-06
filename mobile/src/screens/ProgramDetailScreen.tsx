@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, FlatList, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, SafeAreaView, FlatList, ScrollView, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import withObservables from '@nozbe/with-observables'
 import { Q } from '@nozbe/watermelondb'
@@ -135,6 +135,10 @@ const ProgramDetailScreenInner: React.FC<Props> = ({ program, sessions, programs
             <Text style={styles.addButtonText}>{t.programDetail.addSession}</Text>
           </TouchableOpacity>
         }
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'android'}
       />
 
       {/* Choix ajout séance : manuel ou IA */}
@@ -336,7 +340,9 @@ function useStyles(colors: ThemeColors) {
   })
 }
 
-const EnhancedProgramDetailScreen = withObservables(
+export { ProgramDetailScreenInner }
+
+const ObservableProgramDetailContent = withObservables(
   ['route'],
   ({ route }: { route: RouteProp<RootStackParamList, 'ProgramDetail'> }) => ({
     program: database.get<Program>('programs').findAndObserve(route.params.programId),
@@ -348,4 +354,18 @@ const EnhancedProgramDetailScreen = withObservables(
   })
 )(ProgramDetailScreenInner)
 
-export default EnhancedProgramDetailScreen
+const ProgramDetailScreen = ({ route, navigation }: {
+  route: RouteProp<RootStackParamList, 'ProgramDetail'>
+  navigation: NativeStackNavigationProp<RootStackParamList, 'ProgramDetail'>
+}) => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableProgramDetailContent route={route} navigation={navigation} />}
+    </View>
+  )
+}
+
+export default ProgramDetailScreen

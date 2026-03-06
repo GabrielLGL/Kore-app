@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { NavigationContainer, DarkTheme, NavigationContainerRefWithCurrent } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Platform, BackHandler, ToastAndroid } from 'react-native'
@@ -10,34 +10,39 @@ import { LanguageProvider, useLanguage } from '../contexts/LanguageContext'
 import type { ThemeMode } from '../theme'
 import type { Language } from '../i18n'
 
+// Static imports — critical startup screens
 import HomeScreen from '../screens/HomeScreen'
-import ProgramsScreen from '../screens/ProgramsScreen'
-import SessionDetailScreen from '../screens/SessionDetailScreen'
-import ExercisesScreen from '../screens/ExercisesScreen'
-import ChartsScreen from '../screens/ChartsScreen'
-import SettingsScreen from '../screens/SettingsScreen'
-import WorkoutScreen from '../screens/WorkoutScreen'
-import AssistantScreen from '../screens/AssistantScreen'
-import StatsScreen from '../screens/StatsScreen'
-import StatsDurationScreen from '../screens/StatsDurationScreen'
-import StatsVolumeScreen from '../screens/StatsVolumeScreen'
-import StatsCalendarScreen from '../screens/StatsCalendarScreen'
-import StatsExercisesScreen from '../screens/StatsExercisesScreen'
-import StatsMeasurementsScreen from '../screens/StatsMeasurementsScreen'
-import { ErrorBoundary } from '../components/ErrorBoundary'
 import OnboardingScreen from '../screens/OnboardingScreen'
-import BadgesScreen from '../screens/BadgesScreen'
-import ProgramDetailScreen from '../screens/ProgramDetailScreen'
+
+// Lazy imports — secondary screens
+const ProgramsScreen = React.lazy(() => import('../screens/ProgramsScreen'))
+const SessionDetailScreen = React.lazy(() => import('../screens/SessionDetailScreen'))
+const ExercisesScreen = React.lazy(() => import('../screens/ExercisesScreen'))
+const ChartsScreen = React.lazy(() => import('../screens/ChartsScreen'))
+const SettingsScreen = React.lazy(() => import('../screens/SettingsScreen'))
+const WorkoutScreen = React.lazy(() => import('../screens/WorkoutScreen'))
+const AssistantScreen = React.lazy(() => import('../screens/AssistantScreen'))
+const StatsScreen = React.lazy(() => import('../screens/StatsScreen'))
+const StatsDurationScreen = React.lazy(() => import('../screens/StatsDurationScreen'))
+const StatsVolumeScreen = React.lazy(() => import('../screens/StatsVolumeScreen'))
+const StatsCalendarScreen = React.lazy(() => import('../screens/StatsCalendarScreen'))
+const StatsExercisesScreen = React.lazy(() => import('../screens/StatsExercisesScreen'))
+const StatsMeasurementsScreen = React.lazy(() => import('../screens/StatsMeasurementsScreen'))
+const BadgesScreen = React.lazy(() => import('../screens/BadgesScreen'))
+const ProgramDetailScreen = React.lazy(() => import('../screens/ProgramDetailScreen'))
+const ExerciseHistoryScreen = React.lazy(() => import('../screens/ExerciseHistoryScreen'))
+const AssistantPreviewScreen = React.lazy(() => import('../screens/AssistantPreviewScreen'))
+const CreateExerciseScreen = React.lazy(() => import('../screens/CreateExerciseScreen'))
+const ExerciseCatalogScreen = React.lazy(() => import('../screens/ExerciseCatalogScreen'))
+const HistoryDetailScreen = React.lazy(() => import('../screens/HistoryDetailScreen'))
+
+import { ErrorBoundary } from '../components/ErrorBoundary'
+import ScreenLoader from '../components/ScreenLoader'
 import { database } from '../model'
 import User from '../model/models/User'
-import ExerciseHistoryScreen from '../screens/ExerciseHistoryScreen'
 import type { MilestoneEvent } from '../model/utils/gamificationHelpers'
 import type { BadgeDefinition } from '../model/utils/badgeConstants'
 import type { GeneratedPlan } from '../services/ai/types'
-import AssistantPreviewScreen from '../screens/AssistantPreviewScreen'
-import CreateExerciseScreen from '../screens/CreateExerciseScreen'
-import ExerciseCatalogScreen from '../screens/ExerciseCatalogScreen'
-import HistoryDetailScreen from '../screens/HistoryDetailScreen'
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -153,52 +158,54 @@ function AppContent() {
   return (
     <NavigationContainer ref={navigationRef} theme={navTheme}>
       <GlobalBackHandler navigationRef={navigationRef} exitMessage={t.common.exitToast} />
-      <Stack.Navigator
-        initialRouteName={initialRoute}
-        screenOptions={{
-          headerStyle: { backgroundColor: colors.background },
-          headerTintColor: colors.text,
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: colors.background },
-          statusBarStyle: mode === 'dark' ? 'light' : 'dark',
-          statusBarBackgroundColor: colors.background,
-        }}
-      >
-        {/* Onboarding */}
-        <Stack.Screen
-          name="Onboarding"
-          component={OnboardingScreen}
-          options={{ headerShown: false }}
-        />
-        {/* Dashboard principal */}
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        {/* Écrans principaux (ex-onglets) */}
-        <Stack.Screen name="Programs" component={ProgramsScreen} options={{ title: t.navigation.programs }} />
-        <Stack.Screen name="Exercices" component={ExercisesScreen} options={{ title: t.navigation.exercises }} />
-        <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: t.navigation.assistant }} />
-        <Stack.Screen name="Stats" component={StatsScreen} options={{ title: t.navigation.stats }} />
-        {/* Écrans de détail */}
-        <Stack.Screen name="ProgramDetail" component={ProgramDetailScreen} options={{ title: '' }} />
-        <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: t.navigation.sessionDetail }} />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t.navigation.settings }} />
-        <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
-        <Stack.Screen name="StatsDuration" component={StatsDurationScreen} options={{ title: t.navigation.statsDuration }} />
-        <Stack.Screen name="StatsVolume" component={StatsVolumeScreen} options={{ title: t.navigation.statsVolume }} />
-        <Stack.Screen name="StatsCalendar" component={StatsCalendarScreen} options={{ title: t.navigation.statsCalendar }} />
-        <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: t.navigation.statsExercises }} />
-        <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: t.navigation.statsMeasurements }} />
-        <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: t.navigation.statsHistory }} />
-        <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: t.navigation.badges }} />
-        <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} options={{ title: '' }} />
-        <Stack.Screen name="AssistantPreview" component={AssistantPreviewScreen} options={{ title: t.navigation.assistantPreview }} />
-        <Stack.Screen name="CreateExercise" component={CreateExerciseScreen} options={{ title: t.exercises.newTitle }} />
-        <Stack.Screen name="ExerciseCatalog" component={ExerciseCatalogScreen} options={{ title: t.navigation.catalogueGlobal }} />
-        <Stack.Screen name="HistoryDetail" component={HistoryDetailScreen} options={{ title: '' }} />
-      </Stack.Navigator>
+      <Suspense fallback={<ScreenLoader />}>
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            headerShadowVisible: false,
+            contentStyle: { backgroundColor: colors.background },
+            statusBarStyle: mode === 'dark' ? 'light' : 'dark',
+            statusBarBackgroundColor: colors.background,
+          }}
+        >
+          {/* Onboarding */}
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingScreen}
+            options={{ headerShown: false }}
+          />
+          {/* Dashboard principal */}
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          {/* Écrans principaux (ex-onglets) */}
+          <Stack.Screen name="Programs" component={ProgramsScreen} options={{ title: t.navigation.programs }} />
+          <Stack.Screen name="Exercices" component={ExercisesScreen} options={{ title: t.navigation.exercises }} />
+          <Stack.Screen name="Assistant" component={AssistantScreen} options={{ title: t.navigation.assistant }} />
+          <Stack.Screen name="Stats" component={StatsScreen} options={{ title: t.navigation.stats }} />
+          {/* Écrans de détail */}
+          <Stack.Screen name="ProgramDetail" component={ProgramDetailScreen} options={{ title: '' }} />
+          <Stack.Screen name="SessionDetail" component={SessionDetailScreen} options={{ title: t.navigation.sessionDetail }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t.navigation.settings }} />
+          <Stack.Screen name="Workout" component={WorkoutScreen} options={{ title: '' }} />
+          <Stack.Screen name="StatsDuration" component={StatsDurationScreen} options={{ title: t.navigation.statsDuration }} />
+          <Stack.Screen name="StatsVolume" component={StatsVolumeScreen} options={{ title: t.navigation.statsVolume }} />
+          <Stack.Screen name="StatsCalendar" component={StatsCalendarScreen} options={{ title: t.navigation.statsCalendar }} />
+          <Stack.Screen name="StatsExercises" component={StatsExercisesScreen} options={{ title: t.navigation.statsExercises }} />
+          <Stack.Screen name="StatsMeasurements" component={StatsMeasurementsScreen} options={{ title: t.navigation.statsMeasurements }} />
+          <Stack.Screen name="StatsHistory" component={ChartsScreen} options={{ title: t.navigation.statsHistory }} />
+          <Stack.Screen name="Badges" component={BadgesScreen} options={{ title: t.navigation.badges }} />
+          <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} options={{ title: '' }} />
+          <Stack.Screen name="AssistantPreview" component={AssistantPreviewScreen} options={{ title: t.navigation.assistantPreview }} />
+          <Stack.Screen name="CreateExercise" component={CreateExerciseScreen} options={{ title: t.exercises.newTitle }} />
+          <Stack.Screen name="ExerciseCatalog" component={ExerciseCatalogScreen} options={{ title: t.navigation.catalogueGlobal }} />
+          <Stack.Screen name="HistoryDetail" component={HistoryDetailScreen} options={{ title: '' }} />
+        </Stack.Navigator>
+      </Suspense>
     </NavigationContainer>
   )
 }

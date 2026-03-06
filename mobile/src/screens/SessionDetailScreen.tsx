@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native'
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist'
 import withObservables from '@nozbe/with-observables'
@@ -19,6 +19,7 @@ import { useSessionManager } from '../hooks/useSessionManager'
 import { Ionicons } from '@expo/vector-icons'
 import { BottomSheet } from '../components/BottomSheet'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import type { RouteProp } from '@react-navigation/native'
 import { RootStackParamList } from '../navigation'
 import { fontSize, spacing, borderRadius } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
@@ -156,7 +157,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
     }
   }
 
-  const showRemoveAlert = (se: SessionExercise, exoName: string) => {
+  const showRemoveAlert = useCallback((se: SessionExercise, exoName: string) => {
     setAlertConfig({
       title: `${t.sessionDetail.delete} ${exoName} ?`,
       message: t.sessionDetail.removeConfirmMessage,
@@ -165,7 +166,28 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
       }
     })
     setIsAlertVisible(true)
-  }
+  }, [t, removeExercise])
+
+  const handleEditTargets = useCallback((se: SessionExercise) => {
+    haptics.onPress()
+    prepareEditTargets(se)
+    setIsEditModalVisible(true)
+  }, [haptics, prepareEditTargets])
+
+  const renderDraggableItem = useCallback(({ item, drag, isActive }: RenderItemParams<SessionExercise>) => (
+    <SessionExerciseItem
+      item={item}
+      drag={drag}
+      dragActive={isActive}
+      selectionMode={selectionMode}
+      isSelected={selectedItems.has(item.id)}
+      onSelect={toggleSelection}
+      groupInfo={getGroupInfo(item)}
+      onUngroup={handleUngroup}
+      onEditTargets={handleEditTargets}
+      onRemove={showRemoveAlert}
+    />
+  ), [selectionMode, selectedItems, toggleSelection, getGroupInfo, handleUngroup, handleEditTargets, showRemoveAlert])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -195,27 +217,7 @@ export const SessionDetailContent: React.FC<Props> = ({ session, sessionExercise
         <DraggableFlatList
           data={sessionExercises}
           keyExtractor={item => item.id}
-          renderItem={({ item, drag, isActive }: RenderItemParams<SessionExercise>) => (
-            <SessionExerciseItem
-              item={item}
-              drag={drag}
-              dragActive={isActive}
-              selectionMode={selectionMode}
-              isSelected={selectedItems.has(item.id)}
-              onSelect={toggleSelection}
-              groupInfo={getGroupInfo(item)}
-              onUngroup={handleUngroup}
-              onEditTargets={(se: SessionExercise) => {
-                haptics.onPress()
-                prepareEditTargets(se)
-                setIsEditModalVisible(true)
-              }}
-              onRemove={(se: SessionExercise, exoName: string) => {
-                haptics.onPress()
-                showRemoveAlert(se, exoName)
-              }}
-            />
-          )}
+          renderItem={renderDraggableItem}
           onDragEnd={({ data }) => reorderExercises(data)}
           contentContainerStyle={{ paddingHorizontal: 0, paddingTop: FOOTER_PADDING_TOP, paddingBottom: LIST_PADDING_BOTTOM }}
           ListEmptyComponent={<Text style={styles.emptyText}>{t.sessionDetail.noExercises}</Text>}
@@ -435,9 +437,25 @@ function useStyles(colors: ThemeColors) {
   })
 }
 
-export default withObservables(['route'], ({ route }) => ({
+const ObservableSessionDetailContent = withObservables(['route'], ({ route }: { route: RouteProp<RootStackParamList, 'SessionDetail'> }) => ({
   session: database.get<Session>('sessions').findAndObserve(route.params.sessionId),
   sessionExercises: database.get<SessionExercise>('session_exercises').query(Q.where('session_id', route.params.sessionId), Q.sortBy('position', Q.asc)).observe(),
   exercises: database.get<Exercise>('exercises').query(Q.sortBy('name', Q.asc)).observe(),
   user: database.get<User>('users').query().observe().pipe(map(list => list[0] || null))
 }))(SessionDetailContent)
+
+const SessionDetailScreen = ({ route, navigation }: {
+  route: RouteProp<RootStackParamList, 'SessionDetail'>
+  navigation: NativeStackNavigationProp<RootStackParamList>
+}) => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableSessionDetailContent route={route} navigation={navigation} />}
+    </View>
+  )
+}
+
+export default SessionDetailScreen

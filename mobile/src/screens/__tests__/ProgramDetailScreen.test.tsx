@@ -104,7 +104,7 @@ jest.mock('../../components/ProgramDetailBottomSheet', () => ({
 
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
-import ProgramDetailScreen from '../ProgramDetailScreen'
+import { ProgramDetailScreenInner as ProgramDetailScreen } from '../ProgramDetailScreen'
 import type Program from '../../model/models/Program'
 import type Session from '../../model/models/Session'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'

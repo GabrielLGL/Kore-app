@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View, Text, TouchableOpacity, StyleSheet, Animated,
   ScrollView, ActivityIndicator,
@@ -145,10 +145,26 @@ export function AssistantScreenInner({ programs: _programs, user, navigation, ro
 
 // ─── withObservables — injecte programs et user ───────────────────────────────
 
-export default withObservables([], () => ({
+const ObservableAssistantContent = withObservables([], () => ({
   programs: database.get<Program>('programs').query().observe(),
   user: database.get<User>('users').query().observe().pipe(map(list => list[0] || null)),
 }))(AssistantScreenInner)
+
+const AssistantScreen = ({ navigation, route }: {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Assistant'>
+  route: RouteProp<RootStackParamList, 'Assistant'>
+}) => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableAssistantContent navigation={navigation} route={route} />}
+    </View>
+  )
+}
+
+export default AssistantScreen
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 

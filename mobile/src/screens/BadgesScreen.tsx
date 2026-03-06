@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -156,6 +156,21 @@ function useStyles(colors: ThemeColors) {
 
 // ─── withObservables ──────────────────────────────────────────────────────────
 
-export default withObservables([], () => ({
+export { BadgesScreenBase }
+
+const ObservableBadgesContent = withObservables([], () => ({
   userBadges: database.get<UserBadge>('user_badges').query().observe(),
 }))(BadgesScreenBase)
+
+const BadgesScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableBadgesContent />}
+    </View>
+  )
+}
+
+export default BadgesScreen
