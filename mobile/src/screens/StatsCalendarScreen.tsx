@@ -276,7 +276,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
     })
   ).current
 
-  const handleDayPress = async (day: DayCell) => {
+  const handleDayPress = useCallback(async (day: DayCell) => {
     if (day.isFuture || !day.isCurrentMonth) return
 
     if (detail?.dateKey === day.dateKey) {
@@ -386,7 +386,7 @@ export function StatsCalendarScreenBase({ histories }: Props) {
     } catch (e) {
       if (__DEV__) console.error('[StatsCalendarScreen] handleDayPress error', e)
     }
-  }
+  }, [detail, histories, locale])
 
   const todayKey = toDateKey(today)
 

@@ -20,6 +20,7 @@ export const en: typeof fr = {
     seconds: 'sec',
     validate: 'Validate',
     exitToast: 'Press again to exit',
+    removed: 'Removed',
   },
 
   onboarding: {

@@ -8,6 +8,7 @@ import Exercise from '../model/models/Exercise'
 import PerformanceLog from '../model/models/PerformanceLog'
 import { validateWorkoutInput } from '../model/utils/validationHelpers'
 import { parseNumericInput, parseIntegerInput, getNextPosition } from '../model/utils/databaseHelpers'
+import { useLanguage } from '../contexts/LanguageContext'
 
 /**
  * useSessionManager - Hook pour gérer les opérations sur les exercices d'une session
@@ -44,6 +45,8 @@ export function useSessionManager(
   session: Session,
   onSuccess?: () => void
 ) {
+  const { t } = useLanguage()
+
   // --- TARGET INPUTS STATES ---
   const [targetSets, setTargetSets] = useState('')
   const [targetReps, setTargetReps] = useState('')
@@ -169,7 +172,7 @@ export function useSessionManager(
       })
 
       if (Platform.OS === 'android') {
-        ToastAndroid.show('Retiré', ToastAndroid.SHORT)
+        ToastAndroid.show(t.common.removed, ToastAndroid.SHORT)
       }
 
       return true

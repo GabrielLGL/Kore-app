@@ -152,9 +152,9 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
     }
   }, [summaryVisible, navigation, milestones, newBadges])
 
-  const completedSets = Object.keys(validatedSets).length
-  const totalSetsTarget = sessionExercises.reduce((sum, se) => sum + (se.setsTarget ?? 0), 0)
-  const totalPrs = Object.values(validatedSets).filter(s => s.isPr).length
+  const completedSets = useMemo(() => Object.keys(validatedSets).length, [validatedSets])
+  const totalSetsTarget = useMemo(() => sessionExercises.reduce((sum, se) => sum + (se.setsTarget ?? 0), 0), [sessionExercises])
+  const totalPrs = useMemo(() => Object.values(validatedSets).filter(s => s.isPr).length, [validatedSets])
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -165,15 +165,19 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
   }, [navigation, session.name, colors])
 
   useEffect(() => {
+    let cancelled = false
     createWorkoutHistory(session.id, startTimestampRef.current)
       .then(history => {
+        if (cancelled) return
         historyRef.current = history
         setHistoryId(history.id)
       })
       .catch(e => {
+        if (cancelled) return
         if (__DEV__) console.error('[WorkoutScreen] createWorkoutHistory:', e)
         setStartErrorVisible(true)
       })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -184,6 +188,14 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       })
       .catch(e => { if (__DEV__) console.error('[WorkoutScreen] setupNotificationChannel:', e) })
   }, [])
+
+  // --- Handlers ---
+
+  const handleClose = useCallback(() => {
+    haptics.onPress()
+    setSummaryVisible(false)
+    // La navigation vers Home (avec célébrations) est gérée par le useEffect ci-dessus
+  }, [haptics])
 
   // Back handler Android : prioritaire sur le GlobalBackHandler (LIFO)
   useEffect(() => {
@@ -196,15 +208,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
       return true
     })
     return () => backHandler.remove()
-  }, [summaryVisible])
-
-  // --- Handlers ---
-
-  const handleClose = useCallback(() => {
-    haptics.onPress()
-    setSummaryVisible(false)
-    // La navigation vers Home (avec célébrations) est gérée par le useEffect ci-dessus
-  }, [haptics])
+  }, [summaryVisible, handleClose])
 
   const handleConfirmEnd = useCallback(async () => {
     const now = Date.now()
@@ -338,7 +342,7 @@ export const WorkoutContent: React.FC<WorkoutContentProps> = ({
     setConfirmEndVisible(false)
     setSummaryVisible(true)
     haptics.onMajorSuccess()
-  }, [historyId, completeWorkoutHistory, user, completedSets, totalSetsTarget, totalPrs, validatedSets, sessionExercises, session.id, totalVolume, haptics])
+  }, [historyId, user, completedSets, totalSetsTarget, totalPrs, validatedSets, sessionExercises, session.id, totalVolume, haptics])
 
   /** Nombre total de seances (histories non supprimees). */
   async function getTotalSessionCount(): Promise<number> {

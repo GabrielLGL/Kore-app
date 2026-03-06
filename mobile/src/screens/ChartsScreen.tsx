@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   FlatList,
   Platform,
 } from 'react-native'
@@ -35,8 +35,6 @@ import { buildExerciseStatsFromData } from '../model/utils/databaseHelpers'
 import type { ExerciseSessionStat } from '../model/utils/databaseHelpers'
 import type { RootStackParamList } from '../navigation'
 
-const screenWidth = Dimensions.get('window').width
-
 // --- Sous-composant : ExerciseStatsContent ---
 
 interface ExerciseStatsContentProps {
@@ -54,6 +52,7 @@ const ExerciseStatsContent: React.FC<ExerciseStatsContentProps> = ({
 }) => {
   const colors = useColors()
   const { t } = useLanguage()
+  const { width: screenWidth } = useWindowDimensions()
   const styles = useStyles(colors)
   const haptics = useHaptics()
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()

@@ -140,19 +140,15 @@ export async function recalculateSetPrs(exerciseId: string): Promise<void> {
 
   const activeHistoryIds = new Set(histories.map(h => h.id))
 
-  type RawSet = { history_id: string; exercise_id: string }
-  const getRaw = (s: WorkoutSet): RawSet =>
-    (s as unknown as { _raw: RawSet })._raw
-
   // Filter to sets belonging to non-deleted histories, then sort chronologically
-  const activeSets = allSets.filter(s => activeHistoryIds.has(getRaw(s).history_id))
+  const activeSets = allSets.filter(s => activeHistoryIds.has(s.history.id))
 
   // We need history start times for sorting
   const historyMap = new Map(histories.map(h => [h.id, h.startTime.getTime()]))
 
   activeSets.sort((a, b) => {
-    const timeA = historyMap.get(getRaw(a).history_id) ?? 0
-    const timeB = historyMap.get(getRaw(b).history_id) ?? 0
+    const timeA = historyMap.get(a.history.id) ?? 0
+    const timeB = historyMap.get(b.history.id) ?? 0
     if (timeA !== timeB) return timeA - timeB
     return a.setOrder - b.setOrder
   })

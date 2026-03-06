@@ -288,6 +288,7 @@ const ExerciseCatalogScreen: React.FC = () => {
   const [hasError, setHasError] = useState(false)
   const [selectedExercise, setSelectedExercise] = useState<CatalogExercise | null>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const isImportingRef = useRef(false)
 
   // Refs pour éviter les race conditions
   const currentOffsetRef = useRef(0)
@@ -359,7 +360,8 @@ const ExerciseCatalogScreen: React.FC = () => {
   }, [haptics, detailSheet])
 
   const handleImport = useCallback(async (ex: CatalogExercise) => {
-    if (isImporting) return
+    if (isImportingRef.current) return
+    isImportingRef.current = true
     setIsImporting(true)
     try {
       const { name, muscles, equipment, description } = mapCatalogToLocal(ex)
@@ -371,6 +373,8 @@ const ExerciseCatalogScreen: React.FC = () => {
         .fetchCount()
 
       if (count > 0) {
+        setIsImporting(false)
+        isImportingRef.current = false
         duplicateAlert.open()
         return
       }
@@ -392,8 +396,9 @@ const ExerciseCatalogScreen: React.FC = () => {
       importErrorAlert.open()
     } finally {
       setIsImporting(false)
+      isImportingRef.current = false
     }
-  }, [isImporting, haptics, detailSheet, duplicateAlert, importErrorAlert])
+  }, [haptics, detailSheet, duplicateAlert, importErrorAlert])
 
   const handleEndReached = useCallback(() => {
     loadMore(query)

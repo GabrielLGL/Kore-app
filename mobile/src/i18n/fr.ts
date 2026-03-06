@@ -18,6 +18,7 @@ export const fr = {
     seconds: 'sec',
     validate: 'Valider',
     exitToast: 'Appuyez à nouveau pour quitter',
+    removed: 'Retiré',
   },
 
   onboarding: {
