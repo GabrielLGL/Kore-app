@@ -35,6 +35,7 @@
 | 2026-02-28 | 20 | 20 | 20 | 20 | 15 | **95/100** | ↑ +2 (1559 tests, cov 80.61% lines, hardcoded→tokens fixé, LanguageContext rollback, MilestoneCelebration any fixé) |
 | 2026-03-06 | 20 | 20 | 18 | 20 | 15 | **93/100** | ↓ -2 (1571 tests, duplicate() setsTargetMax fixé, StatsCalendar try/catch, 30 i18n strings + WorkoutScreen perf restants) |
 | 2026-03-06 | 20 | 20 | 20 | 20 | 15 | **95/100** | ↑ +2 (1571 tests, 8 critiques fixés: race condition, cleanup, _raw, useCallback, useWindowDimensions) |
+| 2026-03-06 | 20 | 20 | 20 | 20 | 15 | **95/100** | → stable (1558 tests, C1 motivationalPhrase language fixé, @text decorators) |
 
 ---
 
