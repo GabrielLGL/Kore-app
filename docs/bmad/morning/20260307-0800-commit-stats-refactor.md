@@ -35,4 +35,7 @@
 - Build + tests toujours OK apres commit
 
 ## Statut
-En attente
+✅ Résolu — 20260307-0830
+
+## Résolution
+Rapport do : docs/bmad/do/20260307-0830-refactor-stats.md
