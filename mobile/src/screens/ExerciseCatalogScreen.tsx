@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from 'react-native'
 import { Image } from 'expo-image'
 import { Ionicons } from '@expo/vector-icons'
@@ -29,6 +30,7 @@ import { BottomSheet } from '../components/BottomSheet'
 import { AlertDialog } from '../components/AlertDialog'
 import { Button } from '../components/Button'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import { useHaptics } from '../hooks/useHaptics'
 import { useModalState } from '../hooks/useModalState'
 import { fontSize, spacing, borderRadius } from '../theme'
@@ -127,6 +129,7 @@ interface ExerciseDetailProps {
   onImport: (exercise: CatalogExercise) => void
   isImporting: boolean
   colors: ThemeColors
+  t: ReturnType<typeof useLanguage>['t']
 }
 
 const ExerciseDetail: React.FC<ExerciseDetailProps> = ({
@@ -134,6 +137,7 @@ const ExerciseDetail: React.FC<ExerciseDetailProps> = ({
   onImport,
   isImporting,
   colors,
+  t,
 }) => {
   const styles = useDetailStyles(colors)
   return (
@@ -167,7 +171,7 @@ const ExerciseDetail: React.FC<ExerciseDetailProps> = ({
       {/* Instructions */}
       {exercise.instructions.length > 0 && (
         <View style={styles.instructions}>
-          <Text style={styles.instructionsTitle}>Instructions</Text>
+          <Text style={styles.instructionsTitle}>{t.exerciseCatalog.instructions}</Text>
           {exercise.instructions.map((step, i) => (
             <View key={i} style={styles.instructionRow}>
               <Text style={styles.instructionNum}>{i + 1}.</Text>
@@ -186,7 +190,7 @@ const ExerciseDetail: React.FC<ExerciseDetailProps> = ({
           onPress={() => onImport(exercise)}
           disabled={isImporting}
         >
-          {isImporting ? 'Ajout en cours…' : 'Ajouter à ma bibliothèque'}
+          {isImporting ? t.exerciseCatalog.adding : t.exerciseCatalog.addToLibrary}
         </Button>
       </View>
     </ScrollView>
@@ -271,6 +275,7 @@ function useDetailStyles(colors: ThemeColors) {
 
 const ExerciseCatalogScreen: React.FC = () => {
   const colors = useColors()
+  const { t } = useLanguage()
   const styles = useStyles(colors)
   const haptics = useHaptics()
 
@@ -423,10 +428,10 @@ const ExerciseCatalogScreen: React.FC = () => {
       return (
         <View style={styles.emptyState}>
           <Ionicons name="wifi-outline" size={40} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>Erreur de connexion</Text>
-          <Text style={styles.emptySubtitle}>Vérifiez votre réseau et réessayez.</Text>
+          <Text style={styles.emptyTitle}>{t.exerciseCatalog.connectionError}</Text>
+          <Text style={styles.emptySubtitle}>{t.exerciseCatalog.connectionErrorSubtitle}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={handleRetry}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t.exerciseCatalog.retry}</Text>
           </TouchableOpacity>
         </View>
       )
@@ -434,8 +439,8 @@ const ExerciseCatalogScreen: React.FC = () => {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="search-outline" size={40} color={colors.textSecondary} />
-        <Text style={styles.emptyTitle}>Aucun exercice trouvé</Text>
-        <Text style={styles.emptySubtitle}>Essayez un autre terme de recherche.</Text>
+        <Text style={styles.emptyTitle}>{t.exercises.noExercises}</Text>
+        <Text style={styles.emptySubtitle}>{t.exerciseCatalog.noExercisesSubtitle}</Text>
       </View>
     )
   }, [isLoading, hasError, styles, colors, handleRetry])
@@ -448,7 +453,7 @@ const ExerciseCatalogScreen: React.FC = () => {
           <Ionicons name="search-outline" size={16} color={colors.textSecondary} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Rechercher un exercice…"
+            placeholder={t.exerciseCatalog.searchPlaceholder}
             placeholderTextColor={colors.textSecondary}
             value={query}
             onChangeText={setQuery}
@@ -480,10 +485,14 @@ const ExerciseCatalogScreen: React.FC = () => {
           ListEmptyComponent={renderEmpty}
           ListFooterComponent={renderFooter}
           onEndReached={handleEndReached}
-          onEndReachedThreshold={0.3}
+          onEndReachedThreshold={0.5}
           contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          initialNumToRender={15}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
         />
       )}
 
@@ -499,6 +508,7 @@ const ExerciseCatalogScreen: React.FC = () => {
             onImport={handleImport}
             isImporting={isImporting}
             colors={colors}
+            t={t}
           />
         )}
       </BottomSheet>
@@ -506,22 +516,22 @@ const ExerciseCatalogScreen: React.FC = () => {
       {/* AlertDialog — Exercice déjà existant */}
       <AlertDialog
         visible={duplicateAlert.isOpen}
-        title="Déjà dans votre bibliothèque"
-        message="Un exercice avec ce nom existe déjà dans votre bibliothèque."
+        title={t.exerciseCatalog.duplicateTitle}
+        message={t.exerciseCatalog.duplicateMessage}
         onConfirm={duplicateAlert.close}
         onCancel={duplicateAlert.close}
-        confirmText="OK"
+        confirmText={t.common.ok}
         hideCancel
       />
 
       {/* AlertDialog — Erreur d'importation */}
       <AlertDialog
         visible={importErrorAlert.isOpen}
-        title="Erreur d'importation"
-        message="Impossible d'importer cet exercice. Veuillez réessayer."
+        title={t.exerciseCatalog.importErrorTitle}
+        message={t.exerciseCatalog.importErrorMessage}
         onConfirm={importErrorAlert.close}
         onCancel={importErrorAlert.close}
-        confirmText="OK"
+        confirmText={t.common.ok}
         hideCancel
       />
     </View>

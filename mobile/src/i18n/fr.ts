@@ -761,6 +761,39 @@ export const fr = {
     bodyweight: 'PC',
   },
 
+  charts: {
+    setDetail: 'Série {order} : {weight} kg × {reps} reps',
+    emptySelectExercise: 'Sélectionnez un exercice pour commencer.',
+    emptyProgression: 'Enregistrez au moins une autre session pour voir votre progression.',
+    deleteSessionTitle: 'Supprimer cette séance ?',
+  },
+
+  exerciseCatalog: {
+    instructions: 'Instructions',
+    adding: 'Ajout en cours…',
+    addToLibrary: 'Ajouter à ma bibliothèque',
+    connectionError: 'Erreur de connexion',
+    connectionErrorSubtitle: 'Vérifiez votre réseau et réessayez.',
+    retry: 'Réessayer',
+    noExercisesSubtitle: 'Essayez un autre terme de recherche.',
+    searchPlaceholder: 'Rechercher un exercice…',
+    duplicateTitle: 'Déjà dans votre bibliothèque',
+    duplicateMessage: 'Un exercice avec ce nom existe déjà dans votre bibliothèque.',
+    importErrorTitle: "Erreur d'importation",
+    importErrorMessage: "Impossible d'importer cet exercice. Veuillez réessayer.",
+  },
+
+  statsExercises: {
+    noResults: 'Aucun résultat pour ces filtres.',
+    personalRecords: 'Records personnels',
+    noRecords: "Aucun record enregistré pour l'instant.",
+    mostPracticed: 'Exercices les plus pratiqués',
+    noSessions: "Aucune séance enregistrée pour l'instant.",
+    prValue: '{weight} kg × {reps}',
+    prOrm: '→ 1RM ~{orm} kg',
+    freqCount: '{count} fois',
+  },
+
   exerciseInfoSheet: {
     noAnimation: 'Pas de démonstration disponible',
     description: 'Description',

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import {
 import { formatRelativeDate } from '../model/utils/databaseHelpers'
 import { spacing, borderRadius, fontSize } from '../theme'
 import { useColors } from '../contexts/ThemeContext'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { ThemeColors } from '../theme'
 import { useExerciseFilters } from '../hooks/useExerciseFilters'
 import { ChipSelector } from '../components/ChipSelector'
@@ -33,6 +34,7 @@ interface Props {
 
 export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) {
   const colors = useColors()
+  const { t } = useLanguage()
   const styles = useStyles(colors)
   const {
     searchQuery,
@@ -83,7 +85,7 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
       {/* Filtres */}
       <TextInput
         style={styles.searchInput}
-        placeholder="Rechercher un exercice..."
+        placeholder={t.exercises.search}
         placeholderTextColor={colors.textSecondary}
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -94,28 +96,28 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
         items={MUSCLES_LIST}
         selectedValue={filterMuscle}
         onChange={setFilterMuscle}
-        noneLabel="Tous muscles"
+        noneLabel={t.exercises.allMuscles}
         style={styles.chipRow}
       />
       <ChipSelector
         items={EQUIPMENT_LIST}
         selectedValue={filterEquipment}
         onChange={setFilterEquipment}
-        noneLabel="Tout équipement"
+        noneLabel={t.exercises.allEquipment}
         style={styles.chipRow}
       />
 
       {noResults ? (
         <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>Aucun résultat pour ces filtres.</Text>
+          <Text style={styles.emptyText}>{t.statsExercises.noResults}</Text>
         </View>
       ) : (
         <>
           {/* Records personnels */}
-          <Text style={styles.sectionTitle}>Records personnels</Text>
+          <Text style={styles.sectionTitle}>{t.statsExercises.personalRecords}</Text>
           {filteredPrs.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Aucun record enregistré pour l'instant.</Text>
+              <Text style={styles.emptyText}>{t.statsExercises.noRecords}</Text>
             </View>
           ) : (
             <View style={styles.card}>
@@ -130,9 +132,9 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
                   </View>
                   <View style={styles.prRight}>
                     <Text style={styles.prValue}>
-                      {pr.weight} kg × {pr.reps}
+                      {t.statsExercises.prValue.replace('{weight}', String(pr.weight)).replace('{reps}', String(pr.reps))}
                     </Text>
-                    <Text style={styles.prOrm}>→ 1RM ~{pr.orm1} kg</Text>
+                    <Text style={styles.prOrm}>{t.statsExercises.prOrm.replace('{orm}', String(pr.orm1))}</Text>
                   </View>
                 </View>
               ))}
@@ -141,11 +143,11 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
 
           {/* Top exercices par fréquence */}
           <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>
-            Exercices les plus pratiqués
+            {t.statsExercises.mostPracticed}
           </Text>
           {filteredTopFrequency.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>Aucune séance enregistrée pour l'instant.</Text>
+              <Text style={styles.emptyText}>{t.statsExercises.noSessions}</Text>
             </View>
           ) : (
             <View style={styles.card}>
@@ -156,7 +158,7 @@ export function StatsExercisesScreenBase({ sets, exercises, histories }: Props) 
                 >
                   <Text style={styles.freqRank}>{i + 1}</Text>
                   <Text style={styles.freqName} numberOfLines={1}>{ex.exerciseName}</Text>
-                  <Text style={styles.freqCount}>{ex.count} fois</Text>
+                  <Text style={styles.freqCount}>{t.statsExercises.freqCount.replace('{count}', String(ex.count))}</Text>
                 </View>
               ))}
             </View>
@@ -282,4 +284,17 @@ const enhance = withObservables([], () => ({
   histories: database.get<History>('histories').query(Q.where('deleted_at', null)).observe(),
 }))
 
-export default enhance(StatsExercisesScreenBase)
+const ObservableStatsExercisesContent = enhance(StatsExercisesScreenBase)
+
+const StatsExercisesScreen = () => {
+  const colors = useColors()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {mounted && <ObservableStatsExercisesContent />}
+    </View>
+  )
+}
+
+export default StatsExercisesScreen

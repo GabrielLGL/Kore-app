@@ -760,6 +760,39 @@ export const en: typeof fr = {
     bodyweight: 'BW',
   },
 
+  charts: {
+    setDetail: 'Set {order}: {weight} kg × {reps} reps',
+    emptySelectExercise: 'Select an exercise to get started.',
+    emptyProgression: 'Log at least one more session to see your progress.',
+    deleteSessionTitle: 'Delete this session?',
+  },
+
+  exerciseCatalog: {
+    instructions: 'Instructions',
+    adding: 'Adding…',
+    addToLibrary: 'Add to my library',
+    connectionError: 'Connection error',
+    connectionErrorSubtitle: 'Check your network and try again.',
+    retry: 'Retry',
+    noExercisesSubtitle: 'Try a different search term.',
+    searchPlaceholder: 'Search for an exercise…',
+    duplicateTitle: 'Already in your library',
+    duplicateMessage: 'An exercise with this name already exists in your library.',
+    importErrorTitle: 'Import error',
+    importErrorMessage: 'Unable to import this exercise. Please try again.',
+  },
+
+  statsExercises: {
+    noResults: 'No results for these filters.',
+    personalRecords: 'Personal records',
+    noRecords: 'No records logged yet.',
+    mostPracticed: 'Most practiced exercises',
+    noSessions: 'No sessions logged yet.',
+    prValue: '{weight} kg × {reps}',
+    prOrm: '→ 1RM ~{orm} kg',
+    freqCount: '{count} times',
+  },
+
   exerciseInfoSheet: {
     noAnimation: 'No demonstration available',
     description: 'Description',
