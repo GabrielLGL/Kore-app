@@ -1,6 +1,6 @@
 # Configurer submit.production dans eas.json
 
-## Statut : 🟡 Partiellement résolu — 20260307
+## Statut : ✅ Résolu — 20260307-1200
 
 ## Contexte
 `eas.json` a besoin d'une section `submit.production` pour automatiser la soumission au Play Store via `eas submit`.
@@ -41,3 +41,6 @@
 
 ## Priorite : NICE-TO-HAVE
 Facilite la soumission mais peut etre fait manuellement via la console.
+
+## Résolution
+Rapport do : docs/bmad/do/20260307-1800-chore-eas-submit.md
